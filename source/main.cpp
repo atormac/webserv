@@ -6,11 +6,25 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <sstream>
+#include <sys/epoll.h>
+#include <signal.h>
 
+#define MAX_EVENTS 10
 #define LISTEN_BACKLOG 32
+
+struct epoll_event ev[MAX_EVENTS];
+struct epoll_event events[MAX_EVENTS];
 
 void httpserver_response(int client_fd);
 
+int socket_fd = -1;
+void	signal_handler(int code)
+{
+	(void)code;
+	if (socket_fd >= 0)
+		close(socket_fd);
+	socket_fd = -1;
+}
 bool httpserver_start(std::string ip, int port)
 {
 	struct sockaddr_in socket_addr;
@@ -21,7 +35,7 @@ bool httpserver_start(std::string ip, int port)
 	socket_addr.sin_port = htons(port);
 	socket_addr.sin_addr.s_addr = inet_addr(ip.c_str());
 
-	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1)
 	{
 		std::cerr << "socket() failed" << std::endl;
@@ -51,20 +65,20 @@ bool httpserver_start(std::string ip, int port)
 			std::cerr << "accept() failed" << std::endl;
 			return false;
 		}
-		std::cout << "[webserv] request received" << std::endl;
 		ssize_t bytes_read = read(client_fd, buffer, 2048);
 		if (bytes_read < 0)
 		{
 			std::cerr << "read() failed" << std::endl;
 			return false;
 		}
-		std::cout << "--- [webserv] raw request: ---" << std::endl;
+		std::cout << "[webserv] request received" << std::endl;
 		std::cout << buffer << std::endl;
 		httpserver_response(client_fd);
 
 		close(client_fd);
 	}
-	close(socket_fd);
+	if (socket_fd >= 0)
+		close(socket_fd);
 	return true;
 }
 
@@ -83,6 +97,7 @@ void httpserver_response(int client_fd)
 
 int main(void)
 {
+	signal(SIGINT, signal_handler);
 	std::cout << "[webserv]" << std::endl;
 	httpserver_start("127.0.0.1", 7051);
 	return 0;
