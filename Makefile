@@ -11,7 +11,7 @@ target asan: CXXFLAGS += -fsanitize=address,undefined -g
 all: $(NAME)
 
 $(NAME): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -Iinclude -o $@ $^
 
 %.o: %.c
 	$(CXX) $(CXXFLAGS) -c $< -o $@

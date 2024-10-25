@@ -1,16 +1,5 @@
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
+#include "../include/HttpServer.hpp"
 #include <iostream>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <sstream>
-#include <sys/epoll.h>
-#include <signal.h>
-
-#include "HttpServer.hpp"
-
 
 int main(void)
 {
