@@ -3,7 +3,7 @@ CXX = c++
 CXXFLAGS := -Wall -Wextra -Werror
 
 SOURCE_DIR = source
-SOURCES := main.cpp
+SOURCES := main.cpp HttpServer.cpp
 OBJECTS := $(addprefix $(SOURCE_DIR)/,$(SOURCES:.cpp=.o))
 
 target asan: CXXFLAGS += -fsanitize=address,undefined -g
