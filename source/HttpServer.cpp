@@ -87,7 +87,7 @@ bool HttpServer::listen()
 	}
 	while (true)
 	{
-		int nfds = ::epoll_wait(this->_epoll_fd, events, MAX_EVENTS, 1);
+		int nfds = ::epoll_wait(this->_epoll_fd, events, MAX_EVENTS, -1);
 
 		if (nfds == -1)
 			break;
@@ -99,12 +99,12 @@ bool HttpServer::listen()
 
 bool	HttpServer::handle_event(epoll_event* event)
 {
-	struct epoll_event ev;
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_size = sizeof(peer_addr);
 
 	if (event->data.fd == this->_socket_fd) //Queue requests
 	{
+		struct epoll_event ev;
 		int client_fd =
 			accept(this->_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
 		if (client_fd == -1)
@@ -126,7 +126,7 @@ bool	HttpServer::handle_event(epoll_event* event)
 	}
 	if (event->events & EPOLLIN) //Read event
 	{
-		Client *cl = (Client *)ev.data.ptr;
+		Client *cl = (Client *)event->data.ptr;
 		char buffer[2048 + 1] = { 0 };
 		ssize_t bytes_read = read(cl->fd, buffer, 2048);
 		if (bytes_read < 0)
@@ -138,13 +138,14 @@ bool	HttpServer::handle_event(epoll_event* event)
 		std::cout << buffer << std::endl;
 		struct epoll_event nevent;
 		nevent.events = EPOLLOUT | EPOLLET;
+		nevent.data.ptr = event->data.ptr;
 		epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, cl->fd,
 			  &nevent);
 		return true;
 	}
 	if (event->events & EPOLLOUT) //Write event
 	{
-		Client *cl = (Client *)ev.data.ptr;
+		Client *cl = (Client *)event->data.ptr;
 		std::cout << "[webserv] write " << cl->ip_addr << std::endl;
 		this->response(cl->fd);
 		epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, cl->fd, NULL);
