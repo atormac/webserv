@@ -92,17 +92,23 @@ bool HttpServer::listen()
 		if (nfds == -1)
 			break;
 		for (int i = 0; i < nfds; i++)
-			this->handle_event(&events[i]);
+		{
+			epoll_event &event = events[i];
+			if (event.data.fd == this->_socket_fd) //Queue requests
+				this->accept_client(event);
+			else
+				this->handle_event(event);
+		}
 	}
 	return true;
 }
 
-bool	HttpServer::handle_event(epoll_event* event)
+bool	HttpServer::accept_client(epoll_event &event)
 {
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_size = sizeof(peer_addr);
 
-	if (event->data.fd == this->_socket_fd) //Queue requests
+	if (event.data.fd == this->_socket_fd) //Queue requests
 	{
 		struct epoll_event ev;
 		int client_fd =
@@ -124,36 +130,47 @@ bool	HttpServer::handle_event(epoll_event* event)
 		}
 		return true;
 	}
-	if (event->events & EPOLLIN) //Read event
+	return true;
+}
+
+bool	HttpServer::handle_event(epoll_event &event)
+{
+	Client *client = (Client *)event.data.ptr;
+	struct epoll_event ev_new;
+
+	if (event.events & EPOLLIN) //read
 	{
-		Client *cl = (Client *)event->data.ptr;
 		char buffer[2048 + 1] = { 0 };
-		ssize_t bytes_read = read(cl->fd, buffer, 2048);
+		ssize_t bytes_read = read(client->fd, buffer, 2048);
 		if (bytes_read < 0)
 		{
-			std::cerr << "read() failed" << std::endl;
+			perror("read");
 			return false;
 		}
-		std::cout << "[webserv] request received " << cl->ip_addr << std::endl;
+		std::cout << "[webserv] request received " << client->ip_addr << std::endl;
 		std::cout << buffer << std::endl;
-		struct epoll_event nevent;
-		nevent.events = EPOLLOUT | EPOLLET;
-		nevent.data.ptr = event->data.ptr;
-		epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, cl->fd,
-			  &nevent);
-		return true;
+		ev_new.events = EPOLLOUT | EPOLLET;
+		ev_new.data.ptr = event.data.ptr;
+		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
+		{
+			perror("epoll_ctl");
+			return false;
+		}
 	}
-	if (event->events & EPOLLOUT) //Write event
+	else if (event.events & EPOLLOUT) //write
 	{
-		Client *cl = (Client *)event->data.ptr;
-		std::cout << "[webserv] write " << cl->ip_addr << std::endl;
-		this->response(cl->fd);
-		epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, cl->fd, NULL);
-		close(cl->fd);
-		delete cl;
-		return true;
+		std::cout << "[webserv] write " << client->ip_addr << std::endl;
+		this->response(client->fd);
+		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, client->fd, NULL) == -1)
+		{
+			perror("epoll_ctl");
+			return false;
+		}
+		
+		close(client->fd);
+		delete client;
 	}
-	return false;
+	return true;
 }
 
 void HttpServer::response(int client_fd)

@@ -19,7 +19,8 @@ class HttpServer
 	public:
 		HttpServer(std::string ip, int port);
 		~HttpServer();
-		bool	handle_event(epoll_event* event);
+		bool	accept_client(epoll_event &event);
+		bool	handle_event(epoll_event &event);
 		void signal_handler(int code);
 		bool	init(void);
 		bool	listen(void);
