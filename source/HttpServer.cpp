@@ -10,36 +10,38 @@
 #include <sys/epoll.h>
 #include <signal.h>
 
-/*
-struct epoll_event ev[MAX_EVENTS];
-struct epoll_event events[MAX_EVENTS];
-
-int socket_fd = -1;
+int signo = 0;
 void	signal_handler(int code)
 {
+	signo = code;
 }
-*/
 
 HttpServer::HttpServer(std::string ip, int port)
 {
 	this->_port = port;
 	this->_ip = ip;
 	this->_socket_fd = -1;
+	this->_epoll_fd = -1;
 	(void)this->ev;
 	(void)this->events;
 }
 
 HttpServer::~HttpServer()
 {
+	if (this->_epoll_fd >= 0)
+		close(this->_epoll_fd);
 	if (this->_socket_fd >= 0)
 		close(this->_socket_fd);
 	this->_socket_fd = -1;
+	this->_epoll_fd = -1;
+	std::cout << "HttpServer deconstructor called" << std::endl;
 }
 
 bool HttpServer::init(void)
 {
 	struct sockaddr_in socket_addr;
 
+	signal(SIGINT, ::signal_handler);
 	//memset(&socket_addr, 0, sizeof(socket_addr));
 	socket_addr.sin_family = AF_INET;
 	socket_addr.sin_port = htons(this->_port);
@@ -92,10 +94,7 @@ bool HttpServer::listen()
 		int nfds = ::epoll_wait(this->_epoll_fd, events, MAX_EVENTS, 1);
 
 		if (nfds == -1)
-		{
-			std::cerr << "epoll_wait() failed" << std::endl;
-			return false;
-		}
+			break;
 		for (int i = 0; i < nfds; i++)
 		{
 			if (events[i].data.fd == this->_socket_fd) //Queue requests
@@ -110,7 +109,8 @@ bool HttpServer::listen()
 				int old_flags = fcntl(client_fd, F_GETFL, 0);
 				fcntl(client_fd, F_SETFL, old_flags | O_NONBLOCK);
 				ev.events = EPOLLIN | EPOLLET;
-				ev.data.fd = client_fd;
+				//ev.data.fd = client_fd;
+				ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
 				if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
 				{
 					std::cerr << "epoll_ctl accept failed" << std::endl;
@@ -120,31 +120,34 @@ bool HttpServer::listen()
 			}
 			if (events[i].events & EPOLLIN) //Read event
 			{
+				Client *cl = (Client *)ev.data.ptr;
 				char buffer[2048 + 1] = { 0 };
-				ssize_t bytes_read = read(ev.data.fd, buffer, 2048);
+				ssize_t bytes_read = read(cl->fd, buffer, 2048);
 				if (bytes_read < 0)
 				{
 					std::cerr << "read() failed" << std::endl;
 					return false;
 				}
-				std::cout << "[webserv] request received" << std::endl;
+				std::cout << "[webserv] request received " << cl->ip_addr << std::endl;
 				std::cout << buffer << std::endl;
 				struct epoll_event nevent;
 				nevent.events = EPOLLOUT | EPOLLET;
-				epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, ev.data.fd,
+				epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, cl->fd,
 					  &nevent);
 				continue;
 			}
 			if (events[i].events & EPOLLOUT) //Write event
 			{
-				this->response(ev.data.fd);
-				epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, ev.data.fd, NULL);
-				close(ev.data.fd);
+				Client *cl = (Client *)ev.data.ptr;
+				std::cout << "[webserv] write " << cl->ip_addr << std::endl;
+				this->response(cl->fd);
+				epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, cl->fd, NULL);
+				close(cl->fd);
+				delete cl;
 				continue;
 			}
 			std::cerr << "ERRRO FATAL" << std::endl;
 		}
-
 	}
 	return true;
 }
