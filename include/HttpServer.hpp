@@ -10,6 +10,7 @@
 class HttpServer
 {
 	private:
+		int _epoll_fd;
 		int _socket_fd;
 		int _port;
 		std::string _ip;
