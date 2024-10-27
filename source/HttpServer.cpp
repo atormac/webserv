@@ -35,6 +35,16 @@ HttpServer::~HttpServer()
 	std::cout << "HttpServer deconstructor called" << std::endl;
 }
 
+bool HttpServer::set_nonblocking(int fd)
+{
+	int flags = fcntl(fd, F_GETFL, 0);
+	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+	{
+		perror("fcntl");
+		return false;
+	}
+	return true;
+}
 bool HttpServer::init(void)
 {
 	struct sockaddr_in socket_addr;
@@ -107,8 +117,8 @@ bool	HttpServer::accept_client(void)
 {
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_size = sizeof(peer_addr);
-
 	struct epoll_event ev;
+
 	int client_fd =
 		accept(this->_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
 	if (client_fd == -1)
@@ -116,8 +126,7 @@ bool	HttpServer::accept_client(void)
 		std::cerr << "accept() failed" << std::endl;
 		return false;
 	}
-	int old_flags = fcntl(client_fd, F_GETFL, 0);
-	fcntl(client_fd, F_SETFL, old_flags | O_NONBLOCK);
+	set_nonblocking(client_fd);
 	ev.events = EPOLLIN | EPOLLET;
 	//ev.data.fd = client_fd;
 	ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
@@ -134,6 +143,8 @@ bool	HttpServer::handle_event(epoll_event &event)
 	Client *client = (Client *)event.data.ptr;
 	struct epoll_event ev_new;
 
+	if (client == NULL)
+		return false;
 	if (event.events & EPOLLIN) //read
 	{
 		char buffer[2048 + 1] = { 0 };

@@ -19,9 +19,10 @@ class HttpServer
 	public:
 		HttpServer(std::string ip, int port);
 		~HttpServer();
+		void	signal_handler(int code);
+		bool	set_nonblocking(int fd);
 		bool	accept_client(void);
 		bool	handle_event(epoll_event &event);
-		void signal_handler(int code);
 		bool	init(void);
 		bool	listen(void);
 		void	response(int client_fd);
