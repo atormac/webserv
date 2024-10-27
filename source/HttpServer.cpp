@@ -95,7 +95,7 @@ bool HttpServer::listen()
 		{
 			epoll_event &event = events[i];
 			if (event.data.fd == this->_socket_fd) //Queue requests
-				this->accept_client(event);
+				this->accept_client();
 			else
 				this->handle_event(event);
 		}
@@ -103,32 +103,28 @@ bool HttpServer::listen()
 	return true;
 }
 
-bool	HttpServer::accept_client(epoll_event &event)
+bool	HttpServer::accept_client(void)
 {
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_size = sizeof(peer_addr);
 
-	if (event.data.fd == this->_socket_fd) //Queue requests
+	struct epoll_event ev;
+	int client_fd =
+		accept(this->_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
+	if (client_fd == -1)
 	{
-		struct epoll_event ev;
-		int client_fd =
-			accept(this->_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
-		if (client_fd == -1)
-		{
-			std::cerr << "accept() failed" << std::endl;
-			return false;
-		}
-		int old_flags = fcntl(client_fd, F_GETFL, 0);
-		fcntl(client_fd, F_SETFL, old_flags | O_NONBLOCK);
-		ev.events = EPOLLIN | EPOLLET;
-		//ev.data.fd = client_fd;
-		ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
-		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
-		{
-			std::cerr << "epoll_ctl accept failed" << std::endl;
-			return false;
-		}
-		return true;
+		std::cerr << "accept() failed" << std::endl;
+		return false;
+	}
+	int old_flags = fcntl(client_fd, F_GETFL, 0);
+	fcntl(client_fd, F_SETFL, old_flags | O_NONBLOCK);
+	ev.events = EPOLLIN | EPOLLET;
+	//ev.data.fd = client_fd;
+	ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
+	{
+		std::cerr << "epoll_ctl accept failed" << std::endl;
+		return false;
 	}
 	return true;
 }
