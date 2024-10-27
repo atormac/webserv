@@ -16,11 +16,10 @@ class HttpServer
 		int _socket_fd;
 		int _port;
 		std::string _ip;
-		struct epoll_event ev[MAX_EVENTS];
-		struct epoll_event events[MAX_EVENTS];
 	public:
 		HttpServer(std::string ip, int port);
 		~HttpServer();
+		bool	handle_event(epoll_event* event);
 		void signal_handler(int code);
 		bool	init(void);
 		bool	listen(void);
