@@ -11,7 +11,7 @@
 #include <signal.h>
 
 int signo = 0;
-void	signal_handler(int code)
+void signal_handler(int code)
 {
 	signo = code;
 }
@@ -106,21 +106,20 @@ bool HttpServer::listen()
 			epoll_event &event = events[i];
 			if (event.data.fd == this->_socket_fd) //Queue requests
 				this->accept_client();
-			else
+			else if ((event.events & EPOLLIN) || (event.events & EPOLLOUT))
 				this->handle_event(event);
 		}
 	}
 	return true;
 }
 
-bool	HttpServer::accept_client(void)
+bool HttpServer::accept_client(void)
 {
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_size = sizeof(peer_addr);
 	struct epoll_event ev;
 
-	int client_fd =
-		accept(this->_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
+	int client_fd = accept(this->_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
 	if (client_fd == -1)
 	{
 		std::cerr << "accept() failed" << std::endl;
@@ -138,7 +137,7 @@ bool	HttpServer::accept_client(void)
 	return true;
 }
 
-bool	HttpServer::handle_event(epoll_event &event)
+bool HttpServer::handle_event(epoll_event &event)
 {
 	Client *client = (Client *)event.data.ptr;
 	struct epoll_event ev_new;
@@ -154,7 +153,8 @@ bool	HttpServer::handle_event(epoll_event &event)
 			perror("read");
 			return false;
 		}
-		std::cout << "[webserv] request received " << client->ip_addr << std::endl;
+		std::cout << "[webserv] request received " << client->ip_addr
+			  << std::endl;
 		std::cout << buffer << std::endl;
 		ev_new.events = EPOLLOUT | EPOLLET;
 		ev_new.data.fd = 0;
@@ -164,8 +164,7 @@ bool	HttpServer::handle_event(epoll_event &event)
 			perror("epoll_ctl");
 			return false;
 		}
-	}
-	else if (event.events & EPOLLOUT) //write
+	} else if (event.events & EPOLLOUT) //write
 	{
 		std::cout << "[webserv] write " << client->ip_addr << std::endl;
 		this->response(client->fd);
@@ -174,7 +173,7 @@ bool	HttpServer::handle_event(epoll_event &event)
 			perror("epoll_ctl");
 			return false;
 		}
-		
+
 		close(client->fd);
 		delete client;
 	}
