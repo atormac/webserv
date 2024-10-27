@@ -48,6 +48,7 @@ bool HttpServer::set_nonblocking(int fd)
 bool HttpServer::init(void)
 {
 	struct sockaddr_in socket_addr;
+	int opt = 1;
 
 	signal(SIGINT, ::signal_handler);
 	//memset(&socket_addr, 0, sizeof(socket_addr));
@@ -58,7 +59,12 @@ bool HttpServer::init(void)
 	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (socket_fd == -1)
 	{
-		std::cerr << "socket() failed" << std::endl;
+		perror("socket");
+		return false;
+	}
+	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+	{
+		perror("setsockopt");
 		return false;
 	}
 	if (bind(socket_fd, (sockaddr *)&socket_addr, sizeof(socket_addr)) == -1)
