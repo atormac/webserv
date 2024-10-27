@@ -128,7 +128,7 @@ bool	HttpServer::accept_client(void)
 	}
 	set_nonblocking(client_fd);
 	ev.events = EPOLLIN | EPOLLET;
-	//ev.data.fd = client_fd;
+	ev.data.fd = 0;
 	ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
 	{
@@ -157,6 +157,7 @@ bool	HttpServer::handle_event(epoll_event &event)
 		std::cout << "[webserv] request received " << client->ip_addr << std::endl;
 		std::cout << buffer << std::endl;
 		ev_new.events = EPOLLOUT | EPOLLET;
+		ev_new.data.fd = 0;
 		ev_new.data.ptr = event.data.ptr;
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 		{
