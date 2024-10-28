@@ -87,9 +87,8 @@ bool Server::add(std::string ip, int port)
 		perror("listen");
 		return false;
 	}
-	std::cout << "entry added ! " << entry.ip << entry.port << std::endl;
+	std::cout << "server: " << entry.ip << entry.port << " added" << std::endl;
 	this->_entries.push_back(entry);
-	//this->_socket_fd = socket_fd;
 	return true;
 }
 
@@ -167,7 +166,6 @@ bool Server::accept_client(int _socket_fd)
 	return true;
 }
 
-#include <Request.hpp>
 
 bool Server::handle_event(epoll_event &event)
 {
@@ -188,9 +186,8 @@ bool Server::handle_event(epoll_event &event)
 		std::cout << "[webserv] request received " << client->ip_addr
 			  << std::endl;
 		Request req;
-		std::stringstream ss;
-		ss << buffer;
-		req.parse(ss.str());
+		std::string req_str(buffer, bytes_read);
+		req.parse(req_str);
 		req.dump();
 	
 		//std::cout << buffer << std::endl;

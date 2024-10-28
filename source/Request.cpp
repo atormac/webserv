@@ -20,7 +20,6 @@ State Request::parse_entry(const std::string &line)
 	{
             e.key = line.substr(0, sep);
             e.value = line.substr(sep + 1);
-	    std::cout << "key: " << e.key << "val: " << e.value << std::endl;
 	    this->_headers.push_back(e);
 	    return State::HEADERS;
         }
@@ -34,9 +33,6 @@ State Request::parse_method(std::string &line)
 	req_line >> _method >> _uri >> _version;
 	if (req_line.fail())
 		return State::ERROR;
-	std::cout << "method: " << this->_method << std::endl;
-	std::cout << "uri: " << this->_uri << std::endl;
-	std::cout << "version: " << this->_version << std::endl;
 	return State::HEADERS;
 }
 
@@ -55,7 +51,7 @@ void	Request::dump(void)
 	std::cout << "--- end dump ---" << std::endl;
 }
 
-int Request::parse(std::string data)
+int Request::parse(std::string &data)
 {
 	std::istringstream  ss(data);
 	std::string line;

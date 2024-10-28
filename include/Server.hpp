@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sys/epoll.h>
 #include <vector>
+#include <Request.hpp>
 
 #define MAX_EVENTS 10
 #define LISTEN_BACKLOG 32

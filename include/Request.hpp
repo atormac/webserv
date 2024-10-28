@@ -38,7 +38,7 @@ class Request
 	public:
 		Request();
 		~Request();
-		int parse(std::string data);
+		int parse(std::string &data);
 		void	dump(void);
 };
 
