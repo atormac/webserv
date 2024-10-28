@@ -6,12 +6,12 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/28 14:46:51 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/28 15:10:32 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
 #include <map>
-#include "HttpServer.hpp"
+#include "Server.hpp"
 #include "Socket.hpp"
 
 class Socket;
@@ -26,5 +26,5 @@ class ServersManager
 	public:
 			~ServersManager();			
 
-			void addSocket(std::string &port, HttpServer *server);
+			void addSocket(std::string &port, Server *server);
 };

@@ -1,4 +1,4 @@
-#include "../include/HttpServer.hpp"
+#include "../include/Server.hpp"
 #include "../include/Socket.hpp"
 #include "../include/ServersManager.hpp"
 #include <iostream>
@@ -8,10 +8,10 @@ int main(void)
 	ServersManager sm;
 
 	std::cout << "[webserv]" << std::endl;
-	HttpServer *server1 = new HttpServer("127.0.0.1", 7051);
-	HttpServer *server2 = new HttpServer("127.0.0.1", 7051);
-	HttpServer *server3 = new HttpServer("127.0.0.1", 7051);
-	HttpServer *server4 = new HttpServer("127.0.0.1", 7051);
+	Server *server1 = new Server("127.0.0.1", 7051);
+	Server *server2 = new Server("127.0.0.1", 7051);
+	Server *server3 = new Server("127.0.0.1", 7051);
+	Server *server4 = new Server("127.0.0.1", 7051);
 	
 	std::string port("127.0.0.1:7051");
 	sm.addSocket(port, server1);

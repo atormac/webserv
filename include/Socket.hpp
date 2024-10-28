@@ -6,24 +6,24 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:04:58 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/28 14:24:39 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/28 15:11:05 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
-#include "HttpServer.hpp"
+#include "Server.hpp"
 #include <vector>
 
-class HttpServer;
+class Server;
 
 class Socket
 {
 	private:
 			int _socketFd;
-			std::vector<HttpServer *> _servers;
+			std::vector<Server *> _servers;
 	public:
-			Socket(HttpServer *server);
+			Socket(Server *server);
 			~Socket();
 
-			void addServer(HttpServer *server);
-			const std::vector<HttpServer *> getServers() const;
+			void addServer(Server *server);
+			const std::vector<Server *> getServers() const;
 };

@@ -1,4 +1,4 @@
-#include "../include/HttpServer.hpp"
+#include "../include/Server.hpp"
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/socket.h>
@@ -16,7 +16,7 @@ void signal_handler(int code)
 	signo = code;
 }
 
-HttpServer::HttpServer(std::string ip, int port)
+Server::Server(std::string ip, int port)
 {
 	this->_port = port;
 	this->_ip = ip;
@@ -24,7 +24,7 @@ HttpServer::HttpServer(std::string ip, int port)
 	this->_epoll_fd = -1;
 }
 
-HttpServer::~HttpServer()
+Server::~Server()
 {
 	if (this->_epoll_fd >= 0)
 		close(this->_epoll_fd);
@@ -32,10 +32,10 @@ HttpServer::~HttpServer()
 		close(this->_socket_fd);
 	this->_socket_fd = -1;
 	this->_epoll_fd = -1;
-	std::cout << "HttpServer deconstructor called" << std::endl;
+	std::cout << "Server deconstructor called" << std::endl;
 }
 
-bool HttpServer::set_nonblocking(int fd)
+bool Server::set_nonblocking(int fd)
 {
 	int flags = fcntl(fd, F_GETFL, 0);
 	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
@@ -45,7 +45,7 @@ bool HttpServer::set_nonblocking(int fd)
 	}
 	return true;
 }
-bool HttpServer::init(void)
+bool Server::init(void)
 {
 	struct sockaddr_in socket_addr;
 	int opt = 1;
@@ -76,7 +76,7 @@ bool HttpServer::init(void)
 	return true;
 }
 
-bool HttpServer::listen()
+bool Server::listen()
 {
 	struct epoll_event ev;
 	struct epoll_event events[MAX_EVENTS];
@@ -119,7 +119,7 @@ bool HttpServer::listen()
 	return true;
 }
 
-bool HttpServer::accept_client(void)
+bool Server::accept_client(void)
 {
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_size = sizeof(peer_addr);
@@ -143,7 +143,7 @@ bool HttpServer::accept_client(void)
 	return true;
 }
 
-bool HttpServer::handle_event(epoll_event &event)
+bool Server::handle_event(epoll_event &event)
 {
 	Client *client = (Client *)event.data.ptr;
 	struct epoll_event ev_new;
@@ -186,7 +186,7 @@ bool HttpServer::handle_event(epoll_event &event)
 	return true;
 }
 
-void HttpServer::response(int client_fd)
+void Server::response(int client_fd)
 {
 	std::string html =
 		"<!DOCTYPE html><html lang=\"en\"><body><h1>[WEBSERVER]</h1><p>HELLO WORLD</p></body></html>";

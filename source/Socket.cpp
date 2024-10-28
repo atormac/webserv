@@ -6,30 +6,30 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:28:21 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/28 14:24:19 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/28 15:13:06 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../include/Socket.hpp"
-#include "../include/HttpServer.hpp"
+#include "../include/Server.hpp"
 
-Socket::Socket(HttpServer *server): _socketFd(-1), _servers{server} {}
+Socket::Socket(Server *server): _socketFd(-1), _servers{server} {}
 
 Socket::~Socket()
 {
-	for (HttpServer *i : _servers)
+	for (Server *i : _servers)
 	{
 		delete i;
 		i = NULL;
 	}
 }
 
-void Socket::addServer(HttpServer *server)
+void Socket::addServer(Server *server)
 {
 	_servers.push_back(server);
 }
 
 
-const std::vector<HttpServer *> Socket::getServers() const
+const std::vector<Server *> Socket::getServers() const
 {
 	return _servers;
 }

@@ -9,7 +9,7 @@
 #define LISTEN_BACKLOG 32
 
 void	signal_handler(int code);
-class HttpServer
+class Server
 {
 	private:
 		int _epoll_fd;
@@ -17,8 +17,8 @@ class HttpServer
 		int _port;
 		std::string _ip;
 	public:
-		HttpServer(std::string ip, int port);
-		~HttpServer();
+		Server(std::string ip, int port);
+		~Server();
 		void	signal_handler(int code);
 		bool	set_nonblocking(int fd);
 		bool	accept_client(void);
