@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/28 17:46:20 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/28 19:44:54 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -23,6 +23,7 @@ class Socket;
 class ServersManager
 {
 	private:
+			int	_epoll_fd;
 			std::map<std::string, Socket *> _portsToSockets;
 			std::map<int, Socket *> _socketFdToSockets;
 			
@@ -33,4 +34,5 @@ class ServersManager
 			~ServersManager();			
 
 			void addSocket(std::string &port, Server *server);
+			void listen();
 };

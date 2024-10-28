@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/28 17:47:53 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/28 19:49:15 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <ServersManager.hpp>
@@ -74,4 +74,57 @@ void ServersManager::_initSockets()
 		itr->second->setSocketDescriptor(socketFd);
 		_socketFdToSockets.insert({socketFd, itr->second});
 	}
+}
+
+
+void ServersManager::listen()
+{
+	struct epoll_event events[MAX_EVENTS];
+
+	/*if (::listen(this->_socket_fd, LISTEN_BACKLOG) == -1)
+	{
+		perror("listen");
+		return false;
+	}
+	std::cout << "[webserv] server listening on port: " << this->_port << std::endl;*/
+
+	_epoll_fd = epoll_create1(0);
+	if (_epoll_fd == -1)
+	{
+		perror("epoll_create");
+		//return false;
+	}
+
+	for (std::map<int, Socket*>::iterator itr = _socketFdToSockets.begin(); itr != _socketFdToSockets.end(); itr++)
+	{
+		struct epoll_event ev;
+		ev.events = EPOLLIN;
+		ev.data.fd = itr->first; // socketFD
+
+		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, itr->first, &ev) == -2) // itr->first == socketFd
+		{
+			perror("epoll_ctl");
+			//return false;
+		}
+	}
+	
+	while (true)
+	{
+		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, -1);
+
+		if (nfds == -1)
+			break;
+		for (int i = 0; i < nfds; i++)
+		{
+			epoll_event &event = events[i];
+			for (std::map<int, Socket*>::iterator itr = _socketFdToSockets.begin(); itr != _socketFdToSockets.end(); itr++)
+			{
+				if (event.data.fd == itr->first) //Queue requests
+					itr->second->getServers()[0]->accept_client(); // for now the first server in the sockt accepts, later on we can find correct host
+				else if ((event.events & EPOLLIN) || (event.events & EPOLLOUT))
+					itr->second->getServers()[0]->handle_event(event);
+			}
+		}
+	}
+	//return true;
 }
