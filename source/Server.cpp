@@ -63,6 +63,7 @@ bool Server::init(void)
 		perror("socket");
 		return false;
 	}
+	set_nonblocking(socket_fd);
 	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 	{
 		perror("setsockopt");
