@@ -1,7 +1,7 @@
 #ifndef HTTPSERVER_HPP
 #define HTTPSERVER_HPP
 
-#include "../include/Client.hpp"
+#include <Client.hpp>
 #include <iostream>
 #include <sys/epoll.h>
 

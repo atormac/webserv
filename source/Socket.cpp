@@ -6,11 +6,12 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:28:21 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/28 15:33:11 by atorma           ###   ########.fr       */
+/*   Updated: 2024/10/28 17:42:32 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include "../include/Socket.hpp"
-#include "../include/Server.hpp"
+#include <Socket.hpp>
+#include <Server.hpp>
+
 
 Socket::Socket(Server *server): _socketFd(-1), _servers{server} {}
 
@@ -33,4 +34,10 @@ void Socket::addServer(Server *server)
 const std::vector<Server *> Socket::getServers() const
 {
 	return _servers;
+}
+
+
+void Socket::setSocketDescriptor(int socketFd)
+{
+	_socketFd = socketFd;
 }

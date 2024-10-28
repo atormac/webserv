@@ -1,6 +1,6 @@
-#include "../include/Server.hpp"
-#include "../include/Socket.hpp"
-#include "../include/ServersManager.hpp"
+#include <Server.hpp>
+#include <Socket.hpp>
+#include <ServersManager.hpp>
 #include <iostream>
 
 int main(void)
