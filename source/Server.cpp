@@ -12,23 +12,34 @@
 #include <signal.h>
 
 int signo = 0;
+
 void signal_handler(int code)
 {
-	signo = code;
+	if (code == SIGINT)
+		signo = code;
 }
 
 Server::Server()
 {
+	signal(SIGINT, ::signal_handler);
 }
 
 Server::~Server()
 {
+	std::cout << "Server deconstructor called" << std::endl;
+}
+
+void Server::close_server(void)
+{
+	if (this->_epoll_fd == -1)
+		return;
 	for(const server_entry& entry : this->_entries)
 	{
 		close(entry.socket_fd);
 	}
 	close(this->_epoll_fd);
-	std::cout << "Server deconstructor called" << std::endl;
+	this->_epoll_fd = -1;
+	std::cout << "Server closed" << std::endl;
 }
 
 bool Server::set_nonblocking(int fd)
@@ -48,8 +59,6 @@ bool Server::add(std::string ip, int port)
 	struct server_entry entry;
 	int opt = 1;
 
-	signal(SIGINT, ::signal_handler);
-	//memset(&socket_addr, 0, sizeof(socket_addr));
 	socket_addr.sin_family = AF_INET;
 	socket_addr.sin_port = htons(port);
 	socket_addr.sin_addr.s_addr = inet_addr(ip.c_str());
@@ -108,7 +117,6 @@ bool Server::epoll()
 	while (true)
 	{
 		int nfds = ::epoll_wait(this->_epoll_fd, events, MAX_EVENTS, -1);
-
 		if (nfds == -1)
 			break;
 		for (int i = 0; i < nfds; i++)

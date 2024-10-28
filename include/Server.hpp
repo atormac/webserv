@@ -25,9 +25,10 @@ class Server
 		std::vector<server_entry> _entries;
 	public:
 		Server();
-		Server(std::string ip, int port);
 		~Server();
+		Server(std::string ip, int port);
 		void	signal_handler(int code);
+		void	close_server(void);
 		bool	set_nonblocking(int fd);
 		bool	accept_client(int _socket_fd);
 		bool	handle_event(epoll_event &event);

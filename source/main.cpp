@@ -11,5 +11,7 @@ int main(void)
 	server->add("127.0.0.1", 7052);
 	server->add("127.0.0.1", 7053);
 	server->epoll();
+	server->close_server();
+	delete server;
 	return 0;
 }
