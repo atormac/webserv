@@ -7,6 +7,7 @@ SOURCES := main.cpp HttpServer.cpp Client.cpp Socket.cpp
 OBJECTS := $(addprefix $(SOURCE_DIR)/,$(SOURCES:.cpp=.o))
 
 target asan: CXXFLAGS += -fsanitize=address,undefined -g
+target debug: CXXFLAGS += -g
 
 all: $(NAME)
 
@@ -24,5 +25,6 @@ fclean: clean
 
 re: fclean all
 asan: re
+debug: re
 
-.PHONY: all re clean fclean asan
+.PHONY: all re clean fclean asan debug
