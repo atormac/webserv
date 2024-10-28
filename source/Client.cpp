@@ -1,4 +1,4 @@
-#include "../include/Client.hpp"
+#include <Client.hpp>
 
 Client::Client(int client_fd, std::string ip)
 {

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:28:21 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/28 15:13:06 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/28 15:33:11 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../include/Socket.hpp"
@@ -16,6 +16,7 @@ Socket::Socket(Server *server): _socketFd(-1), _servers{server} {}
 
 Socket::~Socket()
 {
+	(void)_socketFd;
 	for (Server *i : _servers)
 	{
 		delete i;

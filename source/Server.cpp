@@ -1,4 +1,5 @@
-#include "../include/Server.hpp"
+#include <Server.hpp>
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/socket.h>
