@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:04:58 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/28 12:35:14 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/28 14:24:39 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -25,4 +25,5 @@ class Socket
 			~Socket();
 
 			void addServer(HttpServer *server);
+			const std::vector<HttpServer *> getServers() const;
 };
