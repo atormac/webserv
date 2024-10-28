@@ -3,14 +3,11 @@
 
 Request::Request()
 {
-	//this->state = S_START;
-	//this->data = data;
 }
 
 Request::~Request()
 {
 }
-
 
 State Request::parse_entry(const std::string &line)
 {
@@ -32,6 +29,12 @@ State Request::parse_method(std::string &line)
 
 	req_line >> _method >> _uri >> _version;
 	if (req_line.fail())
+		return State::ERROR;
+	if (_method != "GET" && _method != "POST" && _method != "DELETE")
+		return State::ERROR;
+	if (_uri.find_first_not_of(URI_CHARS) != std::string::npos)
+		return State::ERROR;
+	if (_version != "HTTP/1.1")
 		return State::ERROR;
 	return State::HEADERS;
 }

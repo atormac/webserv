@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 
+#define URI_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
+
 enum class State
 {
 	METHOD,
