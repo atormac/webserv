@@ -1,4 +1,5 @@
 #include <Request.hpp>
+#include <sstream>
 
 Request::Request()
 {
@@ -10,24 +11,72 @@ Request::~Request()
 {
 }
 
-enum {
-	METHOD,
-	DONE,
-};
 
-int Request::Parse(std::string data)
+State Request::parse_entry(const std::string &line)
 {
-	int state = METHOD;
-	(void)state;
-	std::cout << data << std::endl;
-	/*
-	for (char c in data)
+	struct header_entry e;
+        auto sep = line.find(':');
+        if (sep != std::string::npos)
+	{
+            e.key = line.substr(0, sep);
+            e.value = line.substr(sep + 1);
+	    std::cout << "key: " << e.key << "val: " << e.value << std::endl;
+	    this->_headers.push_back(e);
+	    return State::HEADERS;
+        }
+	return State::ERROR;
+}
+
+State Request::parse_method(std::string &line)
+{
+	std::istringstream req_line(line);
+
+	req_line >> _method >> _uri >> _version;
+	if (req_line.fail())
+		return State::ERROR;
+	std::cout << "method: " << this->_method << std::endl;
+	std::cout << "uri: " << this->_uri << std::endl;
+	std::cout << "version: " << this->_version << std::endl;
+	return State::HEADERS;
+}
+
+void	Request::dump(void)
+{
+	std::cout << "--- Request::dump ---" << std::endl;
+	std::cout << "METHOD: " << _method << std::endl;
+	std::cout << "URI: " << _uri << std::endl;
+	std::cout << "VERSION: " << _version << std::endl;
+	for(const header_entry& e : this->_headers)
+	{
+		std::cout << "KEY: " << e.key;
+		std::cout << " VAL: " << e.value;
+		std::cout << std::endl;
+	}
+	std::cout << "--- end dump ---" << std::endl;
+}
+
+int Request::parse(std::string data)
+{
+	std::istringstream  ss(data);
+	std::string line;
+
+	State state = State::METHOD;
+	while (std::getline(ss, line))
 	{
 		switch (state)
 		{
-			case S_START:
+			case State::METHOD:
+				state = parse_method(line);
+				break;
+			case State::HEADERS:
+				state = parse_entry(line);
+				break;
+			case State::DONE:
+				return PARSER_OK;
+			case State::ERROR:
+				std::cout << "PARSER ERROR" << std::endl;
+				return PARSER_ERROR;
 		}
 	}
-	*/
-	return (1);
+	return PARSER_OK;
 }

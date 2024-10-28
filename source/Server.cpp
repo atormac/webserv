@@ -122,7 +122,6 @@ bool Server::epoll()
 		for (int i = 0; i < nfds; i++)
 		{
 			bool registered = false;
-			std::cout << "nfds: " << nfds << std::endl;
 			epoll_event &event = events[i];
 			for(const server_entry& entry : this->_entries)
 			{
@@ -168,6 +167,8 @@ bool Server::accept_client(int _socket_fd)
 	return true;
 }
 
+#include <Request.hpp>
+
 bool Server::handle_event(epoll_event &event)
 {
 	Client *client = (Client *)event.data.ptr;
@@ -186,7 +187,13 @@ bool Server::handle_event(epoll_event &event)
 		}
 		std::cout << "[webserv] request received " << client->ip_addr
 			  << std::endl;
-		std::cout << buffer << std::endl;
+		Request req;
+		std::stringstream ss;
+		ss << buffer;
+		req.parse(ss.str());
+		req.dump();
+	
+		//std::cout << buffer << std::endl;
 		ev_new.events = EPOLLOUT | EPOLLET;
 		ev_new.data.fd = 0;
 		ev_new.data.ptr = event.data.ptr;
