@@ -17,22 +17,17 @@ void signal_handler(int code)
 	signo = code;
 }
 
-Server::Server(std::string ip, int port)
+Server::Server()
 {
-	this->_port = port;
-	this->_ip = ip;
-	this->_socket_fd = -1;
-	this->_epoll_fd = -1;
 }
 
 Server::~Server()
 {
-	if (this->_epoll_fd >= 0)
-		close(this->_epoll_fd);
-	if (this->_socket_fd >= 0)
-		close(this->_socket_fd);
-	this->_socket_fd = -1;
-	this->_epoll_fd = -1;
+	for(const server_entry& entry : this->_entries)
+	{
+		close(entry.socket_fd);
+	}
+	close(this->_epoll_fd);
 	std::cout << "Server deconstructor called" << std::endl;
 }
 
@@ -46,49 +41,52 @@ bool Server::set_nonblocking(int fd)
 	}
 	return true;
 }
-bool Server::init(void)
+
+bool Server::add(std::string ip, int port)
 {
 	struct sockaddr_in socket_addr;
+	struct server_entry entry;
 	int opt = 1;
 
 	signal(SIGINT, ::signal_handler);
 	//memset(&socket_addr, 0, sizeof(socket_addr));
 	socket_addr.sin_family = AF_INET;
-	socket_addr.sin_port = htons(this->_port);
-	socket_addr.sin_addr.s_addr = inet_addr(this->_ip.c_str());
+	socket_addr.sin_port = htons(port);
+	socket_addr.sin_addr.s_addr = inet_addr(ip.c_str());
 
-	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (socket_fd == -1)
+	entry.port = port;
+	entry.ip = ip;
+	entry.socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (entry.socket_fd == -1)
 	{
 		perror("socket");
 		return false;
 	}
-	set_nonblocking(socket_fd);
-	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+	set_nonblocking(entry.socket_fd);
+	if (setsockopt(entry.socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
 	{
 		perror("setsockopt");
 		return false;
 	}
-	if (bind(socket_fd, (sockaddr *)&socket_addr, sizeof(socket_addr)) == -1)
+	if (bind(entry.socket_fd, (sockaddr *)&socket_addr, sizeof(socket_addr)) == -1)
 	{
 		perror("bind");
 		return false;
 	}
-	this->_socket_fd = socket_fd;
-	return true;
-}
-
-bool Server::listen()
-{
-	struct epoll_event ev;
-	struct epoll_event events[MAX_EVENTS];
-
-	if (::listen(this->_socket_fd, LISTEN_BACKLOG) == -1)
+	if (::listen(entry.socket_fd, LISTEN_BACKLOG) == -1)
 	{
 		perror("listen");
 		return false;
 	}
-	std::cout << "[webserv] server listening on port: " << this->_port << std::endl;
+	std::cout << "entry added ! " << entry.ip << entry.port << std::endl;
+	this->_entries.push_back(entry);
+	//this->_socket_fd = socket_fd;
+	return true;
+}
+
+bool Server::epoll()
+{
+	struct epoll_event events[MAX_EVENTS];
 
 	this->_epoll_fd = epoll_create1(0);
 	if (this->_epoll_fd == -1)
@@ -96,12 +94,16 @@ bool Server::listen()
 		perror("epoll_create");
 		return false;
 	}
-	ev.events = EPOLLIN;
-	ev.data.fd = this->_socket_fd;
-	if (::epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, this->_socket_fd, &ev) == -1)
+	for(const server_entry& entry : this->_entries)
 	{
-		perror("epoll_ctl");
-		return false;
+		struct epoll_event ev;
+		ev.events = EPOLLIN;
+		ev.data.fd = entry.socket_fd;
+		if (::epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, entry.socket_fd, &ev) == -1)
+		{
+			perror("epoll_ctl");
+			return false;
+		}
 	}
 	while (true)
 	{
@@ -111,23 +113,36 @@ bool Server::listen()
 			break;
 		for (int i = 0; i < nfds; i++)
 		{
+			bool registered = false;
+			std::cout << "nfds: " << nfds << std::endl;
 			epoll_event &event = events[i];
-			if (event.data.fd == this->_socket_fd) //Queue requests
-				this->accept_client();
-			else if ((event.events & EPOLLIN) || (event.events & EPOLLOUT))
+			for(const server_entry& entry : this->_entries)
+			{
+				if (event.data.fd == entry.socket_fd) //Queue requests
+				{
+					registered = true;
+					if (this->accept_client(entry.socket_fd))
+					{
+						std::cout << "client accepted" << std::endl;
+					}
+				}
+			}
+			if (registered)
+				continue;
+			if ((event.events & EPOLLIN) || (event.events & EPOLLOUT))
 				this->handle_event(event);
 		}
 	}
 	return true;
 }
 
-bool Server::accept_client(void)
+bool Server::accept_client(int _socket_fd)
 {
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_size = sizeof(peer_addr);
 	struct epoll_event ev;
 
-	int client_fd = accept(this->_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
+	int client_fd = accept(_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
 	if (client_fd == -1)
 	{
 		std::cerr << "accept() failed" << std::endl;
