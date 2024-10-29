@@ -35,7 +35,7 @@ State Request::parse_method(std::string &line)
 		return State::ERROR;
 	if (_version != "HTTP/1.1")
 		return State::ERROR;
-	if (line.back() != "\r")
+	if (line.back() != '\r')
 		return State::ERROR;
 	return State::HEADERS;
 }
