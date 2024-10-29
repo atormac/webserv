@@ -11,14 +11,13 @@ Request::~Request()
 
 State Request::parse_entry(const std::string &line)
 {
-	struct header_entry e;
         auto sep = line.find(':');
         if (sep != std::string::npos)
 	{
-            e.key = line.substr(0, sep);
-            e.value = line.substr(sep + 1);
-	    this->_headers.push_back(e);
-	    return State::HEADERS;
+		std::string key = line.substr(0, sep);
+		std::string value = line.substr(sep + 1);
+		this->_headers[key] = value;
+		return State::HEADERS;
         }
 	return State::ERROR;
 }
@@ -36,6 +35,8 @@ State Request::parse_method(std::string &line)
 		return State::ERROR;
 	if (_version != "HTTP/1.1")
 		return State::ERROR;
+	if (line.back() != "\r")
+		return State::ERROR;
 	return State::HEADERS;
 }
 
@@ -45,10 +46,11 @@ void	Request::dump(void)
 	std::cout << "METHOD: " << _method << std::endl;
 	std::cout << "URI: " << _uri << std::endl;
 	std::cout << "VERSION: " << _version << std::endl;
-	for(const header_entry& e : this->_headers)
+	std::cout << "HOST: " << _host << std::endl;
+	for(const auto &e : this->_headers)
 	{
-		std::cout << "KEY: " << e.key;
-		std::cout << " VAL: " << e.value;
+		std::cout << "KEY: " << e.first;
+		std::cout << " VAL: " << e.second;
 		std::cout << std::endl;
 	}
 	std::cout << "--- end dump ---" << std::endl;
@@ -68,14 +70,22 @@ int Request::parse(std::string &data)
 				state = parse_method(line);
 				break;
 			case State::HEADERS:
-				state = parse_entry(line);
+				if (line == "\r")
+					state = State::BODY;
+				else
+					state = parse_entry(line);
+				break;
+			case State::BODY:
+				//_body.push
 				break;
 			case State::DONE:
+				std::cout << "STATE_DONE\n" << std::endl;
+				_host = this->_headers["Host"];
 				return PARSER_OK;
 			case State::ERROR:
 				std::cout << "PARSER ERROR" << std::endl;
 				return PARSER_ERROR;
 		}
 	}
-	return PARSER_OK;
+	return state == State::DONE ? PARSER_OK : PARSER_ERROR;
 }

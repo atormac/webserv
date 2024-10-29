@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <map>
 
 #define URI_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
 
@@ -11,6 +12,7 @@ enum class State
 {
 	METHOD,
 	HEADERS,
+	BODY,
 	ERROR,
 	DONE,
 };
@@ -21,20 +23,15 @@ enum
 	PARSER_OK,
 };
 
-struct header_entry
-{
-	std::string key;
-	std::string value;
-};
-
 class Request
 {
 	protected:
 		std::string _method;
 		std::string _uri;
 		std::string _version;
-		std::vector<header_entry> _headers;
-		std::vector<char> _content;
+		std::string _host;
+		std::vector<char> _body;
+		std::map<std::string, std::string> _headers;
 		State parse_method(std::string &line);
 		State parse_entry(const std::string &line);
 	public:
