@@ -7,33 +7,37 @@
 #include <map>
 
 #define URI_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
+#define FIELD_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 enum class State
 {
-	METHOD,
-	HEADERS,
-	BODY,
-	ERROR,
-	DONE,
-};
-
-enum
-{
-	PARSER_ERROR,
-	PARSER_OK,
+	StatusLine,
+	Header,
+	Body,
+	Partial,
+	Complete,
+	Error,
 };
 
 class Request
 {
+	private:
+		State _state;
+		std::string _buffer;
+		void parse_status_line(void);
+		void parse_header(void);
+		bool parse_pair(size_t pos);
+		void	parse_body(void);
 	protected:
+		bool	    _is_chunked;
 		std::string _method;
 		std::string _uri;
 		std::string _version;
 		std::string _host;
-		std::vector<char> _body;
+		std::string _transfer_encoding;
+		std::string _body;
+		size_t	    _content_len;
 		std::map<std::string, std::string> _headers;
-		State parse_method(std::string &line);
-		State parse_entry(const std::string &line);
 	public:
 		Request();
 		~Request();
