@@ -6,6 +6,7 @@
 #include <sys/epoll.h>
 #include <vector>
 #include <Request.hpp>
+#include <Response.hpp>
 
 #define MAX_EVENTS 10
 #define LISTEN_BACKLOG 32
@@ -24,6 +25,7 @@ class Server
 	private:
 		int _epoll_fd;
 		std::vector<server_entry> _entries;
+		void remove_client(Client *client);
 	public:
 		Server();
 		~Server();

@@ -22,13 +22,14 @@ enum class State
 class Request
 {
 	private:
-		State _state;
 		std::string _buffer;
+
 		void parse_status_line(void);
 		void parse_header(void);
 		bool parse_pair(size_t pos);
 		void	parse_body(void);
-	protected:
+	public:
+		State _state;
 		bool	    _is_chunked;
 		std::string _method;
 		std::string _uri;
@@ -38,10 +39,10 @@ class Request
 		std::string _body;
 		size_t	    _content_len;
 		std::map<std::string, std::string> _headers;
-	public:
+
 		Request();
 		~Request();
-		int parse(std::string &data);
+		State parse(std::string &data);
 		void	dump(void);
 };
 

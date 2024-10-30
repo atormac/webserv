@@ -161,9 +161,18 @@ bool Server::accept_client(int _socket_fd)
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
 	{
 		std::cerr << "epoll_ctl accept failed" << std::endl;
+		remove_client((Client *)ev.data.ptr);
 		return false;
 	}
 	return true;
+}
+
+void Server::remove_client(Client *client)
+{
+	if (!client)
+		return;
+	close(client->fd);
+	delete client;
 }
 
 
@@ -178,22 +187,32 @@ bool Server::handle_event(epoll_event &event)
 	{
 		char buffer[2048 + 1] = { 0 };
 		ssize_t bytes_read = read(client->fd, buffer, 2048);
-		if (bytes_read < 0)
+		if (bytes_read == -1)
 		{
-			perror("read");
+			remove_client(client);
 			return false;
 		}
-		std::cout << "[webserv] request received " << client->ip_addr
-			  << std::endl;
-		Request req;
+		std::cout << "[webserv] request received " << bytes_read << " | ";
+		std::cout << client->ip_addr;
+		std::cout << std::endl;
+		if (client->req == nullptr)
+		{
+			client->req = new Request();
+		}
 		std::string req_str(buffer, bytes_read);
-		req.parse(req_str);
-		req.dump();
-	
-		//std::cout << buffer << std::endl;
-		ev_new.events = EPOLLOUT | EPOLLET;
+		State state = client->req->parse(req_str);
+		client->req->dump();
+
+		ev_new.events = EPOLLET | EPOLLIN;
 		ev_new.data.fd = 0;
 		ev_new.data.ptr = event.data.ptr;
+		if (state == State::Complete || bytes_read == 0)
+		{
+			std::cout << "EOF\n";
+			ev_new.events = EPOLLET | EPOLLOUT;
+		}
+	
+		//std::cout << buffer << std::endl;
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 		{
 			perror("epoll_ctl");
@@ -202,15 +221,15 @@ bool Server::handle_event(epoll_event &event)
 	} else if (event.events & EPOLLOUT) //write
 	{
 		std::cout << "[webserv] write " << client->ip_addr << std::endl;
+		Response resp(client->req);
+		(void)resp;
 		this->response(client->fd);
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, client->fd, NULL) == -1)
 		{
 			perror("epoll_ctl");
 			return false;
 		}
-
-		close(client->fd);
-		delete client;
+		remove_client(client);
 	}
 	return true;
 }

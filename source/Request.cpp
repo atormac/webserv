@@ -12,8 +12,7 @@ Request::~Request()
 {
 }
 
-
-int Request::parse(std::string &data)
+State Request::parse(std::string &data)
 {
 	_buffer += data;
 	while (_state != State::Complete && _state != State::Error)
@@ -34,7 +33,7 @@ int Request::parse(std::string &data)
 				break;
 		}
 	}
-	return _state == State::Complete;
+	return _state;
 }
 
 
@@ -114,6 +113,8 @@ void	Request::parse_body(void)
 void	Request::dump(void)
 {
 	std::cout << "--- Request::dump() ---" << std::endl;
+	if (this->_state != State::Complete)
+		std::cout << "State:: != Complete\n";
 	std::cout << "METHOD: " << _method << std::endl;
 	std::cout << "URI: " << _uri << std::endl;
 	std::cout << "VERSION: " << _version << std::endl;
