@@ -38,19 +38,29 @@ void ServerConfig::parse(std::ifstream &configFile)
 
 	skipEmptyLines(configFile, line);
 	if (!configFile)
-		throw std::runtime_error("parseServerConfig: Empty server block!");
+		throw std::runtime_error("parseServer: Empty server block!");
 	if (line != "{")
-		throw std::runtime_error("parseServerConfig: No '{' opening server block!");
+		throw std::runtime_error("parseServer: No '{' opening server block!");
 
 	while (skipEmptyLines(configFile, line), configFile)
 	{
-		if (line != "}")
-			std::cout << "In serv block: " << line << std::endl;
+		line = WspcTrim(line);
+		std::string element = line.substr(0, line.find(" "));
+	
+		if (line != "}" && element != "location" && element != "server_name")
+			std::cout << "In serv block: |" << element << "| eq " << (element=="location") << std::endl;
+		else if (element == "server_name")
+			std::cout << "Found server_name element" << std::endl;
+		else if (element == "location")
+		{
+			while (std::getline(configFile, line), line.find("}") == std::string::npos);
+		}
 		else if (line == "}")
 			break;
 		else
-			throw std::runtime_error("parseServerConfig: Unknown element in server block: " + line);
+			throw std::runtime_error("parseServer: Unknown element in server block: " + line);	
 	}
+	//std::cout << "Line: |" << line << "|" << std::endl;
 	if (line != "}")
 		throw std::runtime_error("parseSerever: Unterminated server block!");
 }
