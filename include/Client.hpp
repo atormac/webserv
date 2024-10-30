@@ -12,6 +12,7 @@ class Client
 		int	fd;
 		std::string ip_addr;
 		Request *req;
+		std::string response;
 		Client(int client_fd, std::string ip);
 		~Client();
 };

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/30 21:36:04 by user             ###   ########.fr       */
+/*   Updated: 2024/10/31 00:33:48 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -228,6 +228,7 @@ void HttpServer::remove_client(Client *client)
 {
 	if (!client)
 		return;
+	epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, client->fd, NULL);
 	if (client->req != nullptr)
 		delete client->req;
 	close(client->fd);
@@ -235,7 +236,8 @@ void HttpServer::remove_client(Client *client)
 }
 
 
-#define READ_BUFFER_SIZE 8
+#define IO_BUFFER_SIZE 1024
+
 bool HttpServer::handle_event(epoll_event &event)
 {
 	Client *client = (Client *)event.data.ptr;
@@ -245,8 +247,8 @@ bool HttpServer::handle_event(epoll_event &event)
 		return false;
 	if (event.events & EPOLLIN) //read
 	{
-		char buffer[READ_BUFFER_SIZE + 1] = { 0 };
-		ssize_t bytes_read = read(client->fd, buffer, READ_BUFFER_SIZE);
+		char buffer[IO_BUFFER_SIZE];
+		ssize_t bytes_read = read(client->fd, buffer, IO_BUFFER_SIZE);
 		if (bytes_read == -1)
 		{
 			remove_client(client);
@@ -281,13 +283,32 @@ bool HttpServer::handle_event(epoll_event &event)
 	} else if (event.events & EPOLLOUT) //write
 	{
 		std::cout << "[webserv] write " << client->ip_addr << std::endl;
-		Response resp(client->req);
-		(void)resp;
-		this->_response(client->fd);
-		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, client->fd, NULL) == -1)
+		if (client->response.size() == 0)
 		{
-			perror("epoll_ctl");
+			Response resp(client->req);
+			client->response = resp.buffer.str();
+		}
+	
+		size_t bytes_written = write(client->fd, client->response.data(), client->response.size());
+		std::cout << "bytes_written: " << bytes_written << std::endl;
+		if (bytes_written <= 0)
+		{
+			remove_client(client);
 			return false;
+		}
+		if (bytes_written < client->response.size())	
+		{
+			std::cout << "writing chunk\n";	
+			client->response.erase(0, bytes_written);
+			ev_new.events = EPOLLET | EPOLLOUT;
+			ev_new.data.fd = 0;
+			ev_new.data.ptr = event.data.ptr;
+			if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
+			{
+				perror("epoll_ctl");
+				return false;
+			}
+			return true;
 		}
 		remove_client(client);
 	}

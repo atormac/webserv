@@ -61,10 +61,13 @@ void Request::parse_status_line(void)
 		return;
 	if (_method != "GET" && _method != "POST" && _method != "DELETE")
 		return; 
+	if (_uri.at(0) != '/')
+		return;
 	if (_uri.find_first_not_of(URI_CHARS) != std::string::npos)
 		return;
 	if (_version != "HTTP/1.1")
 		return;
+	_uri.erase(0, 1);
 	_state = State::Header;
 }
 
