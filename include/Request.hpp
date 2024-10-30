@@ -14,7 +14,9 @@ enum class State
 	StatusLine,
 	Header,
 	Body,
-	Partial,
+	PartialStatus,
+	PartialHeader,
+	PartialBody,
 	Complete,
 	Error,
 };

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/30 19:58:24 by user             ###   ########.fr       */
+/*   Updated: 2024/10/30 20:56:54 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -233,6 +233,7 @@ void HttpServer::remove_client(Client *client)
 }
 
 
+#define READ_BUFFER_SIZE 8
 bool HttpServer::handle_event(epoll_event &event)
 {
 	Client *client = (Client *)event.data.ptr;
@@ -242,8 +243,8 @@ bool HttpServer::handle_event(epoll_event &event)
 		return false;
 	if (event.events & EPOLLIN) //read
 	{
-		char buffer[2048 + 1] = { 0 };
-		ssize_t bytes_read = read(client->fd, buffer, 2048);
+		char buffer[READ_BUFFER_SIZE + 1] = { 0 };
+		ssize_t bytes_read = read(client->fd, buffer, READ_BUFFER_SIZE);
 		if (bytes_read == -1)
 		{
 			remove_client(client);

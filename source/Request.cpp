@@ -19,12 +19,15 @@ State Request::parse(std::string &data)
 	{
 		switch (_state)
 		{
+			case State::PartialStatus:
 			case State::StatusLine:
 				parse_status_line();
 				break;
+			case State::PartialHeader:
 			case State::Header:
 				parse_header();
 				break;
+			case State::PartialBody:
 			case State::Body:
 				parse_body();
 				break;
@@ -32,6 +35,8 @@ State Request::parse(std::string &data)
 				_state = State::Error;
 				break;
 		}
+		if (_state >= State::PartialStatus && _state <= State::PartialBody)
+			break;
 	}
 	return _state;
 }
@@ -41,8 +46,13 @@ void Request::parse_status_line(void)
 {
 	_state = State::Error;
 	size_t pos = _buffer.find("\r\n");
-	if (pos == 0 || pos == std::string::npos)
+	if (pos == 0)
 		return ;
+	if (pos == std::string::npos)
+	{
+		_state = State::PartialStatus;
+		return;
+	}
 	std::istringstream req_line(_buffer.substr(0, pos));
 	_buffer.erase(0, pos + 2);
 	req_line >> _method >> _uri >> _version;
@@ -86,14 +96,18 @@ void Request::parse_header(void)
 	_state = State::Error;
         size_t pos = _buffer.find("\r\n");
 
-	if (pos == std::string::npos)
-		return;
 	if (pos == 0)
 	{
 		_buffer.erase(0, 2);
 		_state = State::Complete;
 		if (_content_len > 0)
 			_state = State::Body;
+		return;
+	}
+	if (pos == std::string::npos)
+	{
+		_state = State::PartialHeader;
+		std::cout << "partial header, cur size: " << _buffer.size() << std::endl;
 		return;
 	}
 	if (parse_pair(pos))
@@ -104,7 +118,10 @@ void	Request::parse_body(void)
 {
 	_state = State::Error;
 	if (_buffer.size() < _content_len)
+	{
+		_state = State::PartialBody;
 		return;
+	}
 	_body = _buffer.substr(0, _content_len);
 	_buffer.erase(0, _content_len);
 	_state = State::Complete;
