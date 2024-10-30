@@ -5,7 +5,7 @@ CXXFLAGS := -Wall -Wextra -Werror
 INCLUDE_DIR = include
 LDFLAGS := 
 SOURCE_DIR = source
-SOURCES := main.cpp Server.cpp Client.cpp Socket.cpp Request.cpp Response.cpp ServersManager.cpp Utils.cpp
+SOURCES := main.cpp HttpServer.cpp ServerConfig.cpp Client.cpp Socket.cpp Request.cpp Response.cpp Utils.cpp
 OBJECTS := $(addprefix $(SOURCE_DIR)/,$(SOURCES:.cpp=.o))
 
 target asan: CXXFLAGS += -fsanitize=address,undefined -g
