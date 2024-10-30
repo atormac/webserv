@@ -67,7 +67,31 @@ void Request::parse_status_line(void)
 	_state = State::Header;
 }
 
-bool Request::parse_pair(size_t pos)
+void Request::parse_header(void)
+{
+	_state = State::Error;
+        size_t pos = _buffer.find("\r\n");
+
+	if (pos == 0)
+	{
+		_buffer.erase(0, 2);
+		_state = State::Complete;
+		if (_content_len > 0)
+			_state = State::Body;
+		return;
+	}
+	if (pos == std::string::npos)
+	{
+		_state = State::PartialHeader;
+		std::cout << "partial header, cur size: " << _buffer.size() << std::endl;
+		return;
+	}
+	if (!parse_header_field(pos))
+		return;
+	_state = State::Header;
+}
+
+bool Request::parse_header_field(size_t pos)
 {
 	std::string line = _buffer.substr(0, pos);
 	_buffer.erase(0, pos + 2);
@@ -89,29 +113,6 @@ bool Request::parse_pair(size_t pos)
 	if (key == "Transfer-Encoding")
 		_transfer_encoding = value;
 	return true;
-}
-
-void Request::parse_header(void)
-{
-	_state = State::Error;
-        size_t pos = _buffer.find("\r\n");
-
-	if (pos == 0)
-	{
-		_buffer.erase(0, 2);
-		_state = State::Complete;
-		if (_content_len > 0)
-			_state = State::Body;
-		return;
-	}
-	if (pos == std::string::npos)
-	{
-		_state = State::PartialHeader;
-		std::cout << "partial header, cur size: " << _buffer.size() << std::endl;
-		return;
-	}
-	if (parse_pair(pos))
-		_state = State::Header;
 }
 
 void	Request::parse_body(void)
