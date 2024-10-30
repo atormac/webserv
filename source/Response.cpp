@@ -33,6 +33,7 @@ bool	Response::read_www_file(std::string filename)
 	file.close();
 	return true;
 }
+
 std::string Response::status_message(int status)
 {
 	switch (status)
@@ -50,22 +51,3 @@ void	Response::build_response(int status)
 	buffer << "\r\n";
 	buffer << _body.str().data();
 }
-/*
-void	not_found(Request *req)
-{
-	std::string html =
-		"<!DOCTYPE html><html lang=\"en\"><body><h1>[WEBSERVER]</h1><p>HELLO WORLD</p></body></html>";
-	std::ostringstream ss;
-	ss << "HTTP/1.1 404 Not Found\nContent-Type: text/html\nContent-Length: " << html.size()
-}
-*/
-
-/*
-bool	get_file(Request *req)
-{
-	return true;
-}
-*/
-
-
-

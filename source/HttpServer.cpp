@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/31 00:33:48 by user             ###   ########.fr       */
+/*   Updated: 2024/10/31 00:35:19 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -314,17 +314,3 @@ bool HttpServer::handle_event(epoll_event &event)
 	}
 	return true;
 }
-
-void HttpServer::_response(int client_fd)
-{
-	std::string html =
-		"<!DOCTYPE html><html lang=\"en\"><body><h1>[WEBSERVER]</h1><p>HELLO WORLD</p></body></html>";
-	std::ostringstream ss;
-	ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " << html.size()
-	   << "\n\n"
-	   << html;
-	std::string html_response = ss.str();
-
-	write(client_fd, html_response.c_str(), html_response.size());
-}
-

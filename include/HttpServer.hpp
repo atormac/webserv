@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/30 19:58:32 by user             ###   ########.fr       */
+/*   Updated: 2024/10/31 00:36:32 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -36,7 +36,6 @@ class HttpServer
 			bool	accept_client(int socket_fd);
 			bool	handle_event(epoll_event &event);
 
-			void _response(int client_fd);
 	public:
 			~HttpServer();			
 
