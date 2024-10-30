@@ -53,6 +53,7 @@ void Request::parse_status_line(void)
 		_state = State::PartialStatus;
 		return;
 	}
+
 	std::istringstream req_line(_buffer.substr(0, pos));
 	_buffer.erase(0, pos + 2);
 	req_line >> _method >> _uri >> _version;

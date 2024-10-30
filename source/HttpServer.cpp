@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/30 20:56:54 by user             ###   ########.fr       */
+/*   Updated: 2024/10/30 21:36:04 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -228,6 +228,8 @@ void HttpServer::remove_client(Client *client)
 {
 	if (!client)
 		return;
+	if (client->req != nullptr)
+		delete client->req;
 	close(client->fd);
 	delete client;
 }
