@@ -10,6 +10,9 @@
 #include <sstream>
 #include <sys/epoll.h>
 #include <signal.h>
+#include <fstream>
+#include <Utils.hpp>
+
 
 int signo = 0;
 
@@ -226,4 +229,27 @@ void Server::response(int client_fd)
 	std::string html_response = ss.str();
 
 	write(client_fd, html_response.c_str(), html_response.size());
+}
+
+void Server::parseServer(std::ifstream &configFile)
+{
+	std::string line;
+
+	skipEmptyLines(configFile, line);
+	if (!configFile)
+		throw std::runtime_error("parseServer: Empty server block!");
+	if (line != "{")
+		throw std::runtime_error("parseServer: No '{' opening server block!");
+
+	while (skipEmptyLines(configFile, line), configFile)
+	{
+		if (line != "}")
+			std::cout << "In serv block: " << line << std::endl;
+		else if (line == "}")
+			break;
+		else
+			throw std::runtime_error("parseServer: Unknown element in server block: " + line);
+	}
+	if (line != "}")
+		throw std::runtime_error("parseSerever: Unterminated server block!");
 }

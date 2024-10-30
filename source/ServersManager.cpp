@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/29 14:02:19 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/30 16:02:21 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <ServersManager.hpp>
@@ -20,9 +20,33 @@
 #include <sstream>
 #include <sys/epoll.h>
 #include <signal.h>
+#include <Utils.hpp>
 
+void ServersManager::parseConfig(const std::string &filePath)
+{
+	std::ifstream configFile;
+	std::string	line;
 
+	configFile.open(filePath.c_str());
+	if (!configFile.is_open())
+		throw std::runtime_error("ParseConfig: Coldn't open config file");
+	std::cout << "Parsing config file" << std::endl;
 
+	while (std::getline(configFile, line))
+	{
+		removeComments(line);
+		if (line.empty())
+			continue;
+		if (line == "server")
+		{
+			Server *server = new Server();
+			server->parseServer(configFile);
+		}
+		else
+			throw std::runtime_error("ParseConfig: Unexpected value outside server block: " + line);
+	}
+	std::cout << "Config parsing completed" << std::endl;
+}
 
 ServersManager::~ServersManager()
 {
@@ -94,7 +118,7 @@ void ServersManager::_initSockets()
 
 		if (bind(socketFd, (sockaddr *)&socket_addr, sizeof(socket_addr)) == -1)
 		{
-			perror("bind AAAAA");
+			perror("bind");
 			//return false;
 		}
 		if (::listen(socketFd, LISTEN_BACKLOG) == -1)

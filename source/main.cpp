@@ -3,6 +3,9 @@
 #include <ServersManager.hpp>
 #include <iostream>
 
+
+void parseConfig(const std::string &filePath);
+
 int main(void)
 {
 	/*std::cout << "[webserv]" << std::endl;
@@ -14,6 +17,7 @@ int main(void)
 	server->close_server();
 	delete server;*/
 
+	/*
 	ServersManager sm;
 
 	Server *server1 = new Server();
@@ -38,7 +42,11 @@ int main(void)
 	sm.addSocket(port4, server4);
 
 	sm._initSockets();
-	sm.listen();
+	sm.listen();*/
+
+	ServersManager sm;
+
+	sm.parseConfig("test.conf");
 
 	return 0;
 }

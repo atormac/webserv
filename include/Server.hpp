@@ -36,5 +36,6 @@ class Server
 		bool	add(std::string ip, int port);
 		bool	epoll(void);
 		void	response(int client_fd);
+		void	parseServer(std::ifstream &configFile);
 };
 #endif

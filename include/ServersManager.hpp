@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/29 13:52:53 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/30 15:45:20 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -36,7 +36,8 @@ class ServersManager
 	public:
 			~ServersManager();			
 
+			void parseConfig(const std::string &filePath);
 			void addSocket(std::string &port, Server *server);
 			void _initSockets();
-			void listen();
+			bool listen();
 };
