@@ -20,7 +20,9 @@ class Response
 		int	_http_status;
 		void	build_response(int status);
 		std::string status_message(int status);
+		void	get_resource(Request *req);
 		bool	read_www_file(std::string filename);
+		void	directory_index(std::string path);
 	public:
 		int status;
 		std::ostringstream _body;

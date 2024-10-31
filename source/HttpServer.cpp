@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/31 00:35:19 by user             ###   ########.fr       */
+/*   Updated: 2024/10/31 01:44:59 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -285,6 +285,7 @@ bool HttpServer::handle_event(epoll_event &event)
 		std::cout << "[webserv] write " << client->ip_addr << std::endl;
 		if (client->response.size() == 0)
 		{
+			std::cout << "size()=0\n";
 			Response resp(client->req);
 			client->response = resp.buffer.str();
 		}
@@ -293,6 +294,7 @@ bool HttpServer::handle_event(epoll_event &event)
 		std::cout << "bytes_written: " << bytes_written << std::endl;
 		if (bytes_written <= 0)
 		{
+			std::cout << "<= 0\n";
 			remove_client(client);
 			return false;
 		}

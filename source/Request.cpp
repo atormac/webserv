@@ -67,7 +67,6 @@ void Request::parse_status_line(void)
 		return;
 	if (_version != "HTTP/1.1")
 		return;
-	_uri.erase(0, 1);
 	_state = State::Header;
 }
 
