@@ -7,29 +7,29 @@
 #include <vector>
 #include <Request.hpp>
 #include <Response.hpp>
+#include <algorithm>
 
 #define MAX_EVENTS 10
 #define LISTEN_BACKLOG 32
 
 void	signal_handler(int code);
 
-struct server_entry
-{
-	int socket_fd;
-	int port;
-	std::string ip;
-};
-
 class ServerConfig
 {
 	private:
-		int _epoll_fd;
-		std::vector<server_entry> _entries;
-		void remove_client(Client *client);
+			std::vector<std::string> _names;
+			size_t _maxSize;
+		
+			void _addName(std::string &name);
+			void _addMaxSize(std::string &size);
+
 	public:
-		ServerConfig();
-		~ServerConfig();
-		ServerConfig(std::string ip, int port);
-		void	parse(std::ifstream &configFile);
+			ServerConfig();
+			~ServerConfig();
+
+			void parse(std::ifstream &configFile);
+
+			std::vector<std::string> &getNames();
+			size_t getMaxSize();
 };
 #endif

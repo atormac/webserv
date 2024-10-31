@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/30 19:58:24 by user             ###   ########.fr       */
+/*   Updated: 2024/10/31 18:42:18 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -41,6 +41,11 @@ void HttpServer::parseConfig(const std::string &filePath)
 		{
 			ServerConfig *server = new ServerConfig();
 			server->parse(configFile);
+			
+			// For testing
+			for (std::string i: server->getNames())
+				std::cout << "Server name: " << i << std::endl;
+			std::cout << "Server max size: " << server->getMaxSize() << std::endl;
 		}
 		else
 			throw std::runtime_error("ParseConfig: Unexpected value outside server block: " + line);

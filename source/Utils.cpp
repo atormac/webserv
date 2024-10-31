@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 15:55:43 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/30 20:16:56 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/31 19:47:49 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Utils.hpp>
@@ -23,22 +23,37 @@ void skipEmptyLines(std::ifstream &configFile, std::string &line)
 	while ((std::getline(configFile, line)) && (removeComments(line), line.empty()));
 }
 
-std::string &leftWspcTrim(std::string &string)
+std::string leftWspcTrim(std::string string)
 {
 	const char *ws = " \t\n\r\f\v";
 	string.erase(0, string.find_first_not_of(ws));
 	return string;
 }
 
-std::string &rightWspcTrim(std::string &string)
+std::string rightWspcTrim(std::string string)
 {
 	const char *ws = " \t\n\r\f\v";
 	string.erase(string.find_last_not_of(ws) + 1);
 	return string;
 }
 
-std::string& WspcTrim(std::string &string)
+std::string WspcTrim(std::string string)
 {
 	return leftWspcTrim(rightWspcTrim(string));
 }
 
+size_t stot(std::string s)
+{
+    size_t res = 0;
+    size_t maxT = std::numeric_limits<size_t>::max();
+    
+    for (char i : s)
+    {
+        if (!std::isdigit(i))
+            throw std::runtime_error("stot: Non digit character in size_t conversion!");
+        if (!(res <= ((maxT - i + 48) / 10)))
+            throw std::runtime_error("stot: size_t overflow!");
+        res = res * 10 + i - 48;
+    }
+    return res;
+}

@@ -45,12 +45,21 @@ void ServerConfig::parse(std::ifstream &configFile)
 	while (skipEmptyLines(configFile, line), configFile)
 	{
 		line = WspcTrim(line);
-		std::string element = line.substr(0, line.find(" "));
+		size_t delim = line.find(" ");
+		std::string element = (delim != std::string::npos) ? line.substr(0, delim) : line;
+		std::string value = (delim != std::string::npos) ? WspcTrim(line.substr(delim + 1)) : "";
 	
-		if (line != "}" && element != "location" && element != "server_name")
-			std::cout << "In serv block: |" << element << "| eq " << (element=="location") << std::endl;
+		if (line != "}" && element != "location" && element != "server_name" && element != "client_max_body_size")
+			std::cout << "In serv block: |" << element << "| eq " << (element == "location") << std::endl;
 		else if (element == "server_name")
-			std::cout << "Found server_name element" << std::endl;
+		{
+			_addName(value);
+			std::cout << "Found server_name element: " << value << std::endl;
+		}
+		else if (element == "client_max_body_size")
+		{
+			_addMaxSize(value);
+		}
 		else if (element == "location")
 		{
 			while (std::getline(configFile, line), line.find("}") == std::string::npos);
@@ -64,3 +73,30 @@ void ServerConfig::parse(std::ifstream &configFile)
 	if (line != "}")
 		throw std::runtime_error("parseSerever: Unterminated server block!");
 }
+
+// Setters
+void ServerConfig::_addName(std::string &name)
+{
+	if (name.empty())
+		throw std::runtime_error("_addName: Adding empty server name!");
+	if (name.back() != ';')
+		throw std::runtime_error("_addName: server_name line not terminated with semicolon!");
+	name.pop_back();
+	if (std::find(_names.begin(), _names.end(), name) != _names.end())
+		throw std::runtime_error("_addName: Adding duplicate server name!");
+	_names.push_back(name);
+}
+
+void ServerConfig::_addMaxSize(std::string &size)
+{
+	if (size.empty())
+		throw std::runtime_error("_addMaxSize: Adding empty max size!");
+	if (size.back() != ';')
+		throw std::runtime_error("_addMaxSize: max size not terminated with semicolon!");
+	size.pop_back();
+	_maxSize = stot(size);
+}
+
+// Getters
+std::vector<std::string> &ServerConfig::getNames() {return _names;}
+size_t ServerConfig::getMaxSize() {return _maxSize;}
