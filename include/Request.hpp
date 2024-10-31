@@ -14,7 +14,9 @@ enum class State
 	StatusLine,
 	Header,
 	Body,
-	Partial,
+	PartialStatus,
+	PartialHeader,
+	PartialBody,
 	Complete,
 	Error,
 };
@@ -26,7 +28,7 @@ class Request
 
 		void parse_status_line(void);
 		void parse_header(void);
-		bool parse_pair(size_t pos);
+		bool parse_header_field(size_t pos);
 		void	parse_body(void);
 	public:
 		State _state;

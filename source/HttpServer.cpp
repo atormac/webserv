@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/31 18:42:18 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/10/31 19:54:20 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -233,10 +233,15 @@ void HttpServer::remove_client(Client *client)
 {
 	if (!client)
 		return;
+	epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, client->fd, NULL);
+	if (client->req != nullptr)
+		delete client->req;
 	close(client->fd);
 	delete client;
 }
 
+
+#define IO_BUFFER_SIZE 1024
 
 bool HttpServer::handle_event(epoll_event &event)
 {
@@ -247,8 +252,8 @@ bool HttpServer::handle_event(epoll_event &event)
 		return false;
 	if (event.events & EPOLLIN) //read
 	{
-		char buffer[2048 + 1] = { 0 };
-		ssize_t bytes_read = read(client->fd, buffer, 2048);
+		char buffer[IO_BUFFER_SIZE];
+		ssize_t bytes_read = read(client->fd, buffer, IO_BUFFER_SIZE);
 		if (bytes_read == -1)
 		{
 			remove_client(client);
@@ -283,29 +288,36 @@ bool HttpServer::handle_event(epoll_event &event)
 	} else if (event.events & EPOLLOUT) //write
 	{
 		std::cout << "[webserv] write " << client->ip_addr << std::endl;
-		Response resp(client->req);
-		(void)resp;
-		this->_response(client->fd);
-		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, client->fd, NULL) == -1)
+		if (client->response.size() == 0)
 		{
-			perror("epoll_ctl");
+			std::cout << "size()=0\n";
+			Response resp(client->req);
+			client->response = resp.buffer.str();
+		}
+	
+		size_t bytes_written = write(client->fd, client->response.data(), client->response.size());
+		std::cout << "bytes_written: " << bytes_written << std::endl;
+		if (bytes_written <= 0)
+		{
+			std::cout << "<= 0\n";
+			remove_client(client);
 			return false;
+		}
+		if (bytes_written < client->response.size())	
+		{
+			std::cout << "writing chunk\n";	
+			client->response.erase(0, bytes_written);
+			ev_new.events = EPOLLET | EPOLLOUT;
+			ev_new.data.fd = 0;
+			ev_new.data.ptr = event.data.ptr;
+			if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
+			{
+				perror("epoll_ctl");
+				return false;
+			}
+			return true;
 		}
 		remove_client(client);
 	}
 	return true;
 }
-
-void HttpServer::_response(int client_fd)
-{
-	std::string html =
-		"<!DOCTYPE html><html lang=\"en\"><body><h1>[WEBSERVER]</h1><p>HELLO WORLD</p></body></html>";
-	std::ostringstream ss;
-	ss << "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: " << html.size()
-	   << "\n\n"
-	   << html;
-	std::string html_response = ss.str();
-
-	write(client_fd, html_response.c_str(), html_response.size());
-}
-
