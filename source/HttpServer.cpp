@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 12:52:11 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/01 13:02:40 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -227,6 +227,10 @@ bool HttpServer::accept_client(int _socket_fd)
 	ev.events = EPOLLIN | EPOLLET;
 	ev.data.fd = 0;
 	ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
+
+	Client *client = (Client *)ev.data.ptr;
+	client->req = new Request();
+
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
 	{
 		std::cerr << "epoll_ctl accept failed" << std::endl;
@@ -273,10 +277,7 @@ void HttpServer::handle_read(epoll_event &event)
 	std::cout << "[webserv] request received " << bytes_read << " | ";
 	std::cout << client->ip_addr;
 	std::cout << std::endl;
-	if (client->req == nullptr)
-	{
-		client->req = new Request();
-	}
+
 	std::string req_str(buffer, bytes_read);
 	State state = client->req->parse(req_str);
 	client->req->dump();
