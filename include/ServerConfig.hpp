@@ -19,9 +19,11 @@ class ServerConfig
 	private:
 			std::vector<std::string> _names;
 			size_t _maxSize;
+			std::map<unsigned int, std::string> _errorPages;
 		
 			void _addName(std::string &name);
 			void _addMaxSize(std::string &size);
+			void _addErrorPage(std::string &page);
 
 	public:
 			ServerConfig();

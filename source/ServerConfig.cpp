@@ -49,17 +49,14 @@ void ServerConfig::parse(std::ifstream &configFile)
 		std::string element = (delim != std::string::npos) ? line.substr(0, delim) : line;
 		std::string value = (delim != std::string::npos) ? WspcTrim(line.substr(delim + 1)) : "";
 	
-		if (line != "}" && element != "location" && element != "server_name" && element != "client_max_body_size")
+		if (line != "}" && element != "location" && element != "server_name" && element != "client_max_body_size" && element != "error_page")
 			std::cout << "In serv block: |" << element << "| eq " << (element == "location") << std::endl;
 		else if (element == "server_name")
-		{
 			_addName(value);
-			std::cout << "Found server_name element: " << value << std::endl;
-		}
 		else if (element == "client_max_body_size")
-		{
 			_addMaxSize(value);
-		}
+		else if (element == "error_page")
+			_addErrorPage(value);
 		else if (element == "location")
 		{
 			while (std::getline(configFile, line), line.find("}") == std::string::npos);
@@ -94,7 +91,31 @@ void ServerConfig::_addMaxSize(std::string &size)
 	if (size.back() != ';')
 		throw std::runtime_error("_addMaxSize: max size not terminated with semicolon!");
 	size.pop_back();
-	_maxSize = stot(size);
+	_maxSize = stoT(size);
+}
+
+void ServerConfig::_addErrorPage(std::string &page)
+{
+	if (page.empty())
+		throw std::runtime_error("_addErrorPage: Adding empty error page!");
+	if (page.back() != ';')
+		throw std::runtime_error("_addErrorPage: Error page not terminated with semicolon!");
+	page.pop_back();
+
+	size_t delim = page.find(" ");
+	if (delim == std::string::npos)	
+		throw std::runtime_error("_addErrorPage: Invalid error page!");
+	std::string errorString = page.substr(0, delim);
+	std::string path = page.substr(delim + 1);
+	unsigned int errorNum = stoUI(errorString);
+	if (!fileExists(path))
+		throw std::runtime_error("_addErrorPage: Invalid error page path!");	
+	_errorPages.insert(std::make_pair(errorNum, path));
+
+	// For debugging	
+	std::cout << "errno: " << errorNum << std::endl;
+	std::cout << "path: " << path << std::endl;
+
 }
 
 // Getters

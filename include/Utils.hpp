@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 15:55:43 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/31 19:49:30 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/01 17:28:43 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -22,4 +22,7 @@ std::string leftWspcTrim(std::string string);
 std::string rightWspcTrim(std::string string);
 std::string WspcTrim(std::string string);
 
-size_t stot(std::string s);
+size_t stoT(std::string s);
+unsigned int stoUI(std::string s);
+
+bool fileExists(const std::string &name);
