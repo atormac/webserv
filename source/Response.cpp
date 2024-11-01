@@ -93,10 +93,14 @@ std::string Response::status_message(int status)
 
 std::string Response::get_content_type(std::string uri)
 {
-	std::string extension = uri.substr(uri.find_last_of(".") + 1);
-	if (mime_map.count(extension) > 0)
-		return mime_map[".html"];
-	return mime_map[extension];
+	size_t pos = uri.find_last_of(".");
+	if (pos != std::string::npos)
+	{
+		std::string extension = uri.substr(pos);
+		if (mime_map.count(extension) > 0)
+			return mime_map[extension];
+	}
+	return mime_map[".html"];
 }
 void	Response::build_response(Request *req, int status)
 {
