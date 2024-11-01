@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 13:02:40 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/01 13:34:28 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -191,10 +191,16 @@ bool HttpServer::listen()
 		for (int i = 0; i < nfds; i++)
 		{
 			bool registered = false;
-			epoll_event &event = events[i];
+			epoll_event &e = events[i];
+
+			if ((e.events & EPOLLERR) || (e.events & EPOLLRDHUP) || (e.events & EPOLLHUP))
+			{
+				remove_client((Client *)e.data.ptr);
+				continue;
+			}
 			for(const auto& so : this->_socketFdToSockets)
 			{
-				if (event.data.fd == so.first)
+				if (e.data.fd == so.first)
 				{
 					registered = true;
 					accept_client(so.first);
@@ -202,10 +208,10 @@ bool HttpServer::listen()
 			}
 			if (registered) continue;
 
-			if (event.events & EPOLLIN)
-				handle_read(event);
-			else if (event.events & EPOLLOUT)
-				handle_write(event);
+			if (e.events & EPOLLIN)
+				handle_read(e);
+			else if (e.events & EPOLLOUT)
+				handle_write(e);
 		}
 	}
 	return true;
