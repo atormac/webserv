@@ -3,6 +3,27 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+std::unordered_map<std::string, std::string> mime_map = {{".html",  "text/html"},
+                                                     {".xml",   "text/xml"},
+                                                     {".xhtml", "application/xhtml+xml"},
+                                                     {".txt",   "text/plain"},
+                                                     {".rtf",   "application/rtf"},
+                                                     {".pdf",   "application/pdf"},
+                                                     {".word",  "application/msword"},
+                                                     {".png",   "image/png"},
+                                                     {".gif",   "image/gif"},
+                                                     {".jpg",   "image/jpeg"},
+                                                     {".jpeg",  "image/jpeg"},
+                                                     {".au", "audio/basic"},
+                                                     {".mpeg", "video/mpeg"},
+                                                     {".mpg", "video/mpeg"},
+                                                     {".avi", "video/x-msvideo"},
+                                                     {".gz", "application/x-gzip"},
+                                                     {".tar", "application/x-tar"},
+                                                     {".svg", "image/svg+xml"},
+                                                     {".css", "text/css"},
+                                                     {"", "text/plain"},
+                                                     {"default", "text/plain"}};
 
 Response::~Response()
 {
@@ -22,7 +43,7 @@ Response::Response(Request *req)
 		read_www_file("./www/404.html");
 	}
 	std::cout << _http_status << std::endl;
-	build_response(_http_status);
+	build_response(req, _http_status);
 }
 
 void	Response::get_resource(Request *req)
@@ -64,16 +85,24 @@ std::string Response::status_message(int status)
 {
 	switch (status)
 	{
-		case STATUS_OK: return"OK";
-		case STATUS_NOT_FOUND: return"Not Found";
+		case STATUS_OK: return "OK";
+		case STATUS_NOT_FOUND: return "Not Found";
 	}
 	return "FATAL";
 }
 
-void	Response::build_response(int status)
+std::string Response::get_content_type(std::string uri)
+{
+	std::string extension = uri.substr(uri.find_last_of(".") + 1);
+	if (mime_map.count(extension) > 0)
+		return mime_map[".html"];
+	return mime_map[extension];
+}
+void	Response::build_response(Request *req, int status)
 {
 	buffer << "HTTP/1.1 " << status << " " <<  status_message(status) << "\r\n";	
 	buffer << "Content-Length: " << _body.str().size() << "\r\n";
+	buffer << "Content-Type: " << get_content_type(req->_uri) << "\r\n";
 	buffer << "\r\n";
 	buffer << _body.str().data();
 }

@@ -6,10 +6,11 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:04:58 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/30 19:36:07 by user             ###   ########.fr       */
+/*   Updated: 2024/11/01 13:55:18 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#pragma once
+#ifndef SOCKET_HPP
+#define SOCKET_HPP
 #include <ServerConfig.hpp>
 #include <vector>
 
@@ -29,3 +30,4 @@ class Socket
 			void addServer(ServerConfig *ServerConfig);
 			const std::vector<ServerConfig *> getServers() const;
 };
+#endif

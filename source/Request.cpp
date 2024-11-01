@@ -103,17 +103,18 @@ bool Request::parse_header_field(size_t pos)
 	if (sep == 0 || sep == std::string::npos)
 		return false;
 	std::string key = line.substr(0, sep);
+	std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
 	if (key.find_first_not_of(FIELD_CHARS) != std::string::npos)
 		return false;
 	std::string value = line.substr(sep + 2);
 	if (value.empty())
 		return false;
 	this->_headers[key] = value;
-	if (key == "Content-Length")
+	if (key == "content-length")
 		_content_len = std::stoi(value);
-	if (key == "Host")
+	if (key == "host")
 		_host = value;
-	if (key == "Transfer-Encoding")
+	if (key == "transfer-encoding")
 		_transfer_encoding = value;
 	return true;
 }
