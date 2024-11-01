@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/10/31 19:54:20 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/01 12:23:40 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -168,9 +168,9 @@ bool HttpServer::listen()
 	{
 		struct epoll_event ev;
 		ev.events = EPOLLIN;
-		ev.data.fd = so.first; // socketFD
+		ev.data.fd = so.first; //socket_fd
 
-		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -2) // itr->first == socketFd
+		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -2)
 		{
 			perror("epoll_ctl");
 			return false;
@@ -195,10 +195,12 @@ bool HttpServer::listen()
 					accept_client(so.first);
 				}
 			}
-			if (registered)
-				continue;
-			if ((event.events & EPOLLIN) || (event.events & EPOLLOUT))
-					handle_event(event);
+			if (registered) continue;
+
+			if (event.events & EPOLLIN)
+				handle_read(event);
+			else if (event.events & EPOLLOUT)
+				handle_write(event);
 		}
 	}
 	return true;
@@ -226,6 +228,7 @@ bool HttpServer::accept_client(int _socket_fd)
 		remove_client((Client *)ev.data.ptr);
 		return false;
 	}
+	std::cout << "client added\n";
 	return true;
 }
 
@@ -233,91 +236,94 @@ void HttpServer::remove_client(Client *client)
 {
 	if (!client)
 		return;
-	epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, client->fd, NULL);
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, client->fd, NULL) == -1)
+	{
+		perror("remove_client epoll_ctl");
+		return;
+	}
 	if (client->req != nullptr)
 		delete client->req;
 	close(client->fd);
 	delete client;
+	std::cout << "client removed\n";
 }
 
 
-#define IO_BUFFER_SIZE 1024
+#define READ_BUFFER_SIZE 1024
 
-bool HttpServer::handle_event(epoll_event &event)
+void HttpServer::handle_read(epoll_event &event)
+{
+	Client *client = (Client *)event.data.ptr;
+	struct epoll_event ev_new;
+	char buffer[READ_BUFFER_SIZE];
+
+	if (client == NULL)
+		return;
+
+	ssize_t bytes_read = read(client->fd, buffer, READ_BUFFER_SIZE);
+	if (bytes_read == -1)
+	{
+		remove_client(client);
+	}
+	std::cout << "[webserv] request received " << bytes_read << " | ";
+	std::cout << client->ip_addr;
+	std::cout << std::endl;
+	if (client->req == nullptr)
+	{
+		client->req = new Request();
+	}
+	std::string req_str(buffer, bytes_read);
+	State state = client->req->parse(req_str);
+	client->req->dump();
+
+	ev_new.events = EPOLLET | EPOLLIN;
+	ev_new.data.fd = 0;
+	ev_new.data.ptr = event.data.ptr;
+	if (state == State::Complete || bytes_read == 0)
+	{
+		std::cout << "EOF\n";
+		ev_new.events = EPOLLET | EPOLLOUT;
+	}
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
+	{
+		perror("epoll_ctl");
+	}
+}
+
+void HttpServer::handle_write(epoll_event &event)
 {
 	Client *client = (Client *)event.data.ptr;
 	struct epoll_event ev_new;
 
 	if (client == NULL)
-		return false;
-	if (event.events & EPOLLIN) //read
+		return;
+	std::cout << "[webserv] write " << client->ip_addr << std::endl;
+	if (client->response.size() == 0)
 	{
-		char buffer[IO_BUFFER_SIZE];
-		ssize_t bytes_read = read(client->fd, buffer, IO_BUFFER_SIZE);
-		if (bytes_read == -1)
-		{
-			remove_client(client);
-			return false;
-		}
-		std::cout << "[webserv] request received " << bytes_read << " | ";
-		std::cout << client->ip_addr;
-		std::cout << std::endl;
-		if (client->req == nullptr)
-		{
-			client->req = new Request();
-		}
-		std::string req_str(buffer, bytes_read);
-		State state = client->req->parse(req_str);
-		client->req->dump();
+		std::cout << "size()=0\n";
+		Response resp(client->req);
+		client->response = resp.buffer.str();
+	}
 
-		ev_new.events = EPOLLET | EPOLLIN;
+	size_t bytes_written = write(client->fd, client->response.data(), client->response.size());
+	std::cout << "bytes_written: " << bytes_written << std::endl;
+	if (bytes_written <= 0)
+	{
+		std::cout << "<= 0\n";
+		remove_client(client);
+	}
+	if (bytes_written < client->response.size())	
+	{
+		std::cout << "writing chunk\n";	
+		client->response.erase(0, bytes_written);
+		ev_new.events = EPOLLET | EPOLLOUT;
 		ev_new.data.fd = 0;
 		ev_new.data.ptr = event.data.ptr;
-		if (state == State::Complete || bytes_read == 0)
-		{
-			std::cout << "EOF\n";
-			ev_new.events = EPOLLET | EPOLLOUT;
-		}
-	
-		//std::cout << buffer << std::endl;
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 		{
 			perror("epoll_ctl");
-			return false;
 		}
-	} else if (event.events & EPOLLOUT) //write
-	{
-		std::cout << "[webserv] write " << client->ip_addr << std::endl;
-		if (client->response.size() == 0)
-		{
-			std::cout << "size()=0\n";
-			Response resp(client->req);
-			client->response = resp.buffer.str();
-		}
-	
-		size_t bytes_written = write(client->fd, client->response.data(), client->response.size());
-		std::cout << "bytes_written: " << bytes_written << std::endl;
-		if (bytes_written <= 0)
-		{
-			std::cout << "<= 0\n";
-			remove_client(client);
-			return false;
-		}
-		if (bytes_written < client->response.size())	
-		{
-			std::cout << "writing chunk\n";	
-			client->response.erase(0, bytes_written);
-			ev_new.events = EPOLLET | EPOLLOUT;
-			ev_new.data.fd = 0;
-			ev_new.data.ptr = event.data.ptr;
-			if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
-			{
-				perror("epoll_ctl");
-				return false;
-			}
-			return true;
-		}
-		remove_client(client);
+		return;
 	}
-	return true;
+	remove_client(client);
 }
