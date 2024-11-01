@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 12:42:39 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/01 12:52:11 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -305,19 +305,19 @@ void HttpServer::handle_write(epoll_event &event)
 	std::cout << "[webserv] write " << client->ip_addr << std::endl;
 	if (client->response.size() == 0)
 	{
-		std::cout << "size()=0\n";
 		Response resp(client->req);
 		client->response = resp.buffer.str();
 	}
 
-	size_t bytes_written = write(client->fd, client->response.data(), client->response.size());
+	ssize_t resp_size = client->response.size();
+	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
 	std::cout << "bytes_written: " << bytes_written << std::endl;
 	if (bytes_written <= 0)
 	{
 		std::cout << "<= 0\n";
 		remove_client(client);
 	}
-	if (bytes_written < client->response.size())	
+	if (bytes_written < resp_size)	
 	{
 		std::cout << "writing chunk\n";	
 		client->response.erase(0, bytes_written);
