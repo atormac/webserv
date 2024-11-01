@@ -92,7 +92,7 @@ std::string Response::status_message(int status)
 }
 
 std::string Response::get_content_type(std::string uri)
-{
+ {
 	size_t pos = uri.find_last_of(".");
 	if (pos != std::string::npos)
 	{
@@ -104,10 +104,10 @@ std::string Response::get_content_type(std::string uri)
 }
 void	Response::build_response(Request *req, int status)
 {
-	buffer << "HTTP/1.1 " << status << " " <<  status_message(status) << "\r\n";	
-	buffer << "Content-Length: " << _body.str().size() << "\r\n";
-	buffer << "Content-Type: " << get_content_type(req->_uri) << "\r\n";
-	buffer << "\r\n";
+	buffer << "HTTP/1.1 " << status << " " <<  status_message(status) << CRLF;
+	buffer << "Content-Length: " << _body.str().size() << CRLF;
+	buffer << "Content-Type: " << get_content_type(req->_uri) << CRLF;
+	buffer << CRLF;
 	buffer << _body.str().data();
 }
 

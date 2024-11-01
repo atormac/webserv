@@ -45,7 +45,7 @@ State Request::parse(std::string &data)
 void Request::parse_status_line(void)
 {
 	_state = State::Error;
-	size_t pos = _buffer.find("\r\n");
+	size_t pos = _buffer.find(CRLF);
 	if (pos == 0)
 		return ;
 	if (pos == std::string::npos)
@@ -73,7 +73,7 @@ void Request::parse_status_line(void)
 void Request::parse_header(void)
 {
 	_state = State::Error;
-        size_t pos = _buffer.find("\r\n");
+        size_t pos = _buffer.find(CRLF);
 
 	if (pos == 0)
 	{
