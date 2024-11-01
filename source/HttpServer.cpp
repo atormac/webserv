@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 12:23:40 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/01 12:42:39 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -103,28 +103,10 @@ void HttpServer::close_server(void)
 	this->_epoll_fd = -1;
 }
 
-void HttpServer::initSockets()
+void HttpServer::init_sockets()
 {
 	for (std::map<std::string, Socket*>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
 	{
-		struct sockaddr_in socket_addr;
-		int opt = 1;
-
-		int socketFd = socket(AF_INET, SOCK_STREAM, 0);
-		if (socketFd == -1)
-		{
-			perror("socket");
-			//return false; We could throw errors
-		}
-		
-		set_nonblocking(socketFd);
-
-		if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-		{
-			perror("setsockopt");
-			//return false;
-		}
-		
 		std::string str = itr->first;
 		size_t delim_pos = str.find(":");
 		std::string ip = str.substr(0, delim_pos);
@@ -132,26 +114,49 @@ void HttpServer::initSockets()
 		std::string s_port = str.substr(delim_pos, str.length() - delim_pos);
 		int port = std::stoi(s_port);
 		
-		socket_addr.sin_family = AF_INET;
-		socket_addr.sin_port = htons(port);
-		socket_addr.sin_addr.s_addr = inet_addr(ip.c_str());
+		int socketFd = bind_socket(ip, port);
 
-		if (bind(socketFd, (sockaddr *)&socket_addr, sizeof(socket_addr)) == -1)
-		{
-			perror("bind");
-			//return false;
-		}
-		if (::listen(socketFd, LISTEN_BACKLOG) == -1)
-		{
-			perror("listen");
-			//return false;
-		}
-		
 		itr->second->setSocketDescriptor(socketFd);
 		_socketFdToSockets.insert({socketFd, itr->second});
-		std::cout << "Listening on port: " << port << std::endl;
 	}
 }
+
+int HttpServer::bind_socket(std::string ip, int port)
+{
+	struct sockaddr_in socket_addr;
+	int opt = 1;
+
+	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (socket_fd == -1)
+	{
+		perror("socket");
+		return -1;
+	}
+	
+	set_nonblocking(socket_fd);
+	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
+	{
+		perror("setsockopt");
+		return -1;
+	}
+	socket_addr.sin_family = AF_INET;
+	socket_addr.sin_port = htons(port);
+	socket_addr.sin_addr.s_addr = inet_addr(ip.c_str());
+
+	if (bind(socket_fd, (sockaddr *)&socket_addr, sizeof(socket_addr)) == -1)
+	{
+		perror("bind");
+		return -1;
+	}
+	if (::listen(socket_fd, LISTEN_BACKLOG) == -1)
+	{
+		perror("listen");
+		return -1;
+	}
+	std::cout << "Listening on: " << ip << ":" << port << std::endl;
+	return socket_fd;
+}
+
 
 bool HttpServer::listen()
 {

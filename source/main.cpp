@@ -22,7 +22,7 @@ int main(void)
 	server.addSocket(port2, cfg2);
 	server.addSocket(port3, cfg3);
 
-	server.initSockets();
+	server.init_sockets();
 	server.listen();
 	server.close_server();
 

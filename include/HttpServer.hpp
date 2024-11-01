@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 12:09:27 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/01 12:41:40 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -32,10 +32,11 @@ class HttpServer
 			bool _socketPresent(std::string &port);
 			//rename for sanity
 			bool	set_nonblocking(int socketFd);
+			int	bind_socket(std::string ip, int port);
 			void	remove_client(Client *client);
 			bool	accept_client(int socket_fd);
-			void handle_read(epoll_event &event);
-			void handle_write(epoll_event &event);
+			void	handle_read(epoll_event &event);
+			void	handle_write(epoll_event &event);
 
 	public:
 			~HttpServer();			
@@ -43,6 +44,6 @@ class HttpServer
 			void parseConfig(const std::string &filePath);
 			void close_server(void);
 			void addSocket(std::string &port, ServerConfig *server);
-			void initSockets();
+			void init_sockets();
 			bool listen();
 };
