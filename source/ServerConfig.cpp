@@ -49,8 +49,6 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 		else if (element == "location")
 		{
 			std::shared_ptr<Location> location(new Location(this));
-			//Location *location = new Location(this);
-
 			location->parseLocation(configFile);
 			_addLocation(location);
 		}

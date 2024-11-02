@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/02 13:11:02 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/02 15:03:30 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -21,6 +21,7 @@
 #include <sys/epoll.h>
 #include <signal.h>
 #include <Utils.hpp>
+#include <memory>
 
 void HttpServer::parseConfig(const std::string &filePath)
 {
@@ -39,7 +40,8 @@ void HttpServer::parseConfig(const std::string &filePath)
 			continue;
 		if (line == "server")
 		{
-			ServerConfig *server = new ServerConfig();
+			std::shared_ptr<ServerConfig> server(new ServerConfig());
+			//ServerConfig *server = new ServerConfig();
 			server->parseServerConfig(configFile);
 			
 			// For testing
