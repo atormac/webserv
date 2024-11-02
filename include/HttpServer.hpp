@@ -26,8 +26,8 @@ class HttpServer
 {
 	private:
 			int	_epoll_fd;
-			std::map<std::string, Socket *> _portsToSockets;
-			std::map<int, Socket *> _socketFdToSockets;
+			std::map<std::string, std::shared_ptr<Socket>> _portsToSockets;
+			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
 			
 			bool _socketPresent(std::string &port);
 			//rename for sanity

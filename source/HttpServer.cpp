@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/02 15:03:30 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/02 15:15:55 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -57,11 +57,11 @@ void HttpServer::parseConfig(const std::string &filePath)
 
 HttpServer::~HttpServer()
 {
-	for (std::map<std::string, Socket*>::iterator itr = _portsToSockets.begin();
+	/*for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin();
 		itr != _portsToSockets.end(); itr++)
 	{
 		delete itr->second;
-	}
+	}*/
 }
 
 bool HttpServer::_socketPresent(std::string &port)
@@ -74,7 +74,8 @@ void HttpServer::addSocket(std::string &port, ServerConfig *server)
 	if (_socketPresent(port))
 		_portsToSockets[port]->addServer(server);
 	else
-		_portsToSockets.insert({port, new Socket(server)});
+		_portsToSockets.insert({port, std::shared_ptr<Socket>(new Socket(server))});
+		//_portsToSockets.insert({port, new Socket(server)});
 
 	std::cout << "Servers in socket: " << _portsToSockets[port]->getServers().size() << std::endl;
 }
@@ -107,7 +108,7 @@ void HttpServer::close_server(void)
 
 void HttpServer::init_sockets()
 {
-	for (std::map<std::string, Socket*>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
+	for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
 	{
 		std::string str = itr->first;
 		size_t delim_pos = str.find(":");
