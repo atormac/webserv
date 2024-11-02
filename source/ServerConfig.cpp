@@ -1,18 +1,7 @@
 #include <ServerConfig.hpp>
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <iostream>
-#include <stdlib.h>
-#include <sstream>
-#include <sys/epoll.h>
+#include <Location.hpp>
+#include <memory>
 #include <signal.h>
-#include <fstream>
-#include <Utils.hpp>
-
 
 int signo = 0;
 
@@ -32,7 +21,7 @@ ServerConfig::~ServerConfig()
 	std::cout << "ServerConfig deconstructor called" << std::endl;
 }
 
-void ServerConfig::parse(std::ifstream &configFile)
+void ServerConfig::parseServerConfig(std::ifstream &configFile)
 {
 	std::string line;
 
@@ -59,7 +48,11 @@ void ServerConfig::parse(std::ifstream &configFile)
 			_addErrorPage(value);
 		else if (element == "location")
 		{
-			while (std::getline(configFile, line), line.find("}") == std::string::npos);
+			std::shared_ptr<Location> location(new Location(this));
+			//Location *location = new Location(this);
+
+			location->parseLocation(configFile);
+			_addLocation(location);
 		}
 		else if (line == "}")
 			break;
@@ -115,9 +108,14 @@ void ServerConfig::_addErrorPage(std::string &page)
 	// For debugging	
 	std::cout << "errno: " << errorNum << std::endl;
 	std::cout << "path: " << path << std::endl;
+}
 
+void ServerConfig::_addLocation(std::shared_ptr<Location> location)
+{
+	_locations.push_back(location);
 }
 
 // Getters
 std::vector<std::string> &ServerConfig::getNames() {return _names;}
 size_t ServerConfig::getMaxSize() {return _maxSize;}
+std::vector<std::shared_ptr<Location>> &ServerConfig::getLocations() {return _locations;}

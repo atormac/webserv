@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 13:34:28 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/02 13:11:02 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -40,7 +40,7 @@ void HttpServer::parseConfig(const std::string &filePath)
 		if (line == "server")
 		{
 			ServerConfig *server = new ServerConfig();
-			server->parse(configFile);
+			server->parseServerConfig(configFile);
 			
 			// For testing
 			for (std::string i: server->getNames())
