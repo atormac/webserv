@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/02 14:00:04 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/04 20:59:08 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -21,7 +21,7 @@ Location::Location(const Location &original): _serverConfig(original._serverConf
 
 Location::~Location(){}
 
-Location &Location::operator=(const Location &original)
+Location &Location::operator = (const Location &original)
 {
 	if (this != &original)
 	{
@@ -48,8 +48,10 @@ void Location::parseLocation(std::ifstream &configFile)
 		std::string element = (delim != std::string::npos) ? line.substr(0, delim) : line;
 		std::string value = (delim != std::string::npos) ? WspcTrim(line.substr(delim + 1)) : "";
 	
-		if (line != "}")
+		if (line != "}" && line != "autoindex")
 			std::cout << "In location block: |" << element << "|" << std::endl;
+		else if (line == "autoindex")
+			std::cout << "here autoindex" << std::endl;
 		else if (line == "}")
 			break;
 		else
