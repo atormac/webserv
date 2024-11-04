@@ -68,6 +68,12 @@ void	Response::handle_post(Request *req)
 {
 	(void)req;
 	std::cout << "handle_post()\n";
+	/*
+	struct Part part = req->parts.front();
+	std::ofstream fs("example.bin", std::ios::out | std::ios::binary | std::ios::app);
+        fs.write(part.data.data(), part.data.size());
+        fs.close();
+	*/
 }
 
 void	Response::handle_delete(Request *req)
@@ -100,13 +106,11 @@ void	Response::handle_get(Request *req)
 
 bool	Response::read_www_file(std::string filename)
 {
-	std::cout << "read_www_file: " << filename << "\n";
 	std::ifstream file(filename, std::ios::binary);
 	if (!file)
 		return false;
 	_body << file.rdbuf();
 	file.close();
-	std::cout << "_body size: " << _body.str().size();
 	return true;
 }
 

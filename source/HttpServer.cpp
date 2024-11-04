@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/04 18:44:29 by user             ###   ########.fr       */
+/*   Updated: 2024/11/04 22:03:50 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -262,7 +262,7 @@ void HttpServer::remove_client(Client *client)
 	close(client->fd);
 	//delete client;
 	_clients.erase(client->fd);
-	std::cout << "client removed\n";
+	//std::cout << "client removed\n";
 }
 
 
@@ -287,14 +287,15 @@ void HttpServer::handle_read(epoll_event &event)
 	std::cout << std::endl;
 
 	State state = client->req->parse(buffer, bytes_read);
-	client->req->dump();
+	//if (state == State::Complete)
+	//client->req->dump();
 
 	ev_new.events = EPOLLET | EPOLLIN;
 	ev_new.data.fd = 0;
 	ev_new.data.ptr = event.data.ptr;
 	if (state == State::Complete || state == State::Error || bytes_read == 0)
 	{
-		std::cout << "EOF\n";
+		//std::cout << "EOF\n";
 		ev_new.events = EPOLLET | EPOLLOUT;
 	}
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
@@ -320,12 +321,10 @@ void HttpServer::handle_write(epoll_event &event)
 
 	ssize_t resp_size = client->response.size();
 	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
-	std::cout << "bytes_written: " << bytes_written << std::endl;
-	std::cout << "client->response.size(): " << client->response.size() << std::endl;
 	if (bytes_written <= 0)
 	{
-		std::cout << "<= 0\n";
 		remove_client(client);
+		return;
 	}
 	if (bytes_written < resp_size)	
 	{

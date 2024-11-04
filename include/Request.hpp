@@ -18,8 +18,17 @@ enum class State
 	PartialStatus,
 	PartialHeader,
 	PartialBody,
+	MultiPart,
 	Complete,
 	Error,
+};
+
+struct Part
+{
+	std::string name;
+	std::string filename;
+	std::string content_type;
+	std::string data;
 };
 
 class Request
@@ -31,6 +40,9 @@ class Request
 		void parse_header(void);
 		bool parse_header_field(size_t pos);
 		void	parse_body(void);
+		void	parse_multipart(void);
+		std::string	get_key_data(std::string &buf, std::string key);
+		std::string safe_substr(std::string &buf, std::string before, std::string after);
 	public:
 		State _state;
 		int	    _error;
@@ -40,7 +52,10 @@ class Request
 		std::string _version;
 		std::string _host;
 		std::string _transfer_encoding;
+		std::string _content_type;
+		std::string _boundary;
 		std::string _body;
+		std::vector<Part> parts;
 		size_t	    _content_len;
 		std::map<std::string, std::string> _headers;
 
