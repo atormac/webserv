@@ -26,7 +26,7 @@ class Response
 		void	build_response(Request *req, int status);
 		void	get_resource(Request *req);
 		bool	read_www_file(std::string filename);
-		void	directory_index(std::string path);
+		void	directory_index(Request *req, std::string path);
 		std::string date_now(void);
 		std::string get_content_type(std::string uri);
 	public:

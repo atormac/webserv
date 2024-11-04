@@ -72,7 +72,7 @@ void	Response::get_resource(Request *req)
 		else if (S_ISDIR(sb.st_mode))
 		{
 			_http_code = STATUS_OK;
-			directory_index(filename);
+			directory_index(req, filename);
 		}
 	}
 }
@@ -129,7 +129,7 @@ void	Response::build_response(Request *req, int status)
 	buffer << bs;
 }
 
-void	Response::directory_index(std::string path)
+void	Response::directory_index(Request *req, std::string path)
 {
 	DIR*			dir;
 	struct dirent*		entry;
@@ -137,10 +137,16 @@ void	Response::directory_index(std::string path)
 	dir = opendir(path.c_str());
 	if (!dir)
 		return;
-	_body << "<html><head><title>Directory Index</title></head><body><h1>Index of The Directory</h1><ul>";
+	_body << "<html><head><title>Index</title></head><body><h1>Index of " << req->_uri << "</h1><ul>";
+
+	std::string e;
+	e.reserve(256);
 	while ((entry = readdir(dir)) != NULL)
 	{
-		_body << "<li><a href=\"" << entry->d_name << "\">" << entry->d_name << "</a></li>";
+		e = entry->d_name;
+		if (e == "." || e == "..")
+			continue;
+		_body << "<li><a href=\"" << e << "\">" << e << "</a></li>";
 	}
 	_body << "</ul></body></html>";
 
