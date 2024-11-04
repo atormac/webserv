@@ -49,9 +49,11 @@ Response::Response(Request *req)
 		return;
 	}
 
-	if (req->_method == METHOD_GET)
+	switch (req->_method)
 	{
-		get_resource(req);
+		case METHOD_GET: handle_get(req); break;
+		case METHOD_POST: handle_post(req); break;
+		case METHOD_DELETE: handle_delete(req); break;
 	}
 
 	if (_http_code == STATUS_NOT_FOUND)
@@ -62,12 +64,24 @@ Response::Response(Request *req)
 	build_response(req, _http_code);
 }
 
-void	Response::get_resource(Request *req)
+void	Response::handle_post(Request *req)
+{
+	(void)req;
+	std::cout << "handle_post()\n";
+}
+
+void	Response::handle_delete(Request *req)
+{
+	(void)req;
+	std::cout << "handle_delete()\n";
+}
+
+void	Response::handle_get(Request *req)
 {
 	struct stat sb;
 
+	std::cout << "handle_get()\n";
 	std::string filename = "./www" + req->_uri;
-	std::cout << "filename: " << filename << std::endl;
 
 	if(stat(filename.c_str(), &sb) == 0)
 	{
