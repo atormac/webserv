@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/02 15:15:55 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/04 15:47:22 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -229,10 +229,15 @@ bool HttpServer::accept_client(int _socket_fd)
 	int client_fd = accept(_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
 	if (client_fd == -1)
 	{
-		std::cerr << "accept() failed" << std::endl;
+		perror("accept()");
 		return false;
 	}
-	set_nonblocking(client_fd);
+	if (!set_nonblocking(client_fd))
+	{
+		perror("set_nonblocking");
+		close(client_fd);
+		return false;
+	}
 	ev.events = EPOLLIN | EPOLLET;
 	ev.data.fd = 0;
 	ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
