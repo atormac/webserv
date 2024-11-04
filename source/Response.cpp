@@ -113,16 +113,18 @@ std::string Response::date_now(void)
 
 void	Response::build_response(Request *req, int status)
 {
+	const std::string &body_str = _body.str();
+
 	buffer << "HTTP/1.1 " << status << " " << code_map[status] << CRLF;
-	buffer << "Content-Length: " << _body.str().size() << CRLF;
+	buffer << "Content-Length: " << body_str.size() << CRLF;
 	buffer << "Connection: close" << CRLF;
 	buffer << "Date: " << date_now() << CRLF;
 	buffer << "Server: webserv" << CRLF;
 
-	if (_body.str().size() > 0)
+	if (body_str.size() > 0)
 		buffer << "Content-Type: " << get_content_type(req->_uri) << CRLF;
 	buffer << CRLF;
-	buffer << _body.str().data();
+	buffer << body_str.data();
 }
 
 void	Response::directory_index(std::string path)
