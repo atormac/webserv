@@ -2,7 +2,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <ctime>
 
+std::unordered_map<int, std::string> code_map = {{200, "OK"},
+						{201, "Created"},
+						{400, "Bad Request"},
+						{403, "Forbidden"},
+						{404, "Not Found"}};
 std::unordered_map<std::string, std::string> mime_map = {{".html",  "text/html"},
                                                      {".xml",   "text/xml"},
                                                      {".xhtml", "application/xhtml+xml"},
@@ -31,19 +37,19 @@ Response::~Response()
 
 Response::Response(Request *req)
 {
-	_http_status = 404;
+	_http_code = STATUS_NOT_FOUND;
 
 	if (req->_method == "GET")
 	{
 		get_resource(req);
 	}
 
-	if (_http_status == STATUS_NOT_FOUND)
+	if (_http_code == STATUS_NOT_FOUND)
 	{
 		read_www_file("./www/404.html");
 	}
-	std::cout << _http_status << std::endl;
-	build_response(req, _http_status);
+	std::cout << _http_code << std::endl;
+	build_response(req, _http_code);
 }
 
 void	Response::get_resource(Request *req)
@@ -55,17 +61,17 @@ void	Response::get_resource(Request *req)
 
 	if(stat(filename.c_str(), &sb) == -1)
 	{
-		_http_status = STATUS_NOT_FOUND;
+		_http_code = STATUS_NOT_FOUND;
 		return;
 	}
 	if (S_ISREG(sb.st_mode))
 	{
-		_http_status = STATUS_OK;
+		_http_code = STATUS_OK;
 		read_www_file(filename);
 	}
 	else if (S_ISDIR(sb.st_mode))
 	{
-		_http_status = STATUS_OK;
+		_http_code = STATUS_OK;
 		directory_index(filename);
 	}
 }
@@ -81,16 +87,6 @@ bool	Response::read_www_file(std::string filename)
 	return true;
 }
 
-std::string Response::status_message(int status)
-{
-	switch (status)
-	{
-		case STATUS_OK: return "OK";
-		case STATUS_NOT_FOUND: return "Not Found";
-	}
-	return "FATAL";
-}
-
 std::string Response::get_content_type(std::string uri)
  {
 	size_t pos = uri.find_last_of(".");
@@ -102,11 +98,29 @@ std::string Response::get_content_type(std::string uri)
 	}
 	return mime_map[".html"];
 }
+
+std::string Response::date_now(void)
+{  
+	time_t t;
+	struct tm *time_struct;
+	char buf[128];
+
+	std::time(&t);
+	time_struct = std::gmtime(&t);
+	std::strftime(buf, sizeof(buf) - 1, "%a, %d %b %Y %H:%M:%S GMT", time_struct);
+	return std::string(buf);
+}
+
 void	Response::build_response(Request *req, int status)
 {
-	buffer << "HTTP/1.1 " << status << " " <<  status_message(status) << CRLF;
+	buffer << "HTTP/1.1 " << status << " " << code_map[status] << CRLF;
 	buffer << "Content-Length: " << _body.str().size() << CRLF;
-	buffer << "Content-Type: " << get_content_type(req->_uri) << CRLF;
+	buffer << "Connection: close" << CRLF;
+	buffer << "Date: " << date_now() << CRLF;
+	buffer << "Server: webserv" << CRLF;
+
+	if (_body.str().size() > 0)
+		buffer << "Content-Type: " << get_content_type(req->_uri) << CRLF;
 	buffer << CRLF;
 	buffer << _body.str().data();
 }
