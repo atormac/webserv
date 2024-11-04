@@ -62,20 +62,18 @@ void	Response::get_resource(Request *req)
 	std::string filename = "./www" + req->_uri;
 	std::cout << "filename: " << filename << std::endl;
 
-	if(stat(filename.c_str(), &sb) == -1)
+	if(stat(filename.c_str(), &sb) == 0)
 	{
-		_http_code = STATUS_NOT_FOUND;
-		return;
-	}
-	if (S_ISREG(sb.st_mode))
-	{
-		_http_code = STATUS_OK;
-		read_www_file(filename);
-	}
-	else if (S_ISDIR(sb.st_mode))
-	{
-		_http_code = STATUS_OK;
-		directory_index(filename);
+		if (S_ISREG(sb.st_mode))
+		{
+			_http_code = STATUS_OK;
+			read_www_file(filename);
+		}
+		else if (S_ISDIR(sb.st_mode))
+		{
+			_http_code = STATUS_OK;
+			directory_index(filename);
+		}
 	}
 }
 
