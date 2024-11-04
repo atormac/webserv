@@ -1,5 +1,12 @@
 #include <Request.hpp>
+#include <Defines.hpp>
 #include <sstream>
+#include <unordered_map>
+
+std::unordered_map<std::string, int> method_map =
+			        {{ "GET", METHOD_GET },
+			        { "POST", METHOD_POST },
+			        { "DELETE", METHOD_DELETE }};
 
 Request::Request()
 {
@@ -39,6 +46,8 @@ State Request::parse(char *data, size_t size)
 		if (_state >= State::PartialStatus && _state <= State::PartialBody)
 			break;
 	}
+	if (_state == State::Error && !_error)
+		_error = STATUS_BAD_REQUEST;
 	return _state;
 }
 
@@ -54,20 +63,20 @@ void Request::parse_status_line(void)
 		_state = State::PartialStatus;
 		return;
 	}
-
+	std::string method_name;
 	std::istringstream req_line(_buffer.substr(0, pos));
 	_buffer.erase(0, pos + 2);
-	req_line >> _method >> _uri >> _version;
+	req_line >> method_name >> _uri >> _version;
+
 	if (req_line.fail())
 		return;
-	if (_method != "GET" && _method != "POST" && _method != "DELETE")
+	if (method_map.count(method_name) == 0)
 	{
-		_error = 405;
+		_error = STATUS_METHOD_NOT_ALLOWED;
 		return; 
 	}
-	if (_uri.at(0) != '/')
-		return;
-	if (_uri.find_first_not_of(URI_CHARS) != std::string::npos)
+	_method = method_map[method_name];
+	if (_uri.at(0) != '/' || _uri.find_first_not_of(URI_CHARS) != std::string::npos)
 		return;
 	if (_version != "HTTP/1.1")
 		return;
@@ -123,6 +132,7 @@ bool Request::parse_header_field(size_t pos)
 	return true;
 }
 
+
 void	Request::parse_body(void)
 {
 	_state = State::Error;
@@ -133,6 +143,11 @@ void	Request::parse_body(void)
 	}
 	_body = _buffer.substr(0, _content_len);
 	_buffer.erase(0, _content_len);
+	if (_body.size() > REQUEST_BODY_LIMIT)
+	{
+		_error = STATUS_TOO_LARGE;
+		return;
+	}
 	_state = State::Complete;
 }
 

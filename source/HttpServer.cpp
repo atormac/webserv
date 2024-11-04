@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/04 18:11:15 by user             ###   ########.fr       */
+/*   Updated: 2024/11/04 18:44:29 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -82,10 +82,8 @@ void HttpServer::addSocket(std::string &port, ServerConfig *server)
 
 bool HttpServer::set_nonblocking(int socketFd)
 {
-	int flags = fcntl(socketFd, F_GETFL, 0);
+	int flags = 0;
 
-	if (flags == -1)
-		flags = 0;
 	if (fcntl(socketFd, F_SETFL, flags | O_NONBLOCK) == -1)
 	{
 		perror("fcntl");

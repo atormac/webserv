@@ -1,4 +1,5 @@
 #include <Response.hpp>
+#include <Defines.hpp>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
@@ -47,7 +48,8 @@ Response::Response(Request *req)
 		build_response(req, req->_error);
 		return;
 	}
-	if (req->_method == "GET")
+
+	if (req->_method == METHOD_GET)
 	{
 		get_resource(req);
 	}

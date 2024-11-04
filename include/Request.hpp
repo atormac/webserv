@@ -7,7 +7,6 @@
 #include <map>
 #include <algorithm>
 
-#define CRLF "\r\n"
 #define URI_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
 #define FIELD_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
@@ -36,7 +35,7 @@ class Request
 		State _state;
 		int	    _error;
 		bool	    _is_chunked;
-		std::string _method;
+		int	    _method;
 		std::string _uri;
 		std::string _version;
 		std::string _host;
