@@ -4,32 +4,35 @@
 #include <dirent.h>
 #include <ctime>
 
-std::unordered_map<int, std::string> code_map = {{200, "OK"},
-						{201, "Created"},
-						{400, "Bad Request"},
-						{403, "Forbidden"},
-						{404, "Not Found"}};
-std::unordered_map<std::string, std::string> mime_map = {{".html",  "text/html"},
-                                                     {".xml",   "text/xml"},
-                                                     {".xhtml", "application/xhtml+xml"},
-                                                     {".txt",   "text/plain"},
-                                                     {".rtf",   "application/rtf"},
-                                                     {".pdf",   "application/pdf"},
-                                                     {".word",  "application/msword"},
-                                                     {".png",   "image/png"},
-                                                     {".gif",   "image/gif"},
-                                                     {".jpg",   "image/jpeg"},
-                                                     {".jpeg",  "image/jpeg"},
-                                                     {".au", "audio/basic"},
-                                                     {".mpeg", "video/mpeg"},
-                                                     {".mpg", "video/mpeg"},
-                                                     {".avi", "video/x-msvideo"},
-                                                     {".gz", "application/x-gzip"},
-                                                     {".tar", "application/x-tar"},
-                                                     {".svg", "image/svg+xml"},
-                                                     {".css", "text/css"},
-                                                     {"", "text/plain"},
-                                                     {"default", "text/plain"}};
+std::unordered_map<int, std::string> code_map =
+			        {{200, "OK"},
+				{201, "Created"},
+				{400, "Bad Request"},
+				{403, "Forbidden"},
+				{404, "Not Found"}};
+
+std::unordered_map<std::string, std::string> mime_map =
+			     {{".html",  "text/html"},
+			     {".xml",   "text/xml"},
+			     {".xhtml", "application/xhtml+xml"},
+			     {".txt",   "text/plain"},
+			     {".rtf",   "application/rtf"},
+			     {".pdf",   "application/pdf"},
+			     {".word",  "application/msword"},
+			     {".png",   "image/png"},
+			     {".gif",   "image/gif"},
+			     {".jpg",   "image/jpeg"},
+			     {".jpeg",  "image/jpeg"},
+			     {".au", "audio/basic"},
+			     {".mpeg", "video/mpeg"},
+			     {".mpg", "video/mpeg"},
+			     {".avi", "video/x-msvideo"},
+			     {".gz", "application/x-gzip"},
+			     {".tar", "application/x-tar"},
+			     {".svg", "image/svg+xml"},
+			     {".css", "text/css"},
+			     {"", "text/plain"},
+			     {"default", "text/plain"}};
 
 Response::~Response()
 {
@@ -78,12 +81,13 @@ void	Response::get_resource(Request *req)
 
 bool	Response::read_www_file(std::string filename)
 {
-
+	std::cout << "read_www_file: " << filename << "\n";
 	std::ifstream file(filename, std::ios::binary);
 	if (!file)
 		return false;
 	_body << file.rdbuf();
 	file.close();
+	std::cout << "_body size: " << _body.str().size();
 	return true;
 }
 
@@ -113,18 +117,18 @@ std::string Response::date_now(void)
 
 void	Response::build_response(Request *req, int status)
 {
-	const std::string &body_str = _body.str();
+	const std::string &bs = _body.str();
 
 	buffer << "HTTP/1.1 " << status << " " << code_map[status] << CRLF;
-	buffer << "Content-Length: " << body_str.size() << CRLF;
+	buffer << "Content-Length: " << bs.size() << CRLF;
 	buffer << "Connection: close" << CRLF;
 	buffer << "Date: " << date_now() << CRLF;
 	buffer << "Server: webserv" << CRLF;
 
-	if (body_str.size() > 0)
+	if (bs.size() > 0)
 		buffer << "Content-Type: " << get_content_type(req->_uri) << CRLF;
 	buffer << CRLF;
-	buffer << body_str.data();
+	buffer << bs;
 }
 
 void	Response::directory_index(std::string path)

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 12:41:40 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/04 16:24:42 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -28,6 +28,7 @@ class HttpServer
 			int	_epoll_fd;
 			std::map<std::string, std::shared_ptr<Socket>> _portsToSockets;
 			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
+			std::map<int, std::shared_ptr<Client>> _clients;
 			
 			bool _socketPresent(std::string &port);
 			//rename for sanity
