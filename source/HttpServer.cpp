@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/04 17:04:23 by user             ###   ########.fr       */
+/*   Updated: 2024/11/04 18:11:15 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -193,7 +193,6 @@ bool HttpServer::listen()
 			break;
 		for (int i = 0; i < nfds; i++)
 		{
-			bool registered = false;
 			epoll_event &e = events[i];
 
 			if ((e.events & EPOLLERR) || (e.events & EPOLLRDHUP) || (e.events & EPOLLHUP))
@@ -201,16 +200,11 @@ bool HttpServer::listen()
 				remove_client((Client *)e.data.ptr);
 				continue;
 			}
-			for(const auto& so : this->_socketFdToSockets)
+			if (this->_socketFdToSockets.count(e.data.fd))
 			{
-				if (e.data.fd == so.first)
-				{
-					registered = true;
-					accept_client(so.first);
-				}
+				accept_client(e.data.fd);
+				continue;
 			}
-			if (registered) continue;
-
 			if (e.events & EPOLLIN)
 				handle_read(e);
 			else if (e.events & EPOLLOUT)
@@ -251,6 +245,7 @@ bool HttpServer::accept_client(int _socket_fd)
 		remove_client((Client *)ev.data.ptr);
 		return false;
 	}
+	_clients.emplace(client_fd, client);
 	std::cout << "client added\n";
 	return true;
 }
@@ -267,7 +262,8 @@ void HttpServer::remove_client(Client *client)
 	if (client->req != nullptr)
 		delete client->req;
 	close(client->fd);
-	delete client;
+	//delete client;
+	_clients.erase(client->fd);
 	std::cout << "client removed\n";
 }
 
@@ -292,8 +288,7 @@ void HttpServer::handle_read(epoll_event &event)
 	std::cout << client->ip_addr;
 	std::cout << std::endl;
 
-	std::string req_str(buffer, bytes_read);
-	State state = client->req->parse(req_str);
+	State state = client->req->parse(buffer, bytes_read);
 	client->req->dump();
 
 	ev_new.events = EPOLLET | EPOLLIN;

@@ -34,6 +34,7 @@ class Request
 		void	parse_body(void);
 	public:
 		State _state;
+		int	    _error;
 		bool	    _is_chunked;
 		std::string _method;
 		std::string _uri;
@@ -46,7 +47,7 @@ class Request
 
 		Request();
 		~Request();
-		State parse(std::string &data);
+		State parse(char *data, size_t size);
 		void	dump(void);
 };
 

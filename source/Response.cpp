@@ -9,7 +9,8 @@ std::unordered_map<int, std::string> code_map =
 				{201, "Created"},
 				{400, "Bad Request"},
 				{403, "Forbidden"},
-				{404, "Not Found"}};
+				{404, "Not Found"},
+				{405, "Method Not Allowed"}};
 
 std::unordered_map<std::string, std::string> mime_map =
 			     {{".html",  "text/html"},
@@ -41,7 +42,11 @@ Response::~Response()
 Response::Response(Request *req)
 {
 	_http_code = STATUS_NOT_FOUND;
-
+	if (req->_error)
+	{
+		build_response(req, req->_error);
+		return;
+	}
 	if (req->_method == "GET")
 	{
 		get_resource(req);

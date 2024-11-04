@@ -3,6 +3,7 @@
 
 Request::Request()
 {
+	this->_error = 0;
 	this->_state = State::StatusLine;
 	this->_content_len = 0;
 	this->_is_chunked = false;
@@ -12,9 +13,9 @@ Request::~Request()
 {
 }
 
-State Request::parse(std::string &data)
+State Request::parse(char *data, size_t size)
 {
-	_buffer += data;
+	_buffer.append(data, size);
 	while (_state != State::Complete && _state != State::Error)
 	{
 		switch (_state)
@@ -60,7 +61,10 @@ void Request::parse_status_line(void)
 	if (req_line.fail())
 		return;
 	if (_method != "GET" && _method != "POST" && _method != "DELETE")
+	{
+		_error = 405;
 		return; 
+	}
 	if (_uri.at(0) != '/')
 		return;
 	if (_uri.find_first_not_of(URI_CHARS) != std::string::npos)
