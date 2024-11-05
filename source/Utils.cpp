@@ -6,10 +6,11 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 15:55:43 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 17:30:28 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/05 23:10:41 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Utils.hpp>
+#include <sstream>
 
 void removeComments(std::string &line)
 {
@@ -20,7 +21,7 @@ void removeComments(std::string &line)
 
 void skipEmptyLines(std::ifstream &configFile, std::string &line)
 {
-	while ((std::getline(configFile, line)) && (removeComments(line), line.empty()));
+	while ((std::getline(configFile, line)) && (removeComments(line), WspcTrim(line).empty()));
 }
 
 std::string leftWspcTrim(std::string string)

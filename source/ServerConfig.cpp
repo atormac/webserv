@@ -33,19 +33,18 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 
 	while (skipEmptyLines(configFile, line), configFile)
 	{
-		line = WspcTrim(line);
-		size_t delim = line.find(" ");
-		std::string element = (delim != std::string::npos) ? line.substr(0, delim) : line;
-		std::string value = (delim != std::string::npos) ? WspcTrim(line.substr(delim + 1)) : "";
-	
+		std::stringstream ss(line);
+		std::string element;
+
+		ss >> element;
 		if (line != "}" && element != "location" && element != "server_name" && element != "client_max_body_size" && element != "error_page")
-			std::cout << "In serv block: |" << element << "| eq " << (element == "location") << std::endl;
+			std::cout << "In serv block: |" << element << "|" << std::endl;
 		else if (element == "server_name")
-			_addName(value);
+			_addName(ss);
 		else if (element == "client_max_body_size")
-			_addMaxSize(value);
+			_addMaxSize(ss);
 		else if (element == "error_page")
-			_addErrorPage(value);
+			_addErrorPage(ss);
 		else if (element == "location")
 		{
 			std::shared_ptr<Location> location(new Location(this));
@@ -57,14 +56,16 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 		else
 			throw std::runtime_error("parseServer: Unknown element in server block: " + line);	
 	}
-	//std::cout << "Line: |" << line << "|" << std::endl;
 	if (line != "}")
 		throw std::runtime_error("parseSerever: Unterminated server block!");
 }
 
 // Setters
-void ServerConfig::_addName(std::string &name)
+void ServerConfig::_addName(std::stringstream &ss)
 {
+	std::string name;
+
+	ss >> name;
 	if (name.empty())
 		throw std::runtime_error("_addName: Adding empty server name!");
 	if (name.back() != ';')
@@ -75,16 +76,22 @@ void ServerConfig::_addName(std::string &name)
 	_names.push_back(name);
 }
 
-void ServerConfig::_addMaxSize(std::string &size)
+void ServerConfig::_addMaxSize(std::stringstream &ss)
 {
+	std::string size;
+
+	ss >> size;
+	if (!ss.eof())
+		throw std::runtime_error("_addMaxSize: Unexpected characters in max size line!");
 	if (size.empty())
 		throw std::runtime_error("_addMaxSize: Adding empty max size!");
 	if (size.back() != ';')
 		throw std::runtime_error("_addMaxSize: max size not terminated with semicolon!");
 	size.pop_back();
-	_maxSize = stoT(size);
+	_maxSize = stringToType<size_t>(size);
 }
 
+/*
 void ServerConfig::_addErrorPage(std::string &page)
 {
 	if (page.empty())
@@ -106,6 +113,31 @@ void ServerConfig::_addErrorPage(std::string &page)
 	// For debugging	
 	std::cout << "errno: " << errorNum << std::endl;
 	std::cout << "path: " << path << std::endl;
+}
+*/
+
+void ServerConfig::_addErrorPage(std::stringstream &ss)
+{
+	std::string num_str;
+	std::string page;
+	int errorNum;
+
+	ss >> num_str;
+	errorNum = stringToType<int>(num_str);
+	ss >> page;
+	if (page.empty())
+		throw std::runtime_error("_addErrorPage: Adding empty error page!");
+	if (page.back() != ';')
+		throw std::runtime_error("_addErrorPage: Error page not terminated with semicolon!");
+	page.pop_back();
+
+	if (!fileExists(page))
+		throw std::runtime_error("_addErrorPage: Invalid error page path!");	
+	_errorPages.insert(std::make_pair(errorNum, page));
+
+	// For debugging	
+	std::cout << "errno: " << errorNum << std::endl;
+	std::cout << "path: " << page << std::endl;
 }
 
 void ServerConfig::_addLocation(std::shared_ptr<Location> location)

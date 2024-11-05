@@ -26,9 +26,9 @@ class ServerConfig
 			std::map<unsigned int, std::string> _errorPages;
 			std::vector<std::shared_ptr<Location>> _locations;
 		
-			void _addName(std::string &name);
-			void _addMaxSize(std::string &size);
-			void _addErrorPage(std::string &page);
+			void _addName(std::stringstream &ss);
+			void _addMaxSize(std::stringstream &ss);
+			void _addErrorPage(std::stringstream &ss);
 			void _addLocation(std::shared_ptr<Location> location);
 
 	public:
