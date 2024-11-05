@@ -48,6 +48,7 @@ class Request
 		int	    _error;
 		bool	    _is_chunked;
 		int	    _method;
+		std::string _method_str;
 		std::string _uri;
 		std::string _version;
 		std::string _host;

@@ -66,20 +66,18 @@ void Request::parse_status_line(void)
 		_state = State::PartialStatus;
 		return;
 	}
-	std::string method_name;
 	std::istringstream req_line(_buffer.substr(0, pos));
 	_buffer.erase(0, pos + 2);
-	req_line >> method_name >> _uri >> _version;
+	req_line >> _method_str >> _uri >> _version;
 
 	if (req_line.fail())
 		return;
-	if (method_map.count(method_name) == 0)
+	if (method_map.count(_method_str) == 0)
 	{
 		_error = STATUS_METHOD_NOT_ALLOWED;
 		return; 
 	}
-	std::cout << "method: " << method_name << std::endl;
-	_method = method_map[method_name];
+	_method = method_map[_method_str];
 	if (_uri.at(0) != '/' || _uri.find_first_not_of(URI_CHARS) != std::string::npos)
 		return;
 	if (_version != "HTTP/1.1")
@@ -149,7 +147,6 @@ bool Request::parse_header_field(size_t pos)
 void	Request::parse_body(void)
 {
 	_state = State::Error;
-	std::cout << "parse_body\n";
 	if (_buffer.size() > REQUEST_BODY_LIMIT)
 	{
 		_error = STATUS_TOO_LARGE;
@@ -204,8 +201,6 @@ void	Request::parse_multipart(void)
 
 	while ((pos = _buffer.find(_boundary, pos)) != std::string::npos)
 	{
-		struct Part part;
-
 		pos += _boundary.size();
 		size_t end = _buffer.find(_boundary, pos);
 		if (end == std::string::npos)
@@ -216,6 +211,7 @@ void	Request::parse_multipart(void)
 		if (header_end == std::string::npos)
 			continue;
 
+		struct Part part;
 		part.data = part_buf.substr(header_end + 4);	
 		part_buf.erase(header_end);
 		part.name = get_key_data(part_buf, "name");
@@ -247,7 +243,7 @@ void	Request::dump(void)
 	std::cout << "CONTENT_LEN: " << _content_len << std::endl;
 	for(const auto &e : this->_headers)
 	{
-		std::cout << e.first << ": " << e.second << std::endl;
+		std::cout << "\t" << e.first << ": " << e.second << std::endl;
 	}
 	if (_content_len > 0)
 		std::cout << "body: " << _body << std::endl;

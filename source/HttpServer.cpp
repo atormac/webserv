@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/04 22:03:50 by user             ###   ########.fr       */
+/*   Updated: 2024/11/05 00:31:24 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -282,12 +282,15 @@ void HttpServer::handle_read(epoll_event &event)
 	{
 		remove_client(client);
 	}
-	std::cout << "[webserv] request received " << bytes_read << " | ";
-	std::cout << client->ip_addr;
-	std::cout << std::endl;
 
 	State state = client->req->parse(buffer, bytes_read);
-	//if (state == State::Complete)
+	if (state == State::Complete)
+	{
+		std::cout << "[webserv] " << client->req->_method_str << " | ";
+		std::cout << client->req->_uri << " | " << bytes_read << " | ";
+		std::cout << client->ip_addr;
+		std::cout << std::endl;
+	}
 	//client->req->dump();
 
 	ev_new.events = EPOLLET | EPOLLIN;
@@ -295,7 +298,6 @@ void HttpServer::handle_read(epoll_event &event)
 	ev_new.data.ptr = event.data.ptr;
 	if (state == State::Complete || state == State::Error || bytes_read == 0)
 	{
-		//std::cout << "EOF\n";
 		ev_new.events = EPOLLET | EPOLLOUT;
 	}
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
