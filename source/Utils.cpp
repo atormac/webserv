@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 15:55:43 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/05 23:10:41 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/06 15:30:09 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Utils.hpp>
@@ -79,4 +79,19 @@ bool fileExists(const std::string &name)
 {
     std::ifstream file(name.c_str());
     return file.good();
+}
+
+bool validLineEnd(std::string &lineEnd, std::stringstream &ss)
+{
+	std::string temp;
+
+	if (lineEnd.back() == ';' && ss.eof())
+	{
+		lineEnd.pop_back();
+		return true;
+	}
+	ss >> temp;
+	if (temp == ";" && ss.eof())
+		return true;
+	return false;
 }

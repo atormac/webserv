@@ -24,6 +24,7 @@ ServerConfig::~ServerConfig()
 void ServerConfig::parseServerConfig(std::ifstream &configFile)
 {
 	std::string line;
+	std::string element;
 
 	skipEmptyLines(configFile, line);
 	if (!configFile)
@@ -34,9 +35,8 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 	while (skipEmptyLines(configFile, line), configFile)
 	{
 		std::stringstream ss(line);
-		std::string element;
-
 		ss >> element;
+
 		if (line != "}" && element != "location" && element != "server_name" && element != "client_max_body_size" && element != "error_page")
 			std::cout << "In serv block: |" << element << "|" << std::endl;
 		else if (element == "server_name")
@@ -51,12 +51,12 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 			location->parseLocation(configFile);
 			_addLocation(location);
 		}
-		else if (line == "}")
+		else if (element == "}")
 			break;
 		else
 			throw std::runtime_error("parseServer: Unknown element in server block: " + line);	
 	}
-	if (line != "}")
+	if (element != "}")
 		throw std::runtime_error("parseSerever: Unterminated server block!");
 }
 
@@ -81,13 +81,11 @@ void ServerConfig::_addMaxSize(std::stringstream &ss)
 	std::string size;
 
 	ss >> size;
-	if (!ss.eof())
-		throw std::runtime_error("_addMaxSize: Unexpected characters in max size line!");
 	if (size.empty())
 		throw std::runtime_error("_addMaxSize: Adding empty max size!");
-	if (size.back() != ';')
-		throw std::runtime_error("_addMaxSize: max size not terminated with semicolon!");
-	size.pop_back();
+	if (!validLineEnd(size, ss))
+		throw std::runtime_error("_addMaxSize: Unexpected characters in max size line!");
+
 	_maxSize = stringToType<size_t>(size);
 }
 
@@ -120,6 +118,7 @@ void ServerConfig::_addErrorPage(std::stringstream &ss)
 {
 	std::string num_str;
 	std::string page;
+	std::string termin;
 	int errorNum;
 
 	ss >> num_str;
@@ -127,9 +126,10 @@ void ServerConfig::_addErrorPage(std::stringstream &ss)
 	ss >> page;
 	if (page.empty())
 		throw std::runtime_error("_addErrorPage: Adding empty error page!");
-	if (page.back() != ';')
+	if (page.back() == ';')
+		page.pop_back();
+	else if (ss >> termin, termin != ";")
 		throw std::runtime_error("_addErrorPage: Error page not terminated with semicolon!");
-	page.pop_back();
 
 	if (!fileExists(page))
 		throw std::runtime_error("_addErrorPage: Invalid error page path!");	

@@ -13,7 +13,7 @@
 template <class T> T stringToType(std::string str)
 {
 	std::istringstream iss(str);
-	int result;
+	T result;
 	char remain;
 	if (!(iss >> result) || iss >> remain)
 	{
