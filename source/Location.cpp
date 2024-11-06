@@ -6,10 +6,11 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/06 16:45:51 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/06 20:21:12 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
+#include <regex>
 
 Location::Location(ServerConfig *srvConf): _serverConfig(srvConf), _autoIndex(false) {}
 
@@ -56,8 +57,12 @@ void Location::parseLocation(std::ifstream &configFile)
 		else
 			throw std::runtime_error("parseLocation: Unknown element in location block: " + line);	
 	}
-	if (element != "}")
+	//if (line != "}")
+	if (!std::regex_match(line, std::regex("\\s*}")))
+	{
+		std::cout << "Location endline |" << line << "|" << std::endl;
 		throw std::runtime_error("parseLocation: Unterminated location block!");
+	}
 }
 
 // Setters

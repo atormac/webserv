@@ -2,6 +2,7 @@
 #include <Location.hpp>
 #include <memory>
 #include <signal.h>
+#include <regex>
 
 int signo = 0;
 
@@ -56,7 +57,7 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 		else
 			throw std::runtime_error("parseServer: Unknown element in server block: " + line);	
 	}
-	if (element != "}")
+	if (line != "}")
 		throw std::runtime_error("parseSerever: Unterminated server block!");
 }
 
@@ -81,62 +82,31 @@ void ServerConfig::_addMaxSize(std::stringstream &ss)
 	std::string size;
 
 	ss >> size;
-	if (size.empty())
-		throw std::runtime_error("_addMaxSize: Adding empty max size!");
-	if (!validLineEnd(size, ss))
-		throw std::runtime_error("_addMaxSize: Unexpected characters in max size line!");
+	if (!std::regex_match(ss.str(), std::regex("^\\s*client_max_body_size\\s+\\d+\\s*;$")))
+		throw std::runtime_error("_addMaxSize: Expected format: \"client_max_body_size [number];\"");
+	if (size.back() == ';')
+		size.pop_back();
 
 	_maxSize = stringToType<size_t>(size);
 }
-
-/*
-void ServerConfig::_addErrorPage(std::string &page)
-{
-	if (page.empty())
-		throw std::runtime_error("_addErrorPage: Adding empty error page!");
-	if (page.back() != ';')
-		throw std::runtime_error("_addErrorPage: Error page not terminated with semicolon!");
-	page.pop_back();
-
-	size_t delim = page.find(" ");
-	if (delim == std::string::npos)	
-		throw std::runtime_error("_addErrorPage: Invalid error page!");
-	std::string errorString = page.substr(0, delim);
-	std::string path = page.substr(delim + 1);
-	unsigned int errorNum = stoUI(errorString);
-	if (!fileExists(path))
-		throw std::runtime_error("_addErrorPage: Invalid error page path!");	
-	_errorPages.insert(std::make_pair(errorNum, path));
-
-	// For debugging	
-	std::cout << "errno: " << errorNum << std::endl;
-	std::cout << "path: " << path << std::endl;
-}
-*/
 
 void ServerConfig::_addErrorPage(std::stringstream &ss)
 {
 	std::string num_str;
 	std::string page;
-	std::string termin;
-	int errorNum;
 
 	ss >> num_str;
-	errorNum = stringToType<int>(num_str);
 	ss >> page;
-	if (page.empty())
-		throw std::runtime_error("_addErrorPage: Adding empty error page!");
+	if (!std::regex_match(ss.str(), std::regex("^\\s*error_page\\s+([1-5][0-9]{2})\\s+.*\\.html\\s*;$")))
+		throw std::runtime_error("_addErrorPage: Expected format: \"error_page [100-599] [valid path to .html];\"");
 	if (page.back() == ';')
 		page.pop_back();
-	else if (ss >> termin, termin != ";")
-		throw std::runtime_error("_addErrorPage: Error page not terminated with semicolon!");
-
 	if (!fileExists(page))
 		throw std::runtime_error("_addErrorPage: Invalid error page path!");	
-	_errorPages.insert(std::make_pair(errorNum, page));
+	_errorPages.insert(std::make_pair(stringToType<int>(num_str), page));
 
 	// For debugging	
-	std::cout << "errno: " << errorNum << std::endl;
+	std::cout << "errno: " << num_str << std::endl;
 	std::cout << "path: " << page << std::endl;
 }
 
