@@ -65,29 +65,36 @@ void Request::parse_status_line(void)
 {
 	_state = State::Error;
 	size_t pos = _buffer.find(CRLF);
-	if (pos == 0)
-		return ;
+
+	if (pos == 0)	return;
 	if (pos == std::string::npos)
 	{
 		_state = State::PartialStatus;
 		return;
 	}
-	std::istringstream req_line(_buffer.substr(0, pos));
-	_buffer.erase(0, pos + 2);
-	req_line >> _method_str >> _uri >> _version;
-
-	if (req_line.fail())
+	std::string str = _buffer.substr(0, pos);
+	std::regex r(R"((\S+) (\S+) (\S+))");
+	std::smatch m;
+	if (!std::regex_match(str, m, r))
+	{
+		std::cerr << "!regex_match\n";
 		return;
+	}
+	_method_str = m[1];
+	_uri = m[2];
+	_version = m[3];
 	if (method_map.count(_method_str) == 0)
 	{
 		_error = STATUS_METHOD_NOT_ALLOWED;
 		return; 
 	}
-	_method = method_map[_method_str];
 	if (_uri.at(0) != '/' || _uri.find_first_not_of(URI_CHARS) != std::string::npos)
 		return;
 	if (_version != "HTTP/1.1")
 		return;
+	_method = method_map[_method_str];
+
+	_buffer.erase(0, pos + 2);
 	_state = State::Header;
 }
 
@@ -125,18 +132,6 @@ bool Request::parse_header_field(size_t pos)
 	std::string line = _buffer.substr(0, pos);
 	_buffer.erase(0, pos + 2);
 
-	/*
-	size_t sep = line.find(": ");
-	if (sep == 0 || sep == std::string::npos)
-		return false;
-	std::string key = line.substr(0, sep);
-	std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
-	if (key.find_first_not_of(FIELD_CHARS) != std::string::npos)
-		return false;
-	std::string value = line.substr(sep + 2);
-	if (value.empty())
-		return false;
-	*/
 	std::regex regex("(.+[^=]): (.+)");
 	std::smatch m;
 
@@ -145,9 +140,6 @@ bool Request::parse_header_field(size_t pos)
 	std::string key = m[1];
 	std::string value = m[2];
 	std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
-
-	std::cout << "key: " << m[1] << std::endl;
-	std::cout << "value: " << m[2] << std::endl;
 
 	this->_headers[key] = value;
 	if (key == "content-length")
