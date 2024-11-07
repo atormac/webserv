@@ -1,5 +1,6 @@
 #include <Request.hpp>
 #include <Defines.hpp>
+#include <regex>
 #include <sstream>
 #include <unordered_map>
 #include <Str.hpp>
@@ -124,6 +125,7 @@ bool Request::parse_header_field(size_t pos)
 	std::string line = _buffer.substr(0, pos);
 	_buffer.erase(0, pos + 2);
 
+	/*
 	size_t sep = line.find(": ");
 	if (sep == 0 || sep == std::string::npos)
 		return false;
@@ -134,6 +136,19 @@ bool Request::parse_header_field(size_t pos)
 	std::string value = line.substr(sep + 2);
 	if (value.empty())
 		return false;
+	*/
+	std::regex regex("(.+[^=]): (.+)");
+	std::smatch m;
+
+	if (!std::regex_match(line, m, regex))
+		return false;
+	std::string key = m[1];
+	std::string value = m[2];
+	std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
+
+	std::cout << "key: " << m[1] << std::endl;
+	std::cout << "value: " << m[2] << std::endl;
+
 	this->_headers[key] = value;
 	if (key == "content-length")
 		_content_len = std::stoi(value);

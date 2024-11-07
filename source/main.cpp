@@ -11,14 +11,15 @@ void parseConfig(const std::string &filePath);
 int main(void)
 {
 	/*
-	std::string str = " Mem(100)=\"120\"";
-	std::regex regex("^ Mem\\(([0-9]+)\\)\\s*=\\s*\"([0-9]+(\\.[0-9]+)?)\"\\s*$");
+	std::string str = "WORD1 WORD2 WORD3\r\n ";
+	std::regex regex("(.+[^=]) (.+[^=]) (.+[^=])(?=\\r\\n).*");
 	std::smatch m;
 
 	std::cout << std::regex_match(str, m, regex) << std::endl;
 
-	std::cout << "key: " << m[1] << std::endl;
-	std::cout << "value: " << m[2] << std::endl;
+	std::cout << "1: " << m[1] << std::endl;
+	std::cout << "2: " << m[2] << std::endl;
+	std::cout << "3" << m[3] << std::endl;
 
 	return 0;
 	*/
