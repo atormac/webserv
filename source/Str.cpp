@@ -1,4 +1,5 @@
 #include <Str.hpp>
+#include <cstring>
 namespace Str
 {
 	int decode_hex(const char *s)
@@ -9,7 +10,7 @@ namespace Str
 
 		if (*s == '\0')
 			return -1;
-		while (*s)
+		while (std::strchr("0123456789abcdefABCDEF", *s))
 		{
 			c = *s;
 			if (c >= '0' && c <= '9')

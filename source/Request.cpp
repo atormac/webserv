@@ -2,6 +2,7 @@
 #include <Defines.hpp>
 #include <sstream>
 #include <unordered_map>
+#include <Str.hpp>
 
 std::unordered_map<std::string, int> method_map =
 			        {{ "GET", METHOD_GET },
@@ -186,7 +187,28 @@ void	Request::parse_body(void)
 void	Request::parse_chunked(void)
 {
 	std::cout << "parse_chunked\n";
-	_state = State::Complete;
+	size_t pos = _buffer.find(CRLF);
+	if (pos == std::string::npos)
+	{
+		_state = State::PartialChunked;
+		return;
+	}
+	int chunk_len = Str::decode_hex(_buffer.c_str());
+	if (chunk_len == -1)
+	{
+		_state = State::Error;
+		return;
+	}
+	if  (chunk_len == 0)
+	{
+		std::cout << "chunked body: " << _body << std::endl;
+		_state = State::Complete;
+		return;
+	}
+	_body += _buffer.substr(pos + 2, chunk_len);
+	_buffer.erase(0, pos + 2 + chunk_len + 1);
+	if (_buffer.size() > 0)
+		parse_chunked();
 }
 
 std::string	Request::get_key_data(std::string &buf, std::string key)
