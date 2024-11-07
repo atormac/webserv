@@ -39,6 +39,10 @@ State Request::parse(char *data, size_t size)
 			case State::Body:
 				parse_body();
 				break;
+			case State::PartialChunked:
+			case State::Chunked:
+				parse_chunked();
+				break;
 			case State::MultiPart:
 				parse_multipart();
 				break;
@@ -94,8 +98,13 @@ void Request::parse_header(void)
 	{
 		_buffer.erase(0, 2);
 		_state = State::Complete;
-		if (_content_len > 0)
-			_state = State::Body;
+		if (_method == METHOD_POST)
+		{
+			if (_is_chunked)
+				_state = State::Chunked;
+			else if (_content_len > 0)
+				_state = State::Body;
+		}
 		return;
 	}
 	if (pos == std::string::npos)
@@ -130,7 +139,11 @@ bool Request::parse_header_field(size_t pos)
 	if (key == "host")
 		_host = value;
 	if (key == "transfer-encoding")
+	{
 		_transfer_encoding = value;
+		if (_transfer_encoding == "chunked")
+			_is_chunked = true;
+	}
 	if (key == "content-type")
 	{
 		_content_type = value;
@@ -166,6 +179,13 @@ void	Request::parse_body(void)
 	}
 	_body = _buffer.substr(0, _content_len);
 	_buffer.clear();
+	_state = State::Complete;
+	std::cout << "body: " << _body << std::endl;
+}
+
+void	Request::parse_chunked(void)
+{
+	std::cout << "parse_chunked\n";
 	_state = State::Complete;
 }
 

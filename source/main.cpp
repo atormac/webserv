@@ -2,6 +2,7 @@
 #include <HttpServer.hpp>
 #include <ServerConfig.hpp>
 #include <iostream>
+#include <Str.hpp>
 
 
 void parseConfig(const std::string &filePath);
