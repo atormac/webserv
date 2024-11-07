@@ -30,6 +30,7 @@ class ServerConfig
 			void _addMaxSize(std::stringstream &ss);
 			void _addErrorPage(std::stringstream &ss);
 			void _addLocation(std::shared_ptr<Location> location);
+			void _addListen(std::stringstream &ss);
 
 	public:
 			ServerConfig();
