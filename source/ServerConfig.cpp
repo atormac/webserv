@@ -126,9 +126,19 @@ void ServerConfig::_addListen(std::stringstream &ss)
 {
 	std::string ip;
 	std::string port;
+	std::regex ptrn("^\\s*listen\\s+((?:(?:25[0-5]|(?:2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}):([0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])\\s*;\\s*$");
+	std::smatch match_res;
+	std::string string = ss.str();
 
-	if (!std::regex_match(ss.str(), std::regex("^\\s*listen\\s+((?:(?:25[0-5]|(?:2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}):([0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])\\s*;\\s*$")))
+	if (!std::regex_match(string, match_res, ptrn))
 		throw std::runtime_error("_addListen: Expected format: \"listen [valid ip]:[valid port];\"");
+
+	
+	_ipAddress = match_res.str(1);
+	_port = match_res.str(2);
+
+	std::cout << _ipAddress << std::endl;	
+	std::cout << _port << std::endl;	
 }
 
 // Getters
