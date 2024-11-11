@@ -151,7 +151,11 @@ bool	Response::directory_index(Request *req, std::string path)
 		e = entry->d_name;
 		if (e == "." || e == "..")
 			continue;
-		_body << "<li><a href=\"" << e << "\">" << e << "</a></li>";
+		std::string link = req->_uri;
+		if (link != "/")
+			link += "/";
+		link += e;
+		_body << "<li><a href=\"" << link << "\">" << e << "</a></li>";
 	}
 	_body << "</ul></body></html>";
 
