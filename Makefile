@@ -34,5 +34,7 @@ fclean: clean
 re: fclean all
 asan: re
 debug: re
+run: asan
+	./webserv
 
-.PHONY: all re clean fclean asan debug
+.PHONY: all re clean fclean asan debug run

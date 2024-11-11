@@ -89,7 +89,10 @@ void Request::parse_status_line(void)
 		return; 
 	}
 	if (_uri.at(0) != '/' || _uri.find_first_not_of(URI_CHARS) != std::string::npos)
+	{
+		std::cerr << "invalid chars on uri\n";
 		return;
+	}
 	if (_version != "HTTP/1.1")
 		return;
 	_method = method_map[_method_str];

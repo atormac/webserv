@@ -68,11 +68,16 @@ void	Response::handle_post(Request *req)
 {
 	(void)req;
 	std::cout << "handle_post()\n";
+
+	if (req->_uri == "/submit")
+	{
+		struct Part part = req->parts.front();
+		std::ofstream fs("./www/upload/" + part.filename, std::ios::out | std::ios::binary | std::ios::app);
+		fs.write(part.data.data(), part.data.size());
+		fs.close();
+		_http_code = STATUS_OK;
+	}
 	/*
-	struct Part part = req->parts.front();
-	std::ofstream fs("example.bin", std::ios::out | std::ios::binary | std::ios::app);
-        fs.write(part.data.data(), part.data.size());
-        fs.close();
 	*/
 }
 
