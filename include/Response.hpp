@@ -22,7 +22,7 @@ class Response
 		void	handle_delete(Request *req);
 		void	handle_get(Request *req);
 
-		void	directory_index(Request *req, std::string path);
+		bool	directory_index(Request *req, std::string path);
 		std::string date_now(void);
 		std::string get_content_type(std::string uri);
 	public:

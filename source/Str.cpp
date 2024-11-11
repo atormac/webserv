@@ -28,7 +28,7 @@ namespace Str
 		return ret;
 	}
 
-	std::string url_decode(std::string s)
+	std::string url_decode(const std::string &s)
 	{
 		std::string res = "";
 
@@ -45,5 +45,28 @@ namespace Str
 			res += s[i];
 		}
 		return res;
+	}
+	std::string	get_key_data(std::string &buf, std::string key)
+	{
+		size_t pos = buf.find(key + "=\"");
+		if (pos == std::string::npos)
+			return "";
+		pos += key.size() + 2;
+		size_t end = buf.find("\"", pos);
+		if (end == std::string::npos)
+			return "";
+		return buf.substr(pos, end - pos);
+
+	}
+
+	std::string safe_substr(std::string &buf, std::string before, std::string after)
+	{
+		size_t pos = buf.find(before);
+		if (pos == std::string::npos)
+			return "";
+		size_t end = buf.find(after, pos);
+		if (end == std::string::npos)
+			return buf.substr(pos + before.size());
+		return buf.substr(pos, end - pos);
 	}
 }

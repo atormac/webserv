@@ -38,6 +38,7 @@ class Request
 {
 	private:
 		std::string _buffer;
+		size_t	    _bytes_read;
 
 		void parse_status_line(void);
 		void parse_header(void);

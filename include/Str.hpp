@@ -5,7 +5,9 @@
 
 namespace Str
 {
-	int decode_hex(const char *s);
-	std::string url_decode(std::string s);
+	int	    decode_hex(const char *s);
+	std::string url_decode(const std::string &s);
+	std::string get_key_data(std::string &buf, std::string key);
+	std::string safe_substr(std::string &buf, std::string before, std::string after);
 }
 #endif

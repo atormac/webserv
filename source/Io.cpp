@@ -3,6 +3,19 @@
 namespace Io
 {
 
+
+	int	file_type(std::string filename)
+	{
+		struct stat sb;
+
+		if(stat(filename.c_str(), &sb) != 0)
+			return FILE_NOT_EXISTS;
+		if (S_ISREG(sb.st_mode))
+			return FILE_FILE;
+		if (S_ISDIR(sb.st_mode))
+			return FILE_DIRECTORY;
+		return FILE_NOT_EXISTS;
+	}
 	bool	read_file(std::string filename, std::ostringstream &out)
 	{
 		std::ifstream file(filename, std::ios::binary);

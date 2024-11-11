@@ -1,7 +1,5 @@
 #include <Response.hpp>
 #include <Defines.hpp>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <dirent.h>
 #include <ctime>
 
@@ -66,17 +64,12 @@ Response::Response(Request *req)
 
 void	Response::handle_post(Request *req)
 {
-	(void)req;
-	std::cout << "handle_post()\n";
-
 	if (req->_uri == "/submit")
 	{
 		struct Part part = req->parts.front();
 		if (Io::write_file(part.filename, part.data))
 			_http_code = STATUS_OK;
 	}
-	/*
-	*/
 }
 
 void	Response::handle_delete(Request *req)
@@ -87,25 +80,18 @@ void	Response::handle_delete(Request *req)
 
 void	Response::handle_get(Request *req)
 {
-	struct stat sb;
-
-	std::cout << "handle_get()\n";
 	std::string filename = "./www" + req->_uri;
+	int filetype = Io::file_type(filename);
 
-	if(stat(filename.c_str(), &sb) == 0)
+	if (filetype == FILE_NOT_EXISTS)
 	{
-		if (S_ISREG(sb.st_mode))
-		{
-			if (Io::read_file(filename, _body))
-				_http_code = STATUS_OK;
-			//read_www_file(filename);
-		}
-		else if (S_ISDIR(sb.st_mode))
-		{
-			_http_code = STATUS_OK;
-			directory_index(req, filename);
-		}
+		_http_code = STATUS_NOT_FOUND;
+		return;
 	}
+	if (filetype == FILE_FILE && Io::read_file(filename, _body))
+			_http_code = STATUS_OK;
+	else if (filetype == FILE_DIRECTORY && directory_index(req, filename))
+			_http_code = STATUS_OK;
 }
 
 std::string Response::get_content_type(std::string uri)
@@ -117,7 +103,7 @@ std::string Response::get_content_type(std::string uri)
 		if (mime_map.count(extension) > 0)
 			return mime_map[extension];
 	}
-	return mime_map["default"];
+	return mime_map[".html"];
 }
 
 std::string Response::date_now(void)
@@ -148,14 +134,14 @@ void	Response::build_response(Request *req, int status)
 	buffer << bs;
 }
 
-void	Response::directory_index(Request *req, std::string path)
+bool	Response::directory_index(Request *req, std::string path)
 {
 	DIR*			dir;
 	struct dirent*		entry;
 
 	dir = opendir(path.c_str());
 	if (!dir)
-		return;
+		return false;
 	_body << "<html><head><title>Index</title></head><body><h1>Index of " << req->_uri << "</h1><ul>";
 
 	std::string e;
@@ -170,4 +156,5 @@ void	Response::directory_index(Request *req, std::string path)
 	_body << "</ul></body></html>";
 
 	closedir(dir);
+	return true;
 }

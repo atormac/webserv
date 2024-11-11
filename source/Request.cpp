@@ -12,6 +12,7 @@ std::unordered_map<std::string, int> method_map =
 
 Request::Request()
 {
+	this->_bytes_read = 0;
 	this->_error = 0;
 	this->_state = State::StatusLine;
 	this->_content_len = 0;
@@ -25,6 +26,8 @@ Request::~Request()
 State Request::parse(char *data, size_t size)
 {
 	_buffer.append(data, size);
+	_bytes_read += size;
+
 	while (_state != State::Complete && _state != State::Error)
 	{
 		switch (_state)
@@ -84,7 +87,6 @@ void Request::parse_status_line(void)
 	_uri = Str::url_decode(m[2]);
 	_version = m[3];
 
-	std::cout << "uri decoded: " << _uri << std::endl;
 	if (method_map.count(_method_str) == 0)
 	{
 		_error = STATUS_METHOD_NOT_ALLOWED;
@@ -223,29 +225,6 @@ void	Request::parse_chunked(void)
 		parse_chunked();
 }
 
-std::string	Request::get_key_data(std::string &buf, std::string key)
-{
-	size_t pos = buf.find(key + "=\"");
-	if (pos == std::string::npos)
-		return "";
-	pos += key.size() + 2;
-	size_t end = buf.find("\"", pos);
-	if (end == std::string::npos)
-		return "";
-	return buf.substr(pos, end - pos);
-
-}
-
-std::string Request::safe_substr(std::string &buf, std::string before, std::string after)
-{
-	size_t pos = buf.find(before);
-	if (pos == std::string::npos)
-		return "";
-	size_t end = buf.find(after, pos);
-	if (end == std::string::npos)
-		return buf.substr(pos + before.size());
-	return buf.substr(pos, end - pos);
-}
 
 void	Request::parse_multipart(void)
 {
@@ -268,9 +247,9 @@ void	Request::parse_multipart(void)
 		struct Part part;
 		part.data = part_buf.substr(header_end + 4);	
 		part_buf.erase(header_end);
-		part.name = get_key_data(part_buf, "name");
-		part.filename = get_key_data(part_buf, "filename");
-		part.content_type = safe_substr(part_buf, "Content-Type: ", CRLF);
+		part.name = Str::get_key_data(part_buf, "name");
+		part.filename = Str::get_key_data(part_buf, "filename");
+		part.content_type = Str::safe_substr(part_buf, "Content-Type: ", CRLF);
 		if (part.data.empty())
 			continue;
 		std::cout << "part.name: " << part.name << std::endl;
@@ -287,19 +266,14 @@ void	Request::parse_multipart(void)
 
 void	Request::dump(void)
 {
-	std::cout << "--- Request::dump() ---" << std::endl;
-	if (this->_state != State::Complete)
-		std::cout << "State:: != Complete\n";
-	std::cout << "METHOD: " << _method << std::endl;
-	std::cout << "URI: " << _uri << std::endl;
-	std::cout << "VERSION: " << _version << std::endl;
-	std::cout << "HOST: " << _host << std::endl;
-	std::cout << "CONTENT_LEN: " << _content_len << std::endl;
+	std::cout << "[webserv] " << _method_str << " | ";
+	std::cout << _uri << " | " << _bytes_read << " | ";
+	std::cout << _host;
+	std::cout << std::endl;
 	for(const auto &e : this->_headers)
 	{
 		std::cout << "\t" << e.first << ": " << e.second << std::endl;
 	}
 	if (_content_len > 0)
 		std::cout << "body: " << _body << std::endl;
-	std::cout << "--- end dump ---" << std::endl;
 }
