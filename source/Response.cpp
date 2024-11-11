@@ -58,7 +58,7 @@ Response::Response(Request *req)
 
 	if (_http_code == STATUS_NOT_FOUND)
 	{
-		read_www_file("./www/404.html");
+		Io::read_file("./www/404.html", _body);
 	}
 	std::cout << _http_code << std::endl;
 	build_response(req, _http_code);
@@ -72,10 +72,8 @@ void	Response::handle_post(Request *req)
 	if (req->_uri == "/submit")
 	{
 		struct Part part = req->parts.front();
-		std::ofstream fs("./www/upload/" + part.filename, std::ios::out | std::ios::binary | std::ios::app);
-		fs.write(part.data.data(), part.data.size());
-		fs.close();
-		_http_code = STATUS_OK;
+		if (Io::write_file(part.filename, part.data))
+			_http_code = STATUS_OK;
 	}
 	/*
 	*/
@@ -98,8 +96,9 @@ void	Response::handle_get(Request *req)
 	{
 		if (S_ISREG(sb.st_mode))
 		{
-			_http_code = STATUS_OK;
-			read_www_file(filename);
+			if (Io::read_file(filename, _body))
+				_http_code = STATUS_OK;
+			//read_www_file(filename);
 		}
 		else if (S_ISDIR(sb.st_mode))
 		{
@@ -107,16 +106,6 @@ void	Response::handle_get(Request *req)
 			directory_index(req, filename);
 		}
 	}
-}
-
-bool	Response::read_www_file(std::string filename)
-{
-	std::ifstream file(filename, std::ios::binary);
-	if (!file)
-		return false;
-	_body << file.rdbuf();
-	file.close();
-	return true;
 }
 
 std::string Response::get_content_type(std::string uri)
@@ -128,7 +117,7 @@ std::string Response::get_content_type(std::string uri)
 		if (mime_map.count(extension) > 0)
 			return mime_map[extension];
 	}
-	return mime_map[".html"];
+	return mime_map["default"];
 }
 
 std::string Response::date_now(void)

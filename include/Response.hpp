@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <cstring>
+#include <Io.hpp>
 
 
 class Response
@@ -21,7 +22,6 @@ class Response
 		void	handle_delete(Request *req);
 		void	handle_get(Request *req);
 
-		bool	read_www_file(std::string filename);
 		void	directory_index(Request *req, std::string path);
 		std::string date_now(void);
 		std::string get_content_type(std::string uri);
