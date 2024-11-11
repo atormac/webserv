@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/11 17:55:30 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/11 21:22:07 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -235,7 +235,7 @@ bool HttpServer::accept_client(int _socket_fd)
 	ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
 
 	Client *client = (Client *)ev.data.ptr;
-	client->req = new Request();
+	//client->req = new Request();
 
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
 	{
@@ -257,8 +257,6 @@ void HttpServer::remove_client(Client *client)
 		perror("remove_client epoll_ctl");
 		return;
 	}
-	if (client->req != nullptr)
-		delete client->req;
 	close(client->fd);
 	_clients.erase(client->fd);
 }

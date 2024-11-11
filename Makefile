@@ -13,10 +13,7 @@ OBJECTS := $(addprefix $(OBJ_DIR)/, $(notdir $(SOURCES:.cpp=.o)))
 
 $(shell mkdir -p $(OBJ_DIR))
 
-ifeq ($(NPROCS),)
-	NPROCS = $(shell grep -c ^processor /proc/cpuinfo)
-endif
-
+NPROCS := $(shell grep -c ^processor /proc/cpuinfo)
 
 target asan_flags: CXXFLAGS += -fsanitize=address,undefined -g
 target debug_flags: CXXFLAGS += -g

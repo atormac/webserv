@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <cstring>
+#include <memory>
 #include <Io.hpp>
 
 
@@ -15,14 +16,15 @@ class Response
 {
 	private:
 		int	_http_code;
+		std::shared_ptr<Request> req;
+
 		void	build_response(int status);
-		void	build_response(Request *req, int status);
 
-		void	handle_post(Request *req);
-		void	handle_delete(Request *req);
-		void	handle_get(Request *req);
+		void	handle_post(void);
+		void	handle_delete(void);
+		void	handle_get(void);
 
-		bool	directory_index(Request *req, std::string path);
+		bool	directory_index(std::string path);
 		std::string date_now(void);
 		std::string get_content_type(std::string uri);
 	public:
@@ -30,7 +32,7 @@ class Response
 		std::ostringstream _body;
 		std::ostringstream buffer;
 
-		Response(Request *req);
+		Response(std::shared_ptr<Request> req);
 		~Response();
 };
 #endif

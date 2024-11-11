@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sys/epoll.h>
 #include <Request.hpp>
+#include <memory>
 
 class Client
 {
@@ -11,9 +12,12 @@ class Client
 	public:
 		int	fd;
 		std::string ip_addr;
-		Request *req;
+		//Request *req;
+		std::shared_ptr<Request> req;
 		std::string response;
-		Client(int client_fd, std::string ip);
+
+		Client();
 		~Client();
+		Client(int client_fd, std::string ip);
 };
 #endif

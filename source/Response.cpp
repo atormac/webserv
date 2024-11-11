@@ -38,20 +38,21 @@ Response::~Response()
 {
 }
 
-Response::Response(Request *req)
+Response::Response(std::shared_ptr<Request> request)
 {
+	req = request;
 	_http_code = STATUS_NOT_FOUND;
+
 	if (req->_error)
 	{
-		build_response(req, req->_error);
+		build_response(req->_error);
 		return;
 	}
-
 	switch (req->_method)
 	{
-		case METHOD_GET: handle_get(req); break;
-		case METHOD_POST: handle_post(req); break;
-		case METHOD_DELETE: handle_delete(req); break;
+		case METHOD_GET: handle_get(); break;
+		case METHOD_POST: handle_post(); break;
+		case METHOD_DELETE: handle_delete(); break;
 	}
 
 	if (_http_code == STATUS_NOT_FOUND)
@@ -59,66 +60,10 @@ Response::Response(Request *req)
 		Io::read_file("./www/404.html", _body);
 	}
 	std::cout << _http_code << std::endl;
-	build_response(req, _http_code);
+	build_response(_http_code);
 }
 
-void	Response::handle_post(Request *req)
-{
-	if (req->_uri == "/submit")
-	{
-		struct Part part = req->parts.front();
-		if (Io::write_file(part.filename, part.data))
-			_http_code = STATUS_OK;
-	}
-}
-
-void	Response::handle_delete(Request *req)
-{
-	(void)req;
-	std::cout << "handle_delete()\n";
-}
-
-void	Response::handle_get(Request *req)
-{
-	std::string filename = "./www" + req->_uri;
-	int filetype = Io::file_type(filename);
-
-	if (filetype == FILE_NOT_EXISTS)
-	{
-		_http_code = STATUS_NOT_FOUND;
-		return;
-	}
-	if (filetype == FILE_FILE && Io::read_file(filename, _body))
-			_http_code = STATUS_OK;
-	else if (filetype == FILE_DIRECTORY && directory_index(req, filename))
-			_http_code = STATUS_OK;
-}
-
-std::string Response::get_content_type(std::string uri)
- {
-	size_t pos = uri.find_last_of(".");
-	if (pos != std::string::npos)
-	{
-		std::string extension = uri.substr(pos);
-		if (mime_map.count(extension) > 0)
-			return mime_map[extension];
-	}
-	return mime_map[".html"];
-}
-
-std::string Response::date_now(void)
-{  
-	time_t t;
-	struct tm *time_struct;
-	char buf[128];
-
-	std::time(&t);
-	time_struct = std::gmtime(&t);
-	std::strftime(buf, sizeof(buf) - 1, "%a, %d %b %Y %H:%M:%S GMT", time_struct);
-	return std::string(buf);
-}
-
-void	Response::build_response(Request *req, int status)
+void	Response::build_response(int status)
 {
 	const std::string &bs = _body.str();
 
@@ -134,7 +79,50 @@ void	Response::build_response(Request *req, int status)
 	buffer << bs;
 }
 
-bool	Response::directory_index(Request *req, std::string path)
+void	Response::handle_post(void)
+{
+	if (req->_uri == "/submit")
+	{
+		struct Part part = req->parts.front();
+		if (Io::write_file(part.filename, part.data))
+			_http_code = STATUS_OK;
+	}
+}
+
+void	Response::handle_delete(void)
+{
+	std::cout << "handle_delete()\n";
+}
+
+void	Response::handle_get(void)
+{
+	std::string filename = "./www" + req->_uri;
+	int filetype = Io::file_type(filename);
+
+	if (filetype == FILE_NOT_EXISTS)
+	{
+		_http_code = STATUS_NOT_FOUND;
+		return;
+	}
+	if (filetype == FILE_FILE && Io::read_file(filename, _body))
+			_http_code = STATUS_OK;
+	else if (filetype == FILE_DIRECTORY && directory_index(filename))
+			_http_code = STATUS_OK;
+}
+
+std::string Response::get_content_type(std::string uri)
+ {
+	size_t pos = uri.find_last_of(".");
+	if (pos != std::string::npos)
+	{
+		std::string extension = uri.substr(pos);
+		if (mime_map.count(extension) > 0)
+			return mime_map[extension];
+	}
+	return mime_map[".html"];
+}
+
+bool	Response::directory_index(std::string path)
 {
 	DIR*			dir;
 	struct dirent*		entry;
@@ -161,4 +149,16 @@ bool	Response::directory_index(Request *req, std::string path)
 
 	closedir(dir);
 	return true;
+}
+
+std::string Response::date_now(void)
+{  
+	time_t t;
+	struct tm *time_struct;
+	char buf[128];
+
+	std::time(&t);
+	time_struct = std::gmtime(&t);
+	std::strftime(buf, sizeof(buf) - 1, "%a, %d %b %Y %H:%M:%S GMT", time_struct);
+	return std::string(buf);
 }
