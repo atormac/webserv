@@ -4,7 +4,7 @@ namespace Io
 {
 
 
-	int	file_type(std::string filename)
+	int	file_type(const std::string &filename)
 	{
 		struct stat sb;
 
@@ -16,7 +16,7 @@ namespace Io
 			return FILE_DIRECTORY;
 		return FILE_NOT_EXISTS;
 	}
-	bool	read_file(std::string filename, std::ostringstream &out)
+	bool	read_file(const std::string &filename, std::ostringstream &out)
 	{
 		std::ifstream file(filename, std::ios::binary);
 		if (!file)
@@ -26,7 +26,7 @@ namespace Io
 		return true;
 	}
 
-	bool	write_file(std::string filename, std::string &content)
+	bool	write_file(const std::string &filename, std::string &content)
 	{
 		//could use try catch here
 		std::ofstream fs(filename, std::ios::out | std::ios::binary | std::ios::app);

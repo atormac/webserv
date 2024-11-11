@@ -16,8 +16,8 @@ enum
 
 namespace Io
 {
-	int	file_type(std::string filename);
-	bool	read_file(std::string filename, std::ostringstream &out);
-	bool write_file(std::string filename, std::string &content);
+	int	file_type(const std::string &filename);
+	bool	read_file(const std::string &filename, std::ostringstream &out);
+	bool write_file(const std::string &filename, std::string &content);
 };
 #endif
