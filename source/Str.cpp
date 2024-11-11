@@ -1,5 +1,6 @@
 #include <Str.hpp>
 #include <cstring>
+
 namespace Str
 {
 	int decode_hex(const char *s)
@@ -25,5 +26,24 @@ namespace Str
 			s++;
 		}
 		return ret;
+	}
+
+	std::string url_decode(std::string s)
+	{
+		std::string res = "";
+
+		for (size_t i = 0; i < s.length(); i++)
+		{
+			if (s[i] == '%' && (s.length() - i) >= 2) {
+				int out;
+				sscanf(s.substr(i+1,2).c_str(), "%x", &out);
+				char ch = static_cast<char>(out);
+				res += ch;
+				i += 2;
+				continue;
+			}
+			res += s[i];
+		}
+		return res;
 	}
 }

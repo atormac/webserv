@@ -81,14 +81,16 @@ void Request::parse_status_line(void)
 		return;
 	}
 	_method_str = m[1];
-	_uri = m[2];
+	_uri = Str::url_decode(m[2]);
 	_version = m[3];
+
+	std::cout << "uri decoded: " << _uri << std::endl;
 	if (method_map.count(_method_str) == 0)
 	{
 		_error = STATUS_METHOD_NOT_ALLOWED;
 		return; 
 	}
-	if (_uri.at(0) != '/' || _uri.find_first_not_of(URI_CHARS) != std::string::npos)
+	if (_uri.at(0) != '/')
 	{
 		std::cerr << "invalid chars on uri\n";
 		return;
