@@ -1,3 +1,4 @@
+MAKEFLAGS += -j8
 NAME = webserv
 CXX = c++
 CXXFLAGS := -Wall -Wextra -Werror -std=c++17
@@ -13,8 +14,8 @@ OBJECTS := $(addprefix $(OBJ_DIR)/, $(notdir $(SOURCES:.cpp=.o)))
 
 $(shell mkdir -p $(OBJ_DIR))
 
-target asan: CXXFLAGS += -fsanitize=address,undefined -g
-target debug: CXXFLAGS += -g
+target asan_flags: CXXFLAGS += -fsanitize=address,undefined -g
+target debug_flags: CXXFLAGS += -g
 
 all: $(NAME)
 
@@ -31,10 +32,22 @@ clean:
 fclean: clean
 	rm -f $(NAME)
 
-re: fclean all
-asan: re
-debug: re
-run: asan
+re:
+	$(MAKE) fclean
+	$(MAKE) all
+
+asan_flags: all
+debug_flags: all
+
+debug:
+	$(MAKE) fclean
+	$(MAKE) debug_flags
+asan:
+	$(MAKE) fclean
+	$(MAKE) asan_flags
+run:
+	$(MAKE) fclean
+	$(MAKE) asan_flags
 	./webserv
 
-.PHONY: all re clean fclean asan debug run
+.PHONY: all re clean fclean asan asan_flags debug debug_flags run
