@@ -34,12 +34,21 @@ struct Part
 	std::string data;
 };
 
+enum
+{
+	BODY_TYPE_NORMAL,
+	BODY_TYPE_CHUNKED,
+	BODY_TYPE_MULTIPART,
+};
+
 class Request
 {
 	private:
 		std::string _buffer;
 		size_t	    _bytes_read;
 
+		int	    _body_type;
+	
 		void parse_status_line(void);
 		void parse_header(void);
 		bool parse_header_field(size_t pos);
@@ -51,19 +60,17 @@ class Request
 	public:
 		State _state;
 		int	    _error;
-		bool	    _is_chunked;
 		int	    _method;
 		std::string _method_str;
 		std::string _uri;
 		std::string _version;
-		std::string _host;
-		std::string _transfer_encoding;
-		std::string _content_type;
-		std::string _boundary;
-		std::string _body;
-		std::vector<Part> parts;
-		size_t	    _content_len;
+
+		std::vector<Part> parts; //multipart
+
 		std::map<std::string, std::string> _headers;
+
+		size_t		_content_len;
+		std::string	_body;
 
 		Request();
 		~Request();

@@ -16,7 +16,7 @@ Request::Request()
 	this->_error = 0;
 	this->_state = State::StatusLine;
 	this->_content_len = 0;
-	this->_is_chunked = false;
+	this->_body_type = BODY_TYPE_NORMAL;
 }
 
 Request::~Request()
@@ -69,7 +69,7 @@ void Request::parse_status_line(void)
 	_state = State::Error;
 	size_t pos = _buffer.find(CRLF);
 
-	if (pos == 0)	return;
+	if (pos == 0) return;
 	if (pos == std::string::npos)
 	{
 		_state = State::PartialStatus;
@@ -92,12 +92,7 @@ void Request::parse_status_line(void)
 		_error = STATUS_METHOD_NOT_ALLOWED;
 		return; 
 	}
-	if (_uri.at(0) != '/')
-	{
-		std::cerr << "invalid chars on uri\n";
-		return;
-	}
-	if (_version != "HTTP/1.1")
+	if (_uri.at(0) != '/' || _version != "HTTP/1.1")
 		return;
 	_method = method_map[_method_str];
 
@@ -110,23 +105,27 @@ void Request::parse_header(void)
 	_state = State::Error;
         size_t pos = _buffer.find(CRLF);
 
+	if (pos == std::string::npos)
+	{
+		_state = State::PartialHeader;
+		return;
+	}
 	if (pos == 0)
 	{
+		if (!_headers.count("host"))
+		{
+			_error = STATUS_BAD_REQUEST;
+			return;
+		}
 		_buffer.erase(0, 2);
 		_state = State::Complete;
 		if (_method == METHOD_POST)
 		{
-			if (_is_chunked)
+			if (_body_type == BODY_TYPE_CHUNKED)
 				_state = State::Chunked;
 			else if (_content_len > 0)
 				_state = State::Body;
 		}
-		return;
-	}
-	if (pos == std::string::npos)
-	{
-		_state = State::PartialHeader;
-		std::cout << "partial header, cur size: " << _buffer.size() << std::endl;
 		return;
 	}
 	if (!parse_header_field(pos))
@@ -139,7 +138,7 @@ bool Request::parse_header_field(size_t pos)
 	std::string line = _buffer.substr(0, pos);
 	_buffer.erase(0, pos + 2);
 
-	std::regex regex("(.+[^=]): (.+)");
+	std::regex regex(R"((\S+): (.+))");
 	std::smatch m;
 
 	if (!std::regex_match(line, m, regex))
@@ -148,26 +147,13 @@ bool Request::parse_header_field(size_t pos)
 	std::string value = m[2];
 	std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
 
-	this->_headers[key] = value;
-	if (key == "content-length")
-		_content_len = std::stoi(value);
-	if (key == "host")
-		_host = value;
-	if (key == "transfer-encoding")
-	{
-		_transfer_encoding = value;
-		if (_transfer_encoding == "chunked")
-			_is_chunked = true;
-	}
-	if (key == "content-type")
-	{
-		_content_type = value;
-		if (_method == METHOD_POST && value.find("multipart/form-data; boundary=") == 0)
-		{
-			value.erase(0, sizeof("multipart/form-data; boundary=") - 1);
-			_boundary = "--" + value;
-		}
-	}
+	_headers[key] = value;
+	if (key == "content-length") _content_len = std::stoi(value);
+	if (key == "transfer-encoding" && value == "chunked")
+		_body_type = BODY_TYPE_CHUNKED;
+	if (key == "content-type" && value.find("multipart/form-data; boundary=") == 0)
+		_body_type = BODY_TYPE_MULTIPART;
+
 	return true;
 }
 
@@ -182,13 +168,11 @@ void	Request::parse_body(void)
 	}
 	if (_buffer.size() < _content_len)
 	{
-		std::cout << "exiting\n";
 		_state = State::PartialBody;
 		return;
 	}
-	if (!_boundary.empty()) //multipart
+	if (_body_type == BODY_TYPE_MULTIPART)
 	{
-		std::cout << "RAW BODY: " << _buffer << std::endl;
 		_state = State::MultiPart;
 		return;
 	}
@@ -228,14 +212,15 @@ void	Request::parse_chunked(void)
 
 void	Request::parse_multipart(void)
 {
-	_boundary += "\r\n";
-	std::cout << "_boundary: " << _boundary << std::endl;
-	size_t pos = 0;
+	std::string boundary = "--";
+	boundary += Str::trim_start(_headers["content-type"], "boundary=");
+	boundary += "\r\n";
 
-	while ((pos = _buffer.find(_boundary, pos)) != std::string::npos)
+	size_t pos = 0;
+	while ((pos = _buffer.find(boundary, pos)) != std::string::npos)
 	{
-		pos += _boundary.size();
-		size_t end = _buffer.find(_boundary, pos);
+		pos += boundary.size();
+		size_t end = _buffer.find(boundary, pos);
 		if (end == std::string::npos)
 			break;
 		std::string part_buf = _buffer.substr(pos, (end - pos) - 2); //Extra CRLF ?
@@ -252,6 +237,7 @@ void	Request::parse_multipart(void)
 		part.content_type = Str::safe_substr(part_buf, "Content-Type: ", CRLF);
 		if (part.data.empty())
 			continue;
+
 		std::cout << "part.name: " << part.name << std::endl;
 		std::cout << "part.filename: " << part.filename << std::endl;
 		std::cout << "part.content_type: " << part.content_type << std::endl;
@@ -261,14 +247,14 @@ void	Request::parse_multipart(void)
 	_state = State::Complete;
 	_body.clear();
 	_buffer.clear();
-	std::cout << "multipart parsed!\n";
+	std::cout << "multipart parsed.\n";
 }
 
 void	Request::dump(void)
 {
 	std::cout << "[webserv] " << _method_str << " | ";
 	std::cout << _uri << " | " << _bytes_read << " | ";
-	std::cout << _host;
+	std::cout << _headers["host"];
 	std::cout << std::endl;
 	for(const auto &e : this->_headers)
 	{

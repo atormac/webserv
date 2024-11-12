@@ -69,4 +69,15 @@ namespace Str
 			return buf.substr(pos + before.size());
 		return buf.substr(pos, end - pos);
 	}
+
+	std::string trim_start(std::string &str, const std::string &needle)
+	{
+		std::string result = str;
+		size_t pos = result.find(needle);
+
+		if (pos == std::string::npos)
+			return result;
+		result.erase(0, pos + needle.size());
+		return result;
+	}
 }

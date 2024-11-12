@@ -83,9 +83,13 @@ void	Response::handle_post(void)
 {
 	if (req->_uri == "/submit")
 	{
-		struct Part part = req->parts.front();
-		if (Io::write_file(part.filename, part.data))
-			_http_code = STATUS_OK;
+		for (auto & part : req->parts)
+		{
+			if (part.data.empty() || part.filename.empty())
+				continue;
+			if (Io::write_file("./www/upload/" + part.filename, part.data))
+				_http_code = STATUS_OK;
+		}
 	}
 }
 
