@@ -43,7 +43,7 @@ bool Cgi::find_cgi(std::string uri)
 	if (cgi_map.count(ext) == 0)
 		return false;
 	_cgi = cgi_map[ext];
-	_cgi_arg = "www" + uri;
+	_cgi_arg = "./www" + uri;
 	std::cout << "cgi_path: " << cgi_map[ext] << std::endl;
 	return true;
 }
@@ -88,21 +88,19 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 	if (pid == 0)
 	{
 		std::vector<char*> envp;
-		for (auto& var : _env)
+		for (const auto& var : _env)
 		{
-			std::cout << var << std::endl;
 			envp.push_back(const_cast<char*>(var.c_str()));
 		}
-		envp.push_back(const_cast<char*>("\0"));
+		envp.push_back(NULL);
 
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
 		execve(args.data()[0], args.data(), envp.data());
 		exit(1);
 	}
-	std::cout << "waiting for interpreter\n";
 	char	buf[1024] = { 0 };
-	waitpid(pid, &status, 0);
+	waitpid(-1, &status, 0);
 	close(fd[1]);
 	dup2(fd[0], STDIN_FILENO);
 
@@ -111,9 +109,14 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 	{
 		body += std::string(buf, bytes_read);
 	}
-	//std::cout << "cgi_output: " << body << std::endl;
 
 	close_pipes(fd);
+	if (bytes_read != 0)
+	{
+		std::cout << "cgi bytes_read: " << bytes_read << std::endl;
+		return false;
+	}
+	std::cout << "cgi_output: " << body << std::endl;
 	return true;
 }
 

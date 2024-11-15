@@ -150,7 +150,7 @@ bool	Response::directory_index(std::string path)
 		if (e == "." || e == "..")
 			continue;
 		std::string link = req->_uri;
-		if (link != "/")
+		if (link.at(0) != '/')
 			link += "/";
 		link += e;
 		_body << "<li><a href=\"" << link << "\">" << e << "</a></li>";
@@ -188,6 +188,9 @@ void Response::do_cgi(void)
 
 	std::cout << "Cgi: " << req->_uri << std::endl;
 	if (!cgi.execute(req, output))
+	{
 		std::cout << "Cgi failed\n";
+		return;
+	}
 	_body << output;
 }
