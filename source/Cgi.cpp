@@ -37,20 +37,32 @@ void Cgi::close_pipes(int *fd)
 	}
 }
 
+bool Cgi::find_cgi(std::string uri)
+{
+	std::string ext = Io::get_file_ext(uri);
+	if (cgi_map.count(ext) == 0)
+		return false;
+	_cgi = cgi_map[ext];
+	_cgi_arg = "www" + uri;
+	std::cout << "cgi_path: " << cgi_map[ext] << std::endl;
+	return true;
+}
+
 bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 {
 	int	fd[2];
 	char	**env = NULL;
 	int	pid;
 	int	status;
-	std::string cgi_path = "/usr/bin/php";
-	std::string cgi_arg_path = "./www" + request->_uri;
+
+	find_cgi(request->_uri);
+
 	std::vector <char *> args;
 
-
-	args.push_back(const_cast<char *>(cgi_path.c_str()));
-	args.push_back(const_cast<char *>(cgi_arg_path.c_str()));
+	args.push_back(const_cast<char *>(_cgi.c_str()));
+	args.push_back(const_cast<char *>(_cgi_arg.c_str()));
 	args.push_back(nullptr);
+
 	if (pipe(fd) == -1)
 		return false;
 
