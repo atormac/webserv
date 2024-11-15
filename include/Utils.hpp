@@ -6,10 +6,11 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 15:55:43 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 17:28:43 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/15 17:59:41 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#pragma once
+#ifndef UTILS_HPP
+#define UTILS_HPP
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -26,3 +27,4 @@ size_t stoT(std::string s);
 unsigned int stoUI(std::string s);
 
 bool fileExists(const std::string &name);
+#endif

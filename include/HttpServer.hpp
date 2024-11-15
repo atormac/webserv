@@ -6,10 +6,12 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/04 16:24:42 by user             ###   ########.fr       */
+/*   Updated: 2024/11/15 18:00:24 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#pragma once
+#ifndef HTTPSERVER_HPP
+#define HTTPSERVER_HPP
+
 #include <map>
 #include <ServerConfig.hpp>
 #include <Socket.hpp>
@@ -48,3 +50,5 @@ class HttpServer
 			void init_sockets();
 			bool listen();
 };
+
+#endif

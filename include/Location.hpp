@@ -6,10 +6,12 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:26:11 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/05 19:24:16 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/15 18:00:54 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#pragma once
+
+#ifndef LOCATION_HPP
+#define LOCATION_HPP
 #include <ServerConfig.hpp>
 #include <Utils.hpp>
 
@@ -35,3 +37,5 @@ class Location
 			
 			bool getAutoIndex();
 };
+
+#endif

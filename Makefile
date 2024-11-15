@@ -5,7 +5,7 @@ CXXFLAGS := -Wall -Wextra -Werror -std=c++17
 INCLUDE_DIR = include
 LDFLAGS := 
 SOURCE_DIR = source
-SOURCES := main.cpp HttpServer.cpp ServerConfig.cpp Client.cpp Socket.cpp Request.cpp Response.cpp Utils.cpp Location.cpp Str.cpp Io.cpp
+SOURCES := main.cpp HttpServer.cpp ServerConfig.cpp Client.cpp Socket.cpp Request.cpp Response.cpp Utils.cpp Location.cpp Str.cpp Io.cpp Cgi.cpp
 
 OBJ_DIR := obj
 #OBJECTS := $(addprefix $(SOURCE_DIR)/,$(SOURCES:.cpp=.o))

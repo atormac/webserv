@@ -41,4 +41,14 @@ namespace Io
 		fs.close();
 		return true;
 	}
+	std::string get_file_ext(std::string uri)
+	{
+		size_t pos = uri.find_last_of(".");
+
+		if (pos != std::string::npos)
+		{
+			return uri.substr(pos);
+		}
+		return "";
+	}
 };

@@ -48,6 +48,11 @@ Response::Response(std::shared_ptr<Request> request)
 		build_response(req->_error);
 		return;
 	}
+	if (is_cgi(req->_uri))
+	{
+		do_cgi();
+		return;
+	}
 	switch (req->_method)
 	{
 		case METHOD_GET: handle_get(); break;
@@ -165,4 +170,20 @@ std::string Response::date_now(void)
 	time_struct = std::gmtime(&t);
 	std::strftime(buf, sizeof(buf) - 1, "%a, %d %b %Y %H:%M:%S GMT", time_struct);
 	return std::string(buf);
+}
+
+bool Response::is_cgi(std::string uri)
+{
+	std::string ext = Io::get_file_ext(uri);
+	if (cgi_map.count(ext) == 0)
+		return false;
+	return true;
+}
+
+void Response::do_cgi(void)
+{	
+	Cgi cgi;
+
+	std::cout << "Cgi: " << req->_uri << std::endl;
+	cgi.execute(req);
 }

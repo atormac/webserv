@@ -10,6 +10,8 @@
 #include <cstring>
 #include <memory>
 #include <Io.hpp>
+#include <Cgi.hpp>
+
 
 
 class Response
@@ -27,6 +29,8 @@ class Response
 		bool	directory_index(std::string path);
 		std::string date_now(void);
 		std::string get_content_type(std::string uri);
+		bool is_cgi(std::string uri);
+		void do_cgi(void);
 	public:
 		int status;
 		std::ostringstream _body;
