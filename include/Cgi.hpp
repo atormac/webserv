@@ -13,9 +13,12 @@ class Cgi
 	private:
 		std::string _cgi;
 		std::string _cgi_arg;
+		std::vector<std::string> _env;
 
 		void close_pipes(int *fd);
 		bool find_cgi(std::string uri);
+		void env_set(std::string key, std::string value);
+		void env_set_vars(std::shared_ptr<Request> request);
 	public:
 		Cgi();
 		~Cgi();

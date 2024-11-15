@@ -48,14 +48,28 @@ bool Cgi::find_cgi(std::string uri)
 	return true;
 }
 
+void Cgi::env_set(std::string key, std::string value)
+{
+	std::string var = key;
+	var += "=";
+	var += value;
+	_env.push_back(var);
+}
+
+void Cgi::env_set_vars(std::shared_ptr<Request> request)
+{
+	env_set("REQUEST_METHOD", request->_method_str);
+	env_set("SERVER_NAME", "webserv");
+}
+
 bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 {
 	int	fd[2];
-	char	**env = NULL;
 	int	pid;
 	int	status;
 
 	find_cgi(request->_uri);
+	env_set_vars(request);
 
 	std::vector <char *> args;
 
@@ -73,9 +87,17 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 	}
 	if (pid == 0)
 	{
+		std::vector<char*> envp;
+		for (auto& var : _env)
+		{
+			std::cout << var << std::endl;
+			envp.push_back(const_cast<char*>(var.c_str()));
+		}
+		envp.push_back(const_cast<char*>("\0"));
+
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
-		execve(args.data()[0], args.data(), env);
+		execve(args.data()[0], args.data(), envp.data());
 		exit(1);
 	}
 	std::cout << "waiting for interpreter\n";
@@ -89,7 +111,7 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 	{
 		body += std::string(buf, bytes_read);
 	}
-	std::cout << "cgi_output: " << body << std::endl;
+	//std::cout << "cgi_output: " << body << std::endl;
 
 	close_pipes(fd);
 	return true;
