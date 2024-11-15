@@ -63,8 +63,7 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 	{
 		close(fd[0]);
 		dup2(fd[1], STDOUT_FILENO);
-		std::cout << "execve" << std::endl;
-		execve("/usr/bin/php", args.data(), env);
+		execve(args.data()[0], args.data(), env);
 		exit(1);
 	}
 	std::cout << "waiting for interpreter\n";
@@ -72,14 +71,15 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 	waitpid(pid, &status, 0);
 	close(fd[1]);
 	dup2(fd[0], STDIN_FILENO);
-	std::cout << "read\n";
-	size_t bytes_read = read(fd[0], buf, 1024);
-	printf("cgi %zu: %s\n", bytes_read, buf);
+
+	ssize_t bytes_read;
+	while ((bytes_read = read(fd[0], buf, sizeof(buf))) > 0)
+	{
+		body += std::string(buf, bytes_read);
+	}
+	std::cout << "cgi_output: " << body << std::endl;
 
 	close_pipes(fd);
-	if (bytes_read < 0)
-		return false;
-	body = std::string(buf, bytes_read);
 	return true;
 }
 
