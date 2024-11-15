@@ -51,6 +51,7 @@ Response::Response(std::shared_ptr<Request> request)
 	if (is_cgi(req->_uri))
 	{
 		do_cgi();
+		build_response(STATUS_OK);
 		return;
 	}
 	switch (req->_method)
@@ -183,7 +184,10 @@ bool Response::is_cgi(std::string uri)
 void Response::do_cgi(void)
 {	
 	Cgi cgi;
+	std::string output;
 
 	std::cout << "Cgi: " << req->_uri << std::endl;
-	cgi.execute(req);
+	if (!cgi.execute(req, output))
+		std::cout << "Cgi failed\n";
+	_body << output;
 }
