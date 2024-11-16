@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/06 20:21:12 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/16 16:01:53 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -68,21 +68,21 @@ void Location::parseLocation(std::ifstream &configFile)
 // Setters
 void Location::_addAutoIndex(std::stringstream &ss)
 {
-	
-	std::string value;
+	std::regex ptrn("^\\s*autoindex\\s+(on|off)\\s*;\\s*$");
+	std::smatch match_res;
+	std::string string = ss.str();
 
-	ss >> value;
-	if (value.empty())
-		throw std::runtime_error("_addAutoIndex: Adding empty max size!");
-	if (!validLineEnd(value, ss))
-		throw std::runtime_error("_addAutoIndex: Unexpected characters in max size line!");
-	
-	if (value == "on")
+	if (!std::regex_match(string, match_res, ptrn))
+		throw std::runtime_error("_addAutoIndex: Expected format: \"autoindex [on/off];\"");
+	if (match_res.str(1) == "on")
 		_autoIndex = true;
-	else if (value == "off")
+	else if (match_res.str(1) == "off")
 		_autoIndex = false;
 	else
 		throw std::runtime_error("_addAutoIndex: autoindex value other than 'on' or 'off'!");
+	// For debugging
+	std::cout << "Autoindex: " << _autoIndex << std::endl;
+	//	
 }
 
 // Getters

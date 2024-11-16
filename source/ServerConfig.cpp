@@ -70,50 +70,43 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 // Setters
 void ServerConfig::_addName(std::stringstream &ss)
 {
-	std::string name;
+	std::regex ptrn("^\\s*server_name\\s+([a-zA-Z0-9_.-]*)\\s*;\\s*$");
+	std::smatch match_res;
+	std::string string = ss.str();
 
-	if (!std::regex_match(ss.str(), std::regex("^\\s*server_name\\s+[a-zA-Z0-9_.-]*\\s*;\\s*$")))
+	if (!std::regex_match(string, match_res, ptrn))
 		throw std::runtime_error("_addName: Expected format: \"server_name [name];\"");
-	ss >> name;
-	if (name.back() == ';')
-		name.pop_back();
-
-	if (std::find(_names.begin(), _names.end(), name) != _names.end())
+	if (std::find(_names.begin(), _names.end(), match_res.str(1)) != _names.end())
 		throw std::runtime_error("_addName: Adding duplicate server name!");
-	_names.push_back(name);
+	_names.push_back(match_res.str(1));
 }
 
 void ServerConfig::_addMaxSize(std::stringstream &ss)
 {
-	std::string size;
+	std::regex ptrn("^\\s*client_max_body_size\\s+(\\d+)\\s*;\\s*$");
+	std::smatch match_res;
+	std::string string = ss.str();
 
-	ss >> size;
-	if (!std::regex_match(ss.str(), std::regex("^\\s*client_max_body_size\\s+\\d+\\s*;\\s*$")))
+	if (!std::regex_match(string, match_res, ptrn))
 		throw std::runtime_error("_addMaxSize: Expected format: \"client_max_body_size [number];\"");
-	if (size.back() == ';')
-		size.pop_back();
-
-	_maxSize = stringToType<size_t>(size);
+	_maxSize = stringToType<size_t>(match_res.str(1));
 }
 
 void ServerConfig::_addErrorPage(std::stringstream &ss)
 {
-	std::string num_str;
-	std::string page;
+	std::regex ptrn("\\s*error_page\\s+([1-5][0-9]{2})\\s+(error_pages\\/([1-5][0-9]{2})\\.html)\\s*;\\s*");
+	std::smatch match_res;
+	std::string string = ss.str();
 
-	if (!std::regex_match(ss.str(), std::regex("^\\s*error_page\\s+([1-5][0-9]{2})\\s+.*\\.html\\s*;\\s*$")))
-		throw std::runtime_error("_addErrorPage: Expected format: \"error_page [100-599] [valid path to .html];\"");
-	ss >> num_str;
-	ss >> page;
-	if (page.back() == ';')
-		page.pop_back();
-	if (!fileExists(page))
+	if (!std::regex_match(string, match_res, ptrn))
+		throw std::runtime_error("_addErrorPage: Expected format: \"error_page [100-599] error_pages/[100-599].html];\"");
+	if (!fileExists(match_res.str(2)))
 		throw std::runtime_error("_addErrorPage: Invalid error page path!");	
-	_errorPages.insert(std::make_pair(stringToType<int>(num_str), page));
-
+	_errorPages.insert(std::make_pair(stringToType<int>(match_res.str(1)), match_res.str(2)));
 	// For debugging	
-	std::cout << "errno: " << num_str << std::endl;
-	std::cout << "path: " << page << std::endl;
+	std::cout << "errno: " << match_res.str(1) << std::endl;
+	std::cout << "path: " << match_res.str(2) << std::endl;
+	//
 }
 
 void ServerConfig::_addLocation(std::shared_ptr<Location> location)
@@ -124,21 +117,19 @@ void ServerConfig::_addLocation(std::shared_ptr<Location> location)
 
 void ServerConfig::_addListen(std::stringstream &ss)
 {
-	std::string ip;
-	std::string port;
 	std::regex ptrn("^\\s*listen\\s+((?:(?:25[0-5]|(?:2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}):([0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])\\s*;\\s*$");
 	std::smatch match_res;
 	std::string string = ss.str();
 
 	if (!std::regex_match(string, match_res, ptrn))
 		throw std::runtime_error("_addListen: Expected format: \"listen [valid ip]:[valid port];\"");
-
 	
 	_ipAddress = match_res.str(1);
 	_port = match_res.str(2);
-
+	// For debugging
 	std::cout << _ipAddress << std::endl;	
-	std::cout << _port << std::endl;	
+	std::cout << _port << std::endl;
+	//
 }
 
 // Getters
