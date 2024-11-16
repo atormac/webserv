@@ -6,21 +6,21 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 15:55:43 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 17:30:28 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/06 22:41:38 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Utils.hpp>
+#include <sstream>
+#include <regex>
 
 void removeComments(std::string &line)
 {
-	size_t trim = std::min(line.find(";"), line.find("#"));
-	if (trim != std::string::npos)
-		line = line.substr(0, (line[trim] == ';' ? trim + 1 : trim));
+	line = std::regex_replace(line, std::regex("#.*$"), "");
 }
 
 void skipEmptyLines(std::ifstream &configFile, std::string &line)
 {
-	while ((std::getline(configFile, line)) && (removeComments(line), line.empty()));
+	while ((std::getline(configFile, line)) && (removeComments(line), WspcTrim(line).empty()));
 }
 
 std::string leftWspcTrim(std::string string)
@@ -78,4 +78,19 @@ bool fileExists(const std::string &name)
 {
     std::ifstream file(name.c_str());
     return file.good();
+}
+
+bool validLineEnd(std::string &lineEnd, std::stringstream &ss)
+{
+	std::string temp;
+
+	if (lineEnd.back() == ';' && ss.eof())
+	{
+		lineEnd.pop_back();
+		return true;
+	}
+	ss >> temp;
+	if (temp == ";" && ss.eof())
+		return true;
+	return false;
 }

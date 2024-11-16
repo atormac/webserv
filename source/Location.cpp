@@ -6,10 +6,11 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/05 19:24:31 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/16 16:01:53 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
+#include <regex>
 
 Location::Location(ServerConfig *srvConf): _serverConfig(srvConf), _autoIndex(false) {}
 
@@ -34,6 +35,7 @@ Location &Location::operator = (const Location &original)
 void Location::parseLocation(std::ifstream &configFile)
 {
 	std::string line;
+	std::string element;
 
 	skipEmptyLines(configFile, line);
 	if (!configFile)
@@ -43,39 +45,44 @@ void Location::parseLocation(std::ifstream &configFile)
 
 	while (skipEmptyLines(configFile, line), configFile)
 	{
-		line = WspcTrim(line);
-		size_t delim = line.find(" ");
-		std::string element = (delim != std::string::npos) ? line.substr(0, delim) : line;
-		std::string value = (delim != std::string::npos) ? WspcTrim(line.substr(delim + 1)) : "";
-	
-		if (line != "}" && element != "autoindex")
+		std::stringstream ss(line);
+		ss >> element;
+
+		if (element != "}" && element != "autoindex")
 			std::cout << "In location block: |" << element << "|" << std::endl;
 		else if (element == "autoindex")
-			_addAutoIndex(value);
-		else if (line == "}")
+			_addAutoIndex(ss);
+		else if (element == "}")
 			break;
 		else
 			throw std::runtime_error("parseLocation: Unknown element in location block: " + line);	
 	}
-	if (line != "}")
+	//if (line != "}")
+	if (!std::regex_match(line, std::regex("\\s*}")))
+	{
+		std::cout << "Location endline |" << line << "|" << std::endl;
 		throw std::runtime_error("parseLocation: Unterminated location block!");
+	}
 }
 
 // Setters
-void Location::_addAutoIndex(std::string &value)
+void Location::_addAutoIndex(std::stringstream &ss)
 {
-	if (value.empty())
-		throw std::runtime_error("_addAutoIndex: autoindex value empty!");
-	if (value.back() != ';')
-		throw std::runtime_error("_addAutoIndex: autoindex line not terminated with semicolon!");
-	value.pop_back();
-	
-	if (value == "on")
+	std::regex ptrn("^\\s*autoindex\\s+(on|off)\\s*;\\s*$");
+	std::smatch match_res;
+	std::string string = ss.str();
+
+	if (!std::regex_match(string, match_res, ptrn))
+		throw std::runtime_error("_addAutoIndex: Expected format: \"autoindex [on/off];\"");
+	if (match_res.str(1) == "on")
 		_autoIndex = true;
-	else if (value == "off")
+	else if (match_res.str(1) == "off")
 		_autoIndex = false;
 	else
 		throw std::runtime_error("_addAutoIndex: autoindex value other than 'on' or 'off'!");
+	// For debugging
+	std::cout << "Autoindex: " << _autoIndex << std::endl;
+	//	
 }
 
 // Getters

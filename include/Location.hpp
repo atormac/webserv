@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:26:11 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/15 18:00:54 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/16 16:14:11 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ class Location
 			Location &operator = (const Location &original);
 
 			void parseLocation(std::ifstream &configFile);
-			void _addAutoIndex(std::string &value);
+			void _addAutoIndex(std::stringstream &ss);
 			
 			bool getAutoIndex();
 };

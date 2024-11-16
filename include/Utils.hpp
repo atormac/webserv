@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/29 15:55:43 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/15 17:59:41 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/16 16:15:00 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef UTILS_HPP
@@ -15,16 +15,22 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
+#include <sstream>
 
 void removeComments(std::string &line);
 void skipEmptyLines(std::ifstream &configFile, std::string &line);
+bool validLineEnd(std::string &lineEnd, std::stringstream &ss);
+
 
 std::string leftWspcTrim(std::string string);
 std::string rightWspcTrim(std::string string);
 std::string WspcTrim(std::string string);
 
+template <class T> T stringToType(std::string str);
 size_t stoT(std::string s);
 unsigned int stoUI(std::string s);
 
 bool fileExists(const std::string &name);
+
+#include "Utils.tpp"
 #endif

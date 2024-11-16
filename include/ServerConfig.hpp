@@ -25,11 +25,14 @@ class ServerConfig
 			size_t _maxSize;
 			std::map<unsigned int, std::string> _errorPages;
 			std::vector<std::shared_ptr<Location>> _locations;
+			std::string _ipAddress;
+			std::string _port;
 		
-			void _addName(std::string &name);
-			void _addMaxSize(std::string &size);
-			void _addErrorPage(std::string &page);
+			void _addName(std::stringstream &ss);
+			void _addMaxSize(std::stringstream &ss);
+			void _addErrorPage(std::stringstream &ss);
 			void _addLocation(std::shared_ptr<Location> location);
+			void _addListen(std::stringstream &ss);
 
 	public:
 			ServerConfig();

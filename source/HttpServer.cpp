@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/11 21:22:07 by user             ###   ########.fr       */
+/*   Updated: 2024/11/16 16:15:50 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -41,7 +41,6 @@ void HttpServer::parseConfig(const std::string &filePath)
 		if (line == "server")
 		{
 			std::shared_ptr<ServerConfig> server(new ServerConfig());
-			//ServerConfig *server = new ServerConfig();
 			server->parseServerConfig(configFile);
 			
 			// For testing
