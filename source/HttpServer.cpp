@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/16 16:15:50 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/16 21:47:47 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -54,14 +54,7 @@ void HttpServer::parseConfig(const std::string &filePath)
 	std::cout << "Config parsing completed" << std::endl;
 }
 
-HttpServer::~HttpServer()
-{
-	/*for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin();
-		itr != _portsToSockets.end(); itr++)
-	{
-		delete itr->second;
-	}*/
-}
+HttpServer::~HttpServer() {}
 
 bool HttpServer::_socketPresent(std::string &port)
 {
@@ -74,7 +67,6 @@ void HttpServer::addSocket(std::string &port, ServerConfig *server)
 		_portsToSockets[port]->addServer(server);
 	else
 		_portsToSockets.insert({port, std::shared_ptr<Socket>(new Socket(server))});
-		//_portsToSockets.insert({port, new Socket(server)});
 
 	std::cout << "Servers in socket: " << _portsToSockets[port]->getServers().size() << std::endl;
 }
