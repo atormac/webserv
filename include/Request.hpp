@@ -64,10 +64,11 @@ class Request
 		std::string _method_str;
 		std::string _uri;
 		std::string _version;
+		std::map<std::string, std::string> params;
+		std::map<std::string, std::string> _headers;
 
 		std::vector<Part> parts; //multipart
 
-		std::map<std::string, std::string> _headers;
 
 		size_t		_content_len;
 		std::string	_body;

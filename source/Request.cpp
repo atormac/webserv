@@ -69,12 +69,14 @@ void Request::parse_status_line(void)
 	_state = State::Error;
 	size_t pos = _buffer.find(CRLF);
 
-	if (pos == 0) return;
+	if (pos == 0)
+		return;
 	if (pos == std::string::npos)
 	{
 		_state = State::PartialStatus;
 		return;
 	}
+
 	std::string str = _buffer.substr(0, pos);
 	std::regex r(R"((\S+) (\S+) (\S+))");
 	std::smatch m;
@@ -86,6 +88,22 @@ void Request::parse_status_line(void)
 	_method_str = m[1];
 	_uri = Str::url_decode(m[2]);
 	_version = m[3];
+
+	size_t pos_q = _uri.find("?");
+	if (pos_q != std::string::npos && pos_q < pos)
+	{
+		std::string keyval, key, val;
+
+		std::istringstream iss(_uri.substr(pos_q + 1, _uri.size()));
+		while(std::getline(iss, keyval, '&'))
+		{
+			std::istringstream iss(keyval);
+
+			if(std::getline(std::getline(iss, key, '='), val))
+				this->params[key] = val;
+		}
+		_uri.erase(pos_q, _uri.size());
+	}
 
 	if (method_map.count(_method_str) == 0)
 	{
@@ -256,6 +274,10 @@ void	Request::dump(void)
 	std::cout << _uri << " | " << _bytes_read << " | ";
 	std::cout << _headers["host"];
 	std::cout << std::endl;
+	for (const auto &e : this->params)
+	{
+		std::cout << "query param: " << e.first << ":" << e.second << std::endl;
+	}
 	for(const auto &e : this->_headers)
 	{
 		std::cout << "\t" << e.first << ": " << e.second << std::endl;
