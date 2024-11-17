@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:04:58 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/01 13:55:18 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/17 16:03:31 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef SOCKET_HPP
@@ -29,5 +29,7 @@ class Socket
 			void setSocketDescriptor(int socketFd);
 			void addServer(ServerConfig *ServerConfig);
 			const std::vector<ServerConfig *> getServers() const;
+
+			int  bind_socket(std::string ip, int port);
 };
 #endif

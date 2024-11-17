@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/16 21:47:47 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/17 16:08:28 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -71,18 +71,6 @@ void HttpServer::addSocket(std::string &port, ServerConfig *server)
 	std::cout << "Servers in socket: " << _portsToSockets[port]->getServers().size() << std::endl;
 }
 
-bool HttpServer::set_nonblocking(int socketFd)
-{
-	int flags = 0;
-
-	if (fcntl(socketFd, F_SETFL, flags | O_NONBLOCK) == -1)
-	{
-		perror("fcntl");
-		return false;
-	}
-	return true;
-}
-
 void HttpServer::close_server(void)
 {
 	if (this->_epoll_fd == -1)
@@ -106,51 +94,16 @@ void HttpServer::init_sockets()
 		std::string s_port = str.substr(delim_pos, str.length() - delim_pos);
 		int port = std::stoi(s_port);
 		
-		int socketFd = bind_socket(ip, port);
+		int socketFd = itr->second->bind_socket(ip, port);
 
 		itr->second->setSocketDescriptor(socketFd);
 		_socketFdToSockets.insert({socketFd, itr->second});
 	}
 }
 
-int HttpServer::bind_socket(std::string ip, int port)
-{
-	struct sockaddr_in socket_addr;
-	int opt = 1;
-
-	int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (socket_fd == -1)
-	{
-		perror("socket");
-		return -1;
-	}
-	
-	set_nonblocking(socket_fd);
-	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-	{
-		perror("setsockopt");
-		return -1;
-	}
-	socket_addr.sin_family = AF_INET;
-	socket_addr.sin_port = htons(port);
-	socket_addr.sin_addr.s_addr = inet_addr(ip.c_str());
-
-	if (bind(socket_fd, (sockaddr *)&socket_addr, sizeof(socket_addr)) == -1)
-	{
-		perror("bind");
-		return -1;
-	}
-	if (::listen(socket_fd, LISTEN_BACKLOG) == -1)
-	{
-		perror("listen");
-		return -1;
-	}
-	std::cout << "Listening on: " << ip << ":" << port << std::endl;
-	return socket_fd;
-}
 
 
-bool HttpServer::listen()
+void HttpServer::epoll()
 {
 	struct epoll_event events[MAX_EVENTS];
 
@@ -158,7 +111,7 @@ bool HttpServer::listen()
 	if (_epoll_fd == -1)
 	{
 		perror("epoll_create");
-		return false;
+		return;
 	}
 
 	for(const auto& so : this->_socketFdToSockets)
@@ -170,7 +123,7 @@ bool HttpServer::listen()
 		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -2)
 		{
 			perror("epoll_ctl");
-			return false;
+			return;
 		}
 	}
 	
@@ -194,13 +147,13 @@ bool HttpServer::listen()
 				accept_client(e.data.fd);
 				continue;
 			}
-			if (e.events & EPOLLIN)
-				handle_read(e);
-			else if (e.events & EPOLLOUT)
-				handle_write(e);
+			if (e.data.ptr == NULL)
+				continue;
+
+			if (e.events & EPOLLIN) handle_read(e);
+			if (e.events & EPOLLOUT) handle_write(e);
 		}
 	}
-	return true;
 }
 
 bool HttpServer::accept_client(int _socket_fd)
@@ -215,7 +168,7 @@ bool HttpServer::accept_client(int _socket_fd)
 		perror("accept()");
 		return false;
 	}
-	if (!set_nonblocking(client_fd))
+	if (!Io::set_nonblocking(client_fd))
 	{
 		perror("set_nonblocking");
 		close(client_fd);
@@ -224,9 +177,7 @@ bool HttpServer::accept_client(int _socket_fd)
 	ev.events = EPOLLIN | EPOLLET;
 	ev.data.fd = 0;
 	ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
-
 	Client *client = (Client *)ev.data.ptr;
-	//client->req = new Request();
 
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
 	{
@@ -252,17 +203,11 @@ void HttpServer::remove_client(Client *client)
 	_clients.erase(client->fd);
 }
 
-
-#define READ_BUFFER_SIZE 1024
-
 void HttpServer::handle_read(epoll_event &event)
 {
 	Client *client = (Client *)event.data.ptr;
 	struct epoll_event ev_new;
 	char buffer[READ_BUFFER_SIZE];
-
-	if (client == NULL)
-		return;
 
 	ssize_t bytes_read = read(client->fd, buffer, READ_BUFFER_SIZE);
 	if (bytes_read == -1)
@@ -292,8 +237,6 @@ void HttpServer::handle_write(epoll_event &event)
 	Client *client = (Client *)event.data.ptr;
 	struct epoll_event ev_new;
 
-	if (client == NULL)
-		return;
 	std::cout << "[webserv] write " << client->ip_addr << std::endl;
 	if (client->response.size() == 0)
 	{

@@ -1,9 +1,19 @@
 #include <Io.hpp>
+#include <fcntl.h>
 
 namespace Io
 {
+	bool set_nonblocking(int fd)
+	{
+		int flags = 0;
 
-
+		if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		{
+			perror("fcntl");
+			return false;
+		}
+		return true;
+	}
 	int	file_type(const std::string &filename)
 	{
 		struct stat sb;

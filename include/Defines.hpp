@@ -19,6 +19,8 @@ enum
 	METHOD_DELETE
 };
 
+#define READ_BUFFER_SIZE 1024
+
 #define SERVER_NAME "webserv"
 #define REQUEST_BODY_LIMIT 10 * 1024 * 1024 //10MB
 #define CRLF "\r\n"

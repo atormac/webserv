@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/15 18:00:24 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/17 16:07:55 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -33,9 +33,8 @@ class HttpServer
 			std::map<int, std::shared_ptr<Client>> _clients;
 			
 			bool _socketPresent(std::string &port);
+
 			//rename for sanity
-			bool	set_nonblocking(int socketFd);
-			int	bind_socket(std::string ip, int port);
 			void	remove_client(Client *client);
 			bool	accept_client(int socket_fd);
 			void	handle_read(epoll_event &event);
@@ -48,7 +47,7 @@ class HttpServer
 			void close_server(void);
 			void addSocket(std::string &port, ServerConfig *server);
 			void init_sockets();
-			bool listen();
+			void epoll();
 };
 
 #endif
