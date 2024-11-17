@@ -1,10 +1,11 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
-#include <Request.hpp>
 #include <unordered_map>
 #include <iostream>
 #include <memory>
+#include <Defines.hpp>
+#include <Request.hpp>
 
 extern std::unordered_map<std::string, std::string> cgi_map;
 
@@ -17,7 +18,7 @@ class Cgi
 
 		void close_pipes(int *fd);
 		bool find_cgi(std::string uri);
-		void env_set(std::string key, std::string value);
+		void env_set(const std::string &key, const std::string &value);
 		void env_set_vars(std::shared_ptr<Request> request);
 	public:
 		Cgi();

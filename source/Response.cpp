@@ -77,7 +77,7 @@ void	Response::build_response(int status)
 	buffer << "Content-Length: " << bs.size() << CRLF;
 	buffer << "Connection: close" << CRLF;
 	buffer << "Date: " << date_now() << CRLF;
-	buffer << "Server: webserv" << CRLF;
+	buffer << "Server: " << SERVER_NAME << CRLF;
 
 	if (bs.size() > 0)
 		buffer << "Content-Type: " << get_content_type(req->_uri) << CRLF;

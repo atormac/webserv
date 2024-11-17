@@ -18,6 +18,8 @@ enum
 	METHOD_POST,
 	METHOD_DELETE
 };
+
+#define SERVER_NAME "webserv"
 #define REQUEST_BODY_LIMIT 10 * 1024 * 1024 //10MB
 #define CRLF "\r\n"
 

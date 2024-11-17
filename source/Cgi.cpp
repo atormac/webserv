@@ -48,7 +48,7 @@ bool Cgi::find_cgi(std::string uri)
 	return true;
 }
 
-void Cgi::env_set(std::string key, std::string value)
+void Cgi::env_set(const std::string &key, const std::string &value)
 {
 	std::string var = key;
 	var += "=";
@@ -58,8 +58,18 @@ void Cgi::env_set(std::string key, std::string value)
 
 void Cgi::env_set_vars(std::shared_ptr<Request> request)
 {
+	env_set("SERVER_NAME", SERVER_NAME);
+	env_set("SERVER_PROTOCOL", "HTTP/1.1");
+	env_set("GATEWAY_INTERFACE", "CGI/1.1");
 	env_set("REQUEST_METHOD", request->_method_str);
-	env_set("SERVER_NAME", "webserv");
+	env_set("HTTP_ACCEPT", request->_headers["accept"]);
+	env_set("HTTP_USER_AGENT", request->_headers["user-agent"]);
+
+	if (request->_method == METHOD_POST)
+	{
+		env_set("CONTENT_TYPE", "application/x-www-form-urlencoded");
+		env_set("CONTENT_LENGTH", std::to_string(request->_body.size()));
+	}
 }
 
 bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
