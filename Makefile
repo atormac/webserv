@@ -17,7 +17,7 @@ $(shell mkdir -p $(OBJ_DIR))
 NPROCS := 8
 
 target asan_flags: CXXFLAGS += -fsanitize=address,undefined -g
-target debug_flags: CXXFLAGS += -g
+target debug_flags: CXXFLAGS += -gdwarf-4 -fstandalone-debug
 
 all: $(NAME)
 
