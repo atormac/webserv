@@ -150,7 +150,7 @@ bool	Response::directory_index(std::string path)
 		if (e == "." || e == "..")
 			continue;
 		std::string link = req->_uri;
-		if (link.at(0) != '/')
+		if (link.back() != '/')
 			link += "/";
 		link += e;
 		_body << "<li><a href=\"" << link << "\">" << e << "</a></li>";

@@ -72,24 +72,39 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	}
 }
 
+bool Cgi::handle_parent(int *fd, std::string &body)
+{
+	int	status;
+	char	buf[1024];
+	ssize_t bytes_read;
+
+	waitpid(-1, &status, 0);
+	close(fd[1]);
+	fd[1] = -1;
+	dup2(fd[0], STDIN_FILENO);
+	while ((bytes_read = read(fd[0], buf, sizeof(buf))) > 0) {
+		body += std::string(buf, bytes_read);
+	}
+
+	return bytes_read == 0;
+}
+
 bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 {
+	bool	ret = false;
 	int	fd[2];
 	int	pid;
-	int	status;
 
 	find_cgi(request->_uri);
 	env_set_vars(request);
 
 	std::vector <char *> args;
-
 	args.push_back(const_cast<char *>(_cgi.c_str()));
 	args.push_back(const_cast<char *>(_cgi_arg.c_str()));
 	args.push_back(nullptr);
 
 	if (pipe(fd) == -1)
 		return false;
-
 	if ((pid = fork()) == -1)
 	{
 		close_pipes(fd);
@@ -109,24 +124,9 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 		execve(args.data()[0], args.data(), envp.data());
 		exit(1);
 	}
-	char	buf[1024] = { 0 };
-	waitpid(-1, &status, 0);
-	close(fd[1]);
-	dup2(fd[0], STDIN_FILENO);
-
-	ssize_t bytes_read;
-	while ((bytes_read = read(fd[0], buf, sizeof(buf))) > 0)
-	{
-		body += std::string(buf, bytes_read);
-	}
-
+	ret = handle_parent(fd, body);
 	close_pipes(fd);
-	if (bytes_read != 0)
-	{
-		std::cout << "cgi bytes_read: " << bytes_read << std::endl;
-		return false;
-	}
-	std::cout << "cgi_output: " << body << std::endl;
-	return true;
+
+	return ret;
 }
 
