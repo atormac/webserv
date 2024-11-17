@@ -29,26 +29,26 @@ namespace Io
 	bool	read_file(const std::string &filename, std::ostringstream &out)
 	{
 		std::ifstream file(filename, std::ios::binary);
-		if (!file)
+		if (!file || file.fail())
 			return false;
 		out << file.rdbuf();
 		file.close();
 		return true;
 	}
 
-	bool	write_file(const std::string &filename, std::string &content)
+	bool	write_file(const std::string &filename, const std::string &content)
 	{
 		//could use try catch here
-		std::ofstream fs(filename, std::ios::out | std::ios::binary | std::ios::app);
-		if (fs.fail())
+		std::ofstream file(filename, std::ios::out | std::ios::binary | std::ios::app);
+		if (!file || file.fail())
 			return false;
-		fs.write(content.data(), content.size());
-		if (fs.fail())
+		file.write(content.data(), content.size());
+		if (file.fail())
 		{
-			fs.close();
+			file.close();
 			return false;
 		}
-		fs.close();
+		file.close();
 		return true;
 	}
 	std::string get_file_ext(std::string uri)
