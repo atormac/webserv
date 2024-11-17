@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/17 16:08:28 by user             ###   ########.fr       */
+/*   Updated: 2024/11/17 16:26:47 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -83,7 +83,7 @@ void HttpServer::close_server(void)
 	this->_epoll_fd = -1;
 }
 
-void HttpServer::init_sockets()
+bool HttpServer::init()
 {
 	for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
 	{
@@ -95,10 +95,31 @@ void HttpServer::init_sockets()
 		int port = std::stoi(s_port);
 		
 		int socketFd = itr->second->bind_socket(ip, port);
-
+		if (socketFd < 0)
+			return false;
 		itr->second->setSocketDescriptor(socketFd);
 		_socketFdToSockets.insert({socketFd, itr->second});
 	}
+
+	_epoll_fd = epoll_create1(0);
+	if (_epoll_fd == -1)
+	{
+		perror("epoll_create");
+		return false;
+	}
+	for(const auto& so : _socketFdToSockets)
+	{
+		struct epoll_event ev;
+		ev.events = EPOLLIN;
+		ev.data.fd = so.first; //socket_fd
+
+		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -1)
+		{
+			perror("epoll_ctl");
+			return false;
+		}
+	}
+	return true;
 }
 
 
@@ -107,26 +128,6 @@ void HttpServer::epoll()
 {
 	struct epoll_event events[MAX_EVENTS];
 
-	_epoll_fd = epoll_create1(0);
-	if (_epoll_fd == -1)
-	{
-		perror("epoll_create");
-		return;
-	}
-
-	for(const auto& so : this->_socketFdToSockets)
-	{
-		struct epoll_event ev;
-		ev.events = EPOLLIN;
-		ev.data.fd = so.first; //socket_fd
-
-		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -2)
-		{
-			perror("epoll_ctl");
-			return;
-		}
-	}
-	
 	while (true)
 	{
 		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, -1);

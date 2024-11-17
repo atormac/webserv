@@ -24,7 +24,7 @@ int main(void)
 	server.addSocket(port2, cfg2);
 	server.addSocket(port3, cfg3);
 
-	server.init_sockets();
+	server.init();
 	server.epoll();
 	server.close_server();
 
