@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/17 16:26:47 by user             ###   ########.fr       */
+/*   Updated: 2024/11/17 16:28:23 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -152,7 +152,7 @@ void HttpServer::epoll()
 				continue;
 
 			if (e.events & EPOLLIN) handle_read(e);
-			if (e.events & EPOLLOUT) handle_write(e);
+			else if (e.events & EPOLLOUT) handle_write(e);
 		}
 	}
 }

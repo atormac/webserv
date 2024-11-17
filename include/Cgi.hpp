@@ -20,8 +20,8 @@ class Cgi
 		bool find_cgi(std::string uri);
 		void env_set(const std::string &key, const std::string &value);
 		void env_set_vars(std::shared_ptr<Request> request);
-		bool handle_parent(int *fd, std::string &body);
-		bool handle_parent(int *fd);
+		bool handle_parent(int pid, int *fd, std::string &body);
+		void handle_child(int *fd, std::vector <char *> args);
 	public:
 		Cgi();
 		~Cgi();

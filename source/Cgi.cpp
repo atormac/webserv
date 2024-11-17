@@ -72,21 +72,39 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	}
 }
 
-bool Cgi::handle_parent(int *fd, std::string &body)
+bool Cgi::handle_parent(int pid, int *fd, std::string &body)
 {
 	int	status;
 	char	buf[1024];
 	ssize_t bytes_read;
 
-	waitpid(-1, &status, 0);
+	waitpid(pid, &status, 0);
 	close(fd[1]);
 	fd[1] = -1;
-	dup2(fd[0], STDIN_FILENO);
+
+	if (dup2(fd[0], STDIN_FILENO) < 0)
+		return false;
 	while ((bytes_read = read(fd[0], buf, sizeof(buf))) > 0) {
 		body += std::string(buf, bytes_read);
 	}
 
 	return bytes_read == 0;
+}
+
+void Cgi::handle_child(int *fd, std::vector <char *> args)
+{
+	std::vector<char*> c_env;
+
+	for (const auto& var : _env) {
+		c_env.push_back(const_cast<char*>(var.c_str()));
+	}
+	c_env.push_back(NULL);
+
+	close(fd[0]);
+	if (dup2(fd[1], STDOUT_FILENO) < 0) {
+		return;
+	}
+	execve(args.data()[0], args.data(), c_env.data());
 }
 
 bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
@@ -112,19 +130,10 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 	}
 	if (pid == 0)
 	{
-		std::vector<char*> envp;
-		for (const auto& var : _env)
-		{
-			envp.push_back(const_cast<char*>(var.c_str()));
-		}
-		envp.push_back(NULL);
-
-		close(fd[0]);
-		dup2(fd[1], STDOUT_FILENO);
-		execve(args.data()[0], args.data(), envp.data());
+		handle_child(fd, args);
 		exit(1);
 	}
-	ret = handle_parent(fd, body);
+	ret = handle_parent(pid, fd, body);
 	close_pipes(fd);
 
 	return ret;
