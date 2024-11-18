@@ -186,4 +186,5 @@ void Response::do_cgi(void)
 	}
 	_body << output;
 	_status_code = 200;
+	std::cout << "CGI RESPONSE: " << output << std::endl;
 }
