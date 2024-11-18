@@ -175,8 +175,12 @@ std::string Response::date_now(void)
 
 bool Response::is_cgi(std::string uri)
 {
+	if (uri.rfind("/cgi-bin/", 0) != 0)
+		return false;
 	std::string ext = Io::get_file_ext(uri);
 	if (cgi_map.count(ext) == 0)
+		return false;
+	if (Io::file_type("./www" + uri) != FILE_FILE)
 		return false;
 	return true;
 }
