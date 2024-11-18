@@ -64,6 +64,7 @@ class Request
 		std::string _method_str;
 		std::string _uri;
 		std::string _version;
+		std::string _query_string;
 		std::map<std::string, std::string> params;
 		std::map<std::string, std::string> _headers;
 

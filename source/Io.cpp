@@ -1,5 +1,6 @@
 #include <Io.hpp>
 #include <fcntl.h>
+#include <unistd.h>
 
 namespace Io
 {
@@ -14,11 +15,14 @@ namespace Io
 		}
 		return true;
 	}
+
 	int	file_type(const std::string &filename)
 	{
 		struct stat sb;
 
 		if(stat(filename.c_str(), &sb) != 0)
+			return FILE_NOT_EXISTS;
+		if (access(filename.c_str(), R_OK) != 0)
 			return FILE_NOT_EXISTS;
 		if (S_ISREG(sb.st_mode))
 			return FILE_FILE;
@@ -26,6 +30,7 @@ namespace Io
 			return FILE_DIRECTORY;
 		return FILE_NOT_EXISTS;
 	}
+
 	bool	read_file(const std::string &filename, std::ostringstream &out)
 	{
 		std::ifstream file(filename, std::ios::binary);
@@ -51,6 +56,7 @@ namespace Io
 		file.close();
 		return true;
 	}
+
 	std::string get_file_ext(std::string uri)
 	{
 		size_t pos = uri.find_last_of(".");

@@ -90,6 +90,15 @@ void Request::parse_status_line(void)
 	_version = m[3];
 
 	size_t pos_q = _uri.find("?");
+
+	if (pos_q != std::string::npos && pos_q < _uri.size()) {
+
+		_query_string = _uri.substr(pos_q + 1, _uri.size());
+		_uri.erase(pos_q, _uri.size());
+	}
+
+	/*
+	 Not sure if it is needed to parse these out manually
 	if (pos_q != std::string::npos && pos_q < pos)
 	{
 		std::string keyval, key, val;
@@ -104,6 +113,7 @@ void Request::parse_status_line(void)
 		}
 		_uri.erase(pos_q, _uri.size());
 	}
+	*/
 
 	if (method_map.count(_method_str) == 0)
 	{
@@ -271,13 +281,10 @@ void	Request::parse_multipart(void)
 void	Request::dump(void)
 {
 	std::cout << "[webserv] " << _method_str << " | ";
-	std::cout << _uri << " | " << _bytes_read << " | ";
-	std::cout << _headers["host"];
+	std::cout << _uri << " | " << _query_string << " | ";
+	std::cout << _bytes_read << " | " << _headers["host"];
 	std::cout << std::endl;
-	for (const auto &e : this->params)
-	{
-		std::cout << "query param: " << e.first << ":" << e.second << std::endl;
-	}
+
 	for(const auto &e : this->_headers)
 	{
 		std::cout << "\t" << e.first << ": " << e.second << std::endl;
