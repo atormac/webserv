@@ -12,19 +12,20 @@ extern std::unordered_map<std::string, std::string> cgi_map;
 class Cgi
 {
 	private:
-		std::string _cgi;
-		std::string _cgi_arg;
+		std::string _interpreter;
+		std::string _script_path;
 		std::vector<std::string> _env;
 
 		void close_pipes(int *fd);
-		bool find_cgi(std::string uri);
 		void env_set(const std::string &key, const std::string &value);
 		void env_set_vars(std::shared_ptr<Request> request);
 		bool handle_parent(int pid, int *fd, std::string &body);
 		void handle_child(int *fd, std::vector <char *> args);
 	public:
 		Cgi();
+		Cgi(std::shared_ptr<Request> request);
 		~Cgi();
-		bool execute(std::shared_ptr<Request> request, std::string &body);
+		bool execute(std::string &body);
+		static bool is_cgi(std::string uri);
 };
 #endif
