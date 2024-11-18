@@ -107,16 +107,16 @@ void	Response::handle_delete(void)
 void	Response::handle_get(void)
 {
 	std::string filename = "./www" + req->_uri;
-	int filetype = Io::file_stat(filename);
+	int flags = Io::file_stat(filename);
 
-	if (filetype == FILE_NOT_EXISTS)
+	if (!(flags & FS_READ))
 	{
 		_status_code = STATUS_NOT_FOUND;
 		return;
 	}
-	if (filetype == FILE_FILE && Io::read_file(filename, _body))
+	if (flags & FS_ISFILE && Io::read_file(filename, _body))
 			_status_code = STATUS_OK;
-	else if (filetype == FILE_DIRECTORY && directory_index(filename))
+	if (flags & FS_ISDIR && directory_index(filename))
 			_status_code = STATUS_OK;
 }
 

@@ -145,7 +145,8 @@ bool Cgi::is_cgi(std::string uri)
 	std::string ext = Io::get_file_ext(uri);
 	if (cgi_map.count(ext) == 0)
 		return false;
-	if (Io::file_stat("./www" + uri) != FILE_FILE)
+	int flags = Io::file_stat("./www" + uri);
+	if (!(flags & FS_ISFILE) || !(flags & FS_READ))
 		return false;
 	return true;
 }

@@ -16,17 +16,21 @@ bool Io::set_nonblocking(int fd)
 
 int	Io::file_stat(const std::string &filename)
 {
+	int flags = 0;
 	struct stat sb;
 
 	if(stat(filename.c_str(), &sb) != 0)
-		return FILE_NOT_EXISTS;
-	if (access(filename.c_str(), R_OK) != 0)
-		return FILE_NOT_EXISTS;
+		return flags;
+	flags |= FS_EXISTS;
 	if (S_ISREG(sb.st_mode))
-		return FILE_FILE;
+		flags |= FS_ISFILE;
 	if (S_ISDIR(sb.st_mode))
-		return FILE_DIRECTORY;
-	return FILE_NOT_EXISTS;
+		flags |= FS_ISDIR;
+	if (access(filename.c_str(), R_OK) == 0)
+		flags |= FS_READ;
+	if (access(filename.c_str(), W_OK) == 0)
+		flags |= FS_WRITE;
+	return flags;
 }
 
 bool	Io::read_file(const std::string &filename, std::ostringstream &out)

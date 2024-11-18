@@ -9,9 +9,11 @@
 
 enum
 {
-	FILE_NOT_EXISTS,
-	FILE_FILE,
-	FILE_DIRECTORY,
+	FS_EXISTS = 1 << 0,
+	FS_ISFILE = 1 << 1,
+	FS_ISDIR = 1 << 2,
+	FS_READ = 1 << 3,
+	FS_WRITE = 1 << 4,
 };
 
 class Io
