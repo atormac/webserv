@@ -17,7 +17,7 @@
 class Response
 {
 	private:
-		int	_http_code;
+		int	_status_code;
 		std::shared_ptr<Request> req;
 
 		void	build_response(int status);

@@ -14,12 +14,14 @@ enum
 	FILE_DIRECTORY,
 };
 
-namespace Io
+class Io
 {
-	bool	set_nonblocking(int fd);
-	int	file_type(const std::string &filename);
-	bool	read_file(const std::string &filename, std::ostringstream &out);
-	bool	write_file(const std::string &filename, const std::string &content);
-	std::string get_file_ext(std::string uri);
+	public:
+		static bool	set_nonblocking(int fd);
+		static int	file_stat(const std::string &filename);
+		static bool	read_file(const std::string &filename, std::ostringstream &out);
+		static bool	write_file(const std::string &filename, const std::string &content);
+		static std::string get_file_ext(std::string uri);
 };
+
 #endif

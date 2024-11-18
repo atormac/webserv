@@ -41,17 +41,17 @@ Response::~Response()
 Response::Response(std::shared_ptr<Request> request)
 {
 	req = request;
-	_http_code = STATUS_NOT_FOUND;
+	_status_code = STATUS_NOT_FOUND;
 
 	if (req->_error)
 	{
 		build_response(req->_error);
 		return;
 	}
-	if (is_cgi(req->_uri))
+	if (Cgi::is_cgi(req->_uri))
 	{
 		do_cgi();
-		build_response(STATUS_OK);
+		build_response(_status_code);
 		return;
 	}
 	switch (req->_method)
@@ -61,12 +61,12 @@ Response::Response(std::shared_ptr<Request> request)
 		case METHOD_DELETE: handle_delete(); break;
 	}
 
-	if (_http_code == STATUS_NOT_FOUND)
+	if (_status_code == STATUS_NOT_FOUND)
 	{
 		Io::read_file("./www/404.html", _body);
 	}
-	std::cout << _http_code << std::endl;
-	build_response(_http_code);
+	std::cout << _status_code << std::endl;
+	build_response(_status_code);
 }
 
 void	Response::build_response(int status)
@@ -94,7 +94,7 @@ void	Response::handle_post(void)
 			if (part.data.empty() || part.filename.empty())
 				continue;
 			if (Io::write_file("./www/upload/" + part.filename, part.data))
-				_http_code = STATUS_OK;
+				_status_code = STATUS_OK;
 		}
 	}
 }
@@ -107,17 +107,17 @@ void	Response::handle_delete(void)
 void	Response::handle_get(void)
 {
 	std::string filename = "./www" + req->_uri;
-	int filetype = Io::file_type(filename);
+	int filetype = Io::file_stat(filename);
 
 	if (filetype == FILE_NOT_EXISTS)
 	{
-		_http_code = STATUS_NOT_FOUND;
+		_status_code = STATUS_NOT_FOUND;
 		return;
 	}
 	if (filetype == FILE_FILE && Io::read_file(filename, _body))
-			_http_code = STATUS_OK;
+			_status_code = STATUS_OK;
 	else if (filetype == FILE_DIRECTORY && directory_index(filename))
-			_http_code = STATUS_OK;
+			_status_code = STATUS_OK;
 }
 
 std::string Response::get_content_type(std::string uri)
@@ -173,24 +173,17 @@ std::string Response::date_now(void)
 	return std::string(buf);
 }
 
-bool Response::is_cgi(std::string uri)
-{
-	std::string ext = Io::get_file_ext(uri);
-	if (cgi_map.count(ext) == 0)
-		return false;
-	return true;
-}
-
 void Response::do_cgi(void)
 {	
-	Cgi cgi;
-	std::string output;
+	Cgi cgi(req);
 
-	std::cout << "Cgi: " << req->_uri << std::endl;
-	if (!cgi.execute(req, output))
+	std::string output;
+	if (!cgi.execute(output))
 	{
-		std::cout << "Cgi failed\n";
+		_status_code = 404;
+		std::cout << "Cgi.execute failed\n";
 		return;
 	}
 	_body << output;
+	_status_code = 200;
 }

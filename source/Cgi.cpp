@@ -19,9 +19,18 @@ Cgi::Cgi()
 {
 }
 
+Cgi::Cgi(std::shared_ptr<Request> request)
+{
+	std::string ext = Io::get_file_ext(request->_uri);
+	_interpreter = cgi_map[ext];
+	_script_path = "./www" + request->_uri;
+	env_set_vars(request);
+}
+
 Cgi::~Cgi()
 {
 }
+
 
 void Cgi::close_pipes(int *fd)
 {
@@ -35,17 +44,6 @@ void Cgi::close_pipes(int *fd)
 		close(fd[1]);
 		fd[1] = -1;
 	}
-}
-
-bool Cgi::find_cgi(std::string uri)
-{
-	std::string ext = Io::get_file_ext(uri);
-	if (cgi_map.count(ext) == 0)
-		return false;
-	_cgi = cgi_map[ext];
-	_cgi_arg = "./www" + uri;
-	std::cout << "cgi_path: " << cgi_map[ext] << std::endl;
-	return true;
 }
 
 void Cgi::env_set(const std::string &key, const std::string &value)
@@ -62,6 +60,7 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	env_set("SERVER_PROTOCOL", "HTTP/1.1");
 	env_set("GATEWAY_INTERFACE", "CGI/1.1");
 	env_set("REQUEST_METHOD", request->_method_str);
+	env_set("QUERY_STRING", request->_query_string);
 	env_set("HTTP_ACCEPT", request->_headers["accept"]);
 	env_set("HTTP_USER_AGENT", request->_headers["user-agent"]);
 
@@ -107,18 +106,16 @@ void Cgi::handle_child(int *fd, std::vector <char *> args)
 	execve(args.data()[0], args.data(), c_env.data());
 }
 
-bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
+bool Cgi::execute(std::string &body)
 {
 	bool	ret = false;
 	int	fd[2];
 	int	pid;
 
-	find_cgi(request->_uri);
-	env_set_vars(request);
 
 	std::vector <char *> args;
-	args.push_back(const_cast<char *>(_cgi.c_str()));
-	args.push_back(const_cast<char *>(_cgi_arg.c_str()));
+	args.push_back(const_cast<char *>(_interpreter.c_str()));
+	args.push_back(const_cast<char *>(_script_path.c_str()));
 	args.push_back(nullptr);
 
 	if (pipe(fd) == -1)
@@ -139,3 +136,16 @@ bool Cgi::execute(std::shared_ptr<Request> request, std::string &body)
 	return ret;
 }
 
+
+//static funcs
+bool Cgi::is_cgi(std::string uri)
+{
+	if (uri.rfind("/cgi-bin/", 0) != 0)
+		return false;
+	std::string ext = Io::get_file_ext(uri);
+	if (cgi_map.count(ext) == 0)
+		return false;
+	if (Io::file_stat("./www" + uri) != FILE_FILE)
+		return false;
+	return true;
+}
