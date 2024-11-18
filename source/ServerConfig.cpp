@@ -29,7 +29,7 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 	skipEmptyLines(configFile, line);
 	if (!configFile)
 		throw std::runtime_error("parseServer: Empty server block!");
-	if (line != "{")
+	if (!std::regex_match(line, std::regex("\\{\\s*")))
 		throw std::runtime_error("parseServer: No '{' opening server block!");
 
 	while (skipEmptyLines(configFile, line), configFile)
@@ -57,14 +57,14 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 		else
 			throw std::runtime_error("parseServer: Unknown element in server block: " + line);	
 	}
-	if (line != "}")
-		throw std::runtime_error("parseSerever: Unterminated server block!");
+	if (!std::regex_match(line, std::regex("\\}\\s*")))
+		throw std::runtime_error("parseServer: No '}' closing server block!");
 }
 
 // Setters
 void ServerConfig::_addName(std::string &line)
 {
-	std::regex ptrn("^\\s*server_name\\s+([a-zA-Z0-9_.-]*)\\s*;\\s*$");
+	std::regex ptrn("^\\tserver_name\\s+([a-zA-Z0-9_.-]*)\\s*;\\s*$");
 	std::smatch match_res;
 
 	if (!std::regex_match(line, match_res, ptrn))
@@ -76,7 +76,7 @@ void ServerConfig::_addName(std::string &line)
 
 void ServerConfig::_addMaxSize(std::string &line)
 {
-	std::regex ptrn("^\\s*client_max_body_size\\s+(\\d+)\\s*;\\s*$");
+	std::regex ptrn("^\\tclient_max_body_size\\s+(\\d+)\\s*;\\s*$");
 	std::smatch match_res;
 
 	if (!std::regex_match(line, match_res, ptrn))
@@ -86,7 +86,7 @@ void ServerConfig::_addMaxSize(std::string &line)
 
 void ServerConfig::_addErrorPage(std::string &line)
 {
-	std::regex ptrn("\\s*error_page\\s+([1-5][0-9]{2})\\s+(error_pages\\/([1-5][0-9]{2})\\.html)\\s*;\\s*");
+	std::regex ptrn("\\terror_page\\s+([1-5][0-9]{2})\\s+(error_pages\\/([1-5][0-9]{2})\\.html)\\s*;\\s*");
 	std::smatch match_res;
 
 	if (!std::regex_match(line, match_res, ptrn))
@@ -108,7 +108,7 @@ void ServerConfig::_addLocation(std::shared_ptr<Location> location)
 
 void ServerConfig::_addListen(std::string &line)
 {
-	std::regex ptrn("^\\s*listen\\s+((?:(?:25[0-5]|(?:2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}):([0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])\\s*;\\s*$");
+	std::regex ptrn("^\\tlisten\\s+((?:(?:25[0-5]|(?:2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}):([0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])\\s*;\\s*$");
 	std::smatch match_res;
 
 	if (!std::regex_match(line, match_res, ptrn))
