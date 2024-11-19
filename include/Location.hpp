@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:26:11 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/19 10:35:57 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/19 19:30:49 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,8 +23,11 @@ class Location
 			ServerConfig*				_serverConfig;
 			std::string 				_path;
 			std::string 				_rootPath;
+			std::vector<std::string>	_indices;
 			bool						_autoIndex;
-			std::vector<std::string>	_allowMethods;
+			std::vector<std::string>	_methods;
+			int							_redirectCode;
+			std::string					_redirectPath;
 
 	public :
 			Location(ServerConfig *serverConfig);
@@ -34,7 +37,10 @@ class Location
 
 			void parseLocation(std::ifstream &configFile);
 			void _addAutoIndex(std::string &line);
-			void _addRoot(std::string line);
+			void _addRoot(std::string &line);
+			void _addIndex(std::string &line);
+			void _addMethods(std::string &line);
+			void _addRedirect(std::string &line);
 			
 			bool getAutoIndex();
 };

@@ -6,19 +6,21 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/19 10:41:14 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/19 19:59:52 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
 #include <regex>
 
-Location::Location(ServerConfig *srvConf): _serverConfig(srvConf), _autoIndex(false) {}
+Location::Location(ServerConfig *srvConf):	_serverConfig(srvConf),
+											_autoIndex(false),
+											_redirectCode(0) {}
 
 Location::Location(const Location &original): _serverConfig(original._serverConfig),
 											_path(original._path),
 											_rootPath(original._rootPath),
 											_autoIndex(original._autoIndex),
-											_allowMethods(original._allowMethods) {}
+											_methods(original._methods) {}
 
 Location::~Location(){}
 
@@ -49,12 +51,18 @@ void Location::parseLocation(std::ifstream &configFile)
 		if (!std::regex_match(line, match_res, ptrn))
 			break;
 
-		if (match_res[1] != "}" && match_res[1] != "autoindex" && match_res[1] != "root")
-			std::cout << "In location block: |" << match_res[1] << "|" << std::endl;
-		else if (match_res[1] == "root")
+		//std::cout << "In location block: |" << match_res[1] << "|" << std::endl;
+		if (match_res[1] == "root")
 			_addRoot(line);
+		else if (match_res[1] == "index")
+			_addIndex(line);
 		else if (match_res[1] == "autoindex")
 			_addAutoIndex(line);
+		else if (match_res[1] == "methods")
+			_addMethods(line);
+		else if (match_res[1] == "return")
+			_addRedirect(line);
+		// ADD UPLOAD CGI
 		else
 			throw std::runtime_error("parseLocation: Unknown element in location block: " + line);	
 	}
@@ -63,7 +71,7 @@ void Location::parseLocation(std::ifstream &configFile)
 }
 
 // Setters
-void Location::_addRoot(std::string line)
+void Location::_addRoot(std::string &line)
 {	
 	std::regex ptrn("\t{2}root\\s+(.*)\\s*;\\s*");
 	std::smatch match_res;
@@ -81,6 +89,21 @@ void Location::_addRoot(std::string line)
 	//	
 }
 
+void Location::_addIndex(std::string &line)
+{	
+	std::regex ptrn_global("\t{2}index(\\s+\\w+.(html|php|py))+\\s*;\\s*");
+	std::regex ptrn_local("\\s+(\\w+.(html|php|py))");
+
+	if (!std::regex_match(line, ptrn_global))
+		throw std::runtime_error("_addIndex: Expected format: \"index [list of indices];\"");
+	for (std::sregex_iterator itr = std::sregex_iterator(line.begin(), line.end(), ptrn_local); itr != std::sregex_iterator(); itr++)
+		_indices.push_back((*itr)[1]);
+	// For debugging
+	for (std::string s: _indices)
+    	std::cout << "Location Index: " << s << std::endl;
+	//
+}
+
 void Location::_addAutoIndex(std::string &line)
 {
 	std::regex ptrn("^\\s*autoindex\\s+(on|off)\\s*;\\s*$");
@@ -96,6 +119,41 @@ void Location::_addAutoIndex(std::string &line)
 		throw std::runtime_error("_addAutoIndex: autoindex value other than 'on' or 'off'!");
 	// For debugging
 	std::cout << "Autoindex: " << _autoIndex << std::endl;
+	//	
+}
+
+void Location::_addMethods(std::string &line)
+{	
+	std::regex ptrn_global("\t{2}methods(\\s+(get|post|delete)){1,3}\\s*;\\s*");
+	std::regex ptrn_local("\\s+(get|post|delete)");
+
+	if (!std::regex_match(line, ptrn_global))
+		throw std::runtime_error("_addMethod: Expected format: \"method [list of methods (get/post/delete)];\"");
+	for (std::sregex_iterator itr = std::sregex_iterator(line.begin(), line.end(), ptrn_local); itr != std::sregex_iterator(); itr++)
+	{
+		if (std::find(_methods.begin(), _methods.end(), (*itr)[1]) != _methods.end())
+			throw std::runtime_error("_addMethods: Adding duplicate location methods!");
+		_methods.push_back((*itr)[1]);
+	}
+	// For debugging
+	for (std::string s: _methods)
+    	std::cout << "Location method: " << s << std::endl;
+	//
+}
+
+void Location::_addRedirect(std::string &line)
+{
+	std::regex ptrn("^\t{2}return\\s+(301|302)\\s+([a-zA-Z0-9\\.\\/:]*)\\s*;\\s*$");
+	std::smatch match_res;
+
+	if (_redirectCode)
+		throw std::runtime_error("_addRedirect: Cannot add multiple redirects to location");
+	if (!std::regex_match(line, match_res, ptrn))
+		throw std::runtime_error("_addRedirect: Expected format: \"return [code] [HTTP/HTTPS URL];\"");
+	_redirectCode = stringToType<int>(match_res[1]);
+	_redirectPath = match_res[2];
+	// For debugging
+	std::cout << "Location redir, code: " << _redirectCode << " path: " << _redirectPath << std::endl;
 	//	
 }
 
