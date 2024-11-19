@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/18 18:11:38 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/19 10:41:14 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -49,8 +49,10 @@ void Location::parseLocation(std::ifstream &configFile)
 		if (!std::regex_match(line, match_res, ptrn))
 			break;
 
-		if (match_res[1] != "}" && match_res[1] != "autoindex")
+		if (match_res[1] != "}" && match_res[1] != "autoindex" && match_res[1] != "root")
 			std::cout << "In location block: |" << match_res[1] << "|" << std::endl;
+		else if (match_res[1] == "root")
+			_addRoot(line);
 		else if (match_res[1] == "autoindex")
 			_addAutoIndex(line);
 		else
@@ -61,6 +63,24 @@ void Location::parseLocation(std::ifstream &configFile)
 }
 
 // Setters
+void Location::_addRoot(std::string line)
+{	
+	std::regex ptrn("\t{2}root\\s+(.*)\\s*;\\s*");
+	std::smatch match_res;
+	struct stat mode;
+
+	if (!std::regex_match(line, match_res, ptrn))
+		throw std::runtime_error("_addRoot: Expected format: \"root [directory];\"");
+	if (stat(match_res.str(1).c_str(), &mode) != 0)
+        throw(std::runtime_error("_addRoot: Specified path doesn't exist!"));
+	if (!(mode.st_mode & S_IFDIR))
+		throw(std::runtime_error("_addRoot: Specified path isn't a directory!"));
+	_rootPath = match_res[1];
+	// For debugging
+	std::cout << "root path: " << _rootPath << std::endl;
+	//	
+}
+
 void Location::_addAutoIndex(std::string &line)
 {
 	std::regex ptrn("^\\s*autoindex\\s+(on|off)\\s*;\\s*$");
