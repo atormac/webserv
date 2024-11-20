@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/19 19:59:52 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/20 23:01:50 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -62,7 +62,10 @@ void Location::parseLocation(std::ifstream &configFile)
 			_addMethods(line);
 		else if (match_res[1] == "return")
 			_addRedirect(line);
-		// ADD UPLOAD CGI
+		else if (match_res[1] == "upload")
+			_addUpload(line);
+		else if (match_res[1] == "cgi")
+			_addCgi(line);
 		else
 			throw std::runtime_error("parseLocation: Unknown element in location block: " + line);	
 	}
@@ -127,6 +130,8 @@ void Location::_addMethods(std::string &line)
 	std::regex ptrn_global("\t{2}methods(\\s+(get|post|delete)){1,3}\\s*;\\s*");
 	std::regex ptrn_local("\\s+(get|post|delete)");
 
+	if (_methods.size())
+		throw std::runtime_error("_addMethods: Cannot add location methods multiple times!");
 	if (!std::regex_match(line, ptrn_global))
 		throw std::runtime_error("_addMethod: Expected format: \"method [list of methods (get/post/delete)];\"");
 	for (std::sregex_iterator itr = std::sregex_iterator(line.begin(), line.end(), ptrn_local); itr != std::sregex_iterator(); itr++)
@@ -147,7 +152,7 @@ void Location::_addRedirect(std::string &line)
 	std::smatch match_res;
 
 	if (_redirectCode)
-		throw std::runtime_error("_addRedirect: Cannot add multiple redirects to location");
+		throw std::runtime_error("_addRedirect: Cannot add multiple redirects to location!");
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addRedirect: Expected format: \"return [code] [HTTP/HTTPS URL];\"");
 	_redirectCode = stringToType<int>(match_res[1]);
@@ -155,6 +160,51 @@ void Location::_addRedirect(std::string &line)
 	// For debugging
 	std::cout << "Location redir, code: " << _redirectCode << " path: " << _redirectPath << std::endl;
 	//	
+}
+
+void Location::_addUpload(std::string &line)
+{	
+	std::regex ptrn("\t{2}upload\\s+(.*)\\s*;\\s*");
+	std::smatch match_res;
+	struct stat mode;
+
+	if (_uploadPath.length())
+		throw std::runtime_error("_addUpload: Cannot add multiple upload paths to location!");
+	if (!std::regex_match(line, match_res, ptrn))
+		throw std::runtime_error("_addUpload: Expected format: \"upload [directory];\"");
+	if (stat(match_res.str(1).c_str(), &mode) != 0)
+        throw(std::runtime_error("_addUpload: Specified path doesn't exist!"));
+	if (!(mode.st_mode & S_IFDIR))
+		throw(std::runtime_error("_addUpload: Specified path isn't a directory!"));
+	_uploadPath = match_res[1];
+	// For debugging
+	std::cout << "upload path: " << _uploadPath << std::endl;
+	//	
+}
+
+void Location::_addCgi(std::string &line)
+{
+	std::regex ptrn_global("^\\t{2}cgi(\\s+(.py|.php)\\s+([^\\s]*\\/(?:python3|php)))+\\s*;\\s*$");
+	std::regex ptrn_local("\\s+(.py|.php)\\s+([^\\s]*\\/(?:python3|php))");
+
+	std::cout << "Map is empty: " << _cgi.empty() << std::endl;
+
+	if (!_cgi.empty())
+		throw std::runtime_error("_addCgi: Cannot add location cgi multiple times!");
+	if (!std::regex_match(line, ptrn_global))
+		throw std::runtime_error("_addCgi: Expected format: \"cgi [list of cgi key value pairs];\"");
+	for (std::sregex_iterator itr = std::sregex_iterator(line.begin(), line.end(), ptrn_local); itr != std::sregex_iterator(); itr++)
+	{		
+		std::cout << "Already in map: " << _cgi.count((*itr)[1]) << std::endl;
+		if (_cgi.count((*itr)[1]))
+			throw std::runtime_error("_addCgi: Cannot add multiple values to one key!");
+		// ADD CHECK IF FILE EXISTS
+		_cgi.insert(std::make_pair((*itr)[1], (*itr)[2]));
+	}
+	// For debugging
+	for (auto s: _cgi)
+    	std::cout << "Location cgi: |" << s.first << "| " << s.second << std::endl;
+	//
 }
 
 // Getters

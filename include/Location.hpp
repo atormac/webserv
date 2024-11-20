@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:26:11 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/19 19:30:49 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/20 22:23:51 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,14 +20,16 @@ class	ServerConfig;
 class Location
 {
 	private:
-			ServerConfig*				_serverConfig;
-			std::string 				_path;
-			std::string 				_rootPath;
-			std::vector<std::string>	_indices;
-			bool						_autoIndex;
-			std::vector<std::string>	_methods;
-			int							_redirectCode;
-			std::string					_redirectPath;
+			ServerConfig*						_serverConfig;
+			std::string 						_path;
+			std::string 						_rootPath;
+			std::vector<std::string>			_indices;
+			bool								_autoIndex;
+			std::vector<std::string>			_methods;
+			int									_redirectCode;
+			std::string							_redirectPath;
+			std::string							_uploadPath;
+			std::map<std::string, std::string>	_cgi;
 
 	public :
 			Location(ServerConfig *serverConfig);
@@ -41,6 +43,8 @@ class Location
 			void _addIndex(std::string &line);
 			void _addMethods(std::string &line);
 			void _addRedirect(std::string &line);
+			void _addUpload(std::string &line);
+			void _addCgi(std::string &line);
 			
 			bool getAutoIndex();
 };
