@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:28:21 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/17 16:09:14 by user             ###   ########.fr       */
+/*   Updated: 2024/11/21 17:04:48 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <Socket.hpp>
@@ -17,30 +17,21 @@
 #include <arpa/inet.h>
 
 
-Socket::Socket(ServerConfig *server): _socketFd(-1), _servers{server} {}
+Socket::Socket(std::shared_ptr<ServerConfig> server): _socketFd(-1), _servers{server} {}
 
-Socket::~Socket()
-{
-	(void)_socketFd;
-	for (ServerConfig *i : _servers)
-	{
-		delete i;
-		i = NULL;
-	}
-}
+Socket::~Socket() {}
 
-void	Socket::close_socket(void)
+void Socket::close_socket(void)
 {
 	close(this->_socketFd);
 	std::cout << "socket: " << _socketFd << " closed" << std::endl;
 }
-void Socket::addServer(ServerConfig *server)
+void Socket::addServer(std::shared_ptr<ServerConfig> server)
 {
 	_servers.push_back(server);
 }
 
-
-const std::vector<ServerConfig *> Socket::getServers() const
+const std::vector<std::shared_ptr<ServerConfig>> Socket::getServers() const
 {
 	return _servers;
 }

@@ -43,6 +43,8 @@ class ServerConfig
 			// Getters
 			std::vector<std::string> &getNames();
 			size_t getMaxSize();
+			std::string &getIpAddress();
+			std::string &getPort();
 			std::vector<std::shared_ptr<Location>> &getLocations();
 };
 #endif

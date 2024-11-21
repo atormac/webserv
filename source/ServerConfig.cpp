@@ -51,7 +51,7 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 		else if (match_res[1] == "location")
 		{
 			std::shared_ptr<Location> location(new Location(this));
-			location->parseLocation(configFile);
+			location->parseLocation(configFile, line);
 			_addLocation(location);
 		}
 		else
@@ -124,4 +124,6 @@ void ServerConfig::_addListen(std::string &line)
 // Getters
 std::vector<std::string> &ServerConfig::getNames() {return _names;}
 size_t ServerConfig::getMaxSize() {return _maxSize;}
+std::string &ServerConfig::getIpAddress() {return _ipAddress;}
+std::string &ServerConfig::getPort() {return _port;}
 std::vector<std::shared_ptr<Location>> &ServerConfig::getLocations() {return _locations;}

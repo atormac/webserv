@@ -12,7 +12,9 @@ int main(void)
 {
 	HttpServer server;
 
-	ServerConfig *cfg1 = new ServerConfig();
+	server.parseConfig("test.conf");
+
+	/*ServerConfig *cfg1 = new ServerConfig();
 	ServerConfig *cfg2 = new ServerConfig();
 	ServerConfig *cfg3 = new ServerConfig();
 	
@@ -22,17 +24,11 @@ int main(void)
 
 	server.addSocket(port1, cfg1);
 	server.addSocket(port2, cfg2);
-	server.addSocket(port3, cfg3);
+	server.addSocket(port3, cfg3);*/
 
 	server.init();
 	server.epoll();
 	server.close_server();
-
-	/*
-	HttpServer sm;
-
-	sm.parseConfig("test.conf");
-	*/
 
 	return 0;
 }

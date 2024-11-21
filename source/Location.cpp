@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/20 23:01:50 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/21 15:59:34 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -34,10 +34,11 @@ Location &Location::operator = (const Location &original)
 	return (*this);
 }
 
-void Location::parseLocation(std::ifstream &configFile)
+void Location::parseLocation(std::ifstream &configFile, std::string &location_line)
 {
 	std::string line;
 
+	_addPath(location_line);
 	skipEmptyLines(configFile, line);
 	if (!configFile)
 		throw std::runtime_error("parseLocation: Empty location block!");
@@ -74,6 +75,20 @@ void Location::parseLocation(std::ifstream &configFile)
 }
 
 // Setters
+void Location::_addPath(std::string &line)
+{	
+	std::regex ptrn("^\tlocation\\s+((\\/.*\\/)|\\/)\\s*$");
+	std::smatch match_res;
+
+	if (!std::regex_match(line, match_res, ptrn))
+		throw std::runtime_error("_addPath: Expected format: \"location [/path/];\"");
+	_path = match_res[1];
+	// For debugging
+	std::cout << "location path: " << _path << std::endl;
+	//	
+}
+
+
 void Location::_addRoot(std::string &line)
 {	
 	std::regex ptrn("\t{2}root\\s+(.*)\\s*;\\s*");
@@ -186,20 +201,21 @@ void Location::_addCgi(std::string &line)
 {
 	std::regex ptrn_global("^\\t{2}cgi(\\s+(.py|.php)\\s+([^\\s]*\\/(?:python3|php)))+\\s*;\\s*$");
 	std::regex ptrn_local("\\s+(.py|.php)\\s+([^\\s]*\\/(?:python3|php))");
-
-	std::cout << "Map is empty: " << _cgi.empty() << std::endl;
+	struct stat mode;
 
 	if (!_cgi.empty())
 		throw std::runtime_error("_addCgi: Cannot add location cgi multiple times!");
 	if (!std::regex_match(line, ptrn_global))
 		throw std::runtime_error("_addCgi: Expected format: \"cgi [list of cgi key value pairs];\"");
 	for (std::sregex_iterator itr = std::sregex_iterator(line.begin(), line.end(), ptrn_local); itr != std::sregex_iterator(); itr++)
-	{		
-		std::cout << "Already in map: " << _cgi.count((*itr)[1]) << std::endl;
-		if (_cgi.count((*itr)[1]))
+	{
+		if (_cgi.count(itr->str(1)))
 			throw std::runtime_error("_addCgi: Cannot add multiple values to one key!");
-		// ADD CHECK IF FILE EXISTS
-		_cgi.insert(std::make_pair((*itr)[1], (*itr)[2]));
+		if (stat(itr->str(2).c_str(), &mode) != 0)
+        	throw(std::runtime_error("_addCgi: Specified path doesn't exist " + itr->str(2) + " !"));
+		if (!S_ISREG(mode.st_mode))
+			throw(std::runtime_error("_addCgi: Specified path isn't a file!"));
+		_cgi.insert(std::make_pair(itr->str(1), itr->str(2)));
 	}
 	// For debugging
 	for (auto s: _cgi)

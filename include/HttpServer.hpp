@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/17 16:26:58 by user             ###   ########.fr       */
+/*   Updated: 2024/11/21 16:59:30 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -32,8 +32,6 @@ class HttpServer
 			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
 			std::map<int, std::shared_ptr<Client>> _clients;
 			
-			bool _socketPresent(std::string &port);
-
 			//rename for sanity
 			void	remove_client(Client *client);
 			bool	accept_client(int socket_fd);
@@ -45,7 +43,6 @@ class HttpServer
 
 			void parseConfig(const std::string &filePath);
 			void close_server(void);
-			void addSocket(std::string &port, ServerConfig *server);
 			bool init();
 			void epoll();
 };

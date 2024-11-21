@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:26:11 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/20 22:23:51 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/21 15:29:13 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,8 @@ class Location
 			~Location();
 			Location &operator = (const Location &original);
 
-			void parseLocation(std::ifstream &configFile);
+			void parseLocation(std::ifstream &configFile, std::string &location_line);
+			void _addPath(std::string &line);
 			void _addAutoIndex(std::string &line);
 			void _addRoot(std::string &line);
 			void _addIndex(std::string &line);

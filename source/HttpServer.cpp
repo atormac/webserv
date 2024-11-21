@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/17 16:28:23 by user             ###   ########.fr       */
+/*   Updated: 2024/11/21 17:18:36 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -42,34 +42,29 @@ void HttpServer::parseConfig(const std::string &filePath)
 		{
 			std::shared_ptr<ServerConfig> server(new ServerConfig());
 			server->parseServerConfig(configFile);
-			
+			std::string ip_and_port = server->getIpAddress() + ":" + server->getPort();
+	
+			if (_portsToSockets.count(ip_and_port))
+				_portsToSockets[ip_and_port]->addServer(server);
+			else
+			{
+				std::shared_ptr<Socket> socket(new Socket(server));
+				_portsToSockets.insert(std::make_pair(ip_and_port, socket));
+			}
+
 			// For testing
 			for (std::string i: server->getNames())
 				std::cout << "Server name: " << i << std::endl;
-			std::cout << "Server max size: " << server->getMaxSize() << std::endl;
+			std::cout << "Server max size: " << server->getMaxSize() << std::endl << std::endl;
 		}
 		else
 			throw std::runtime_error("ParseConfig: Unexpected value outside server block: " + line);
 	}
 	std::cout << "Config parsing completed" << std::endl;
+	std::cout << "Number of sockets: " << _portsToSockets.size() << std::endl;
 }
 
 HttpServer::~HttpServer() {}
-
-bool HttpServer::_socketPresent(std::string &port)
-{
-	return _portsToSockets.find(port) != _portsToSockets.end() ? true : false;
-}
-
-void HttpServer::addSocket(std::string &port, ServerConfig *server)
-{
-	if (_socketPresent(port))
-		_portsToSockets[port]->addServer(server);
-	else
-		_portsToSockets.insert({port, std::shared_ptr<Socket>(new Socket(server))});
-
-	std::cout << "Servers in socket: " << _portsToSockets[port]->getServers().size() << std::endl;
-}
 
 void HttpServer::close_server(void)
 {
