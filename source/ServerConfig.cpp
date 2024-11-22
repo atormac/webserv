@@ -93,6 +93,8 @@ void ServerConfig::_addErrorPage(std::string &line)
 
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addErrorPage: Expected format: \"error_page [100-599] error_pages/[100-599].html];\"");
+	if (_errorPages.count(stringToType<int>(match_res[1])))
+			throw std::runtime_error("_addErrorPage: Cannot add multiple error pages to the same error code!");
 	if (!fileExists(match_res[2]))
 		throw std::runtime_error("_addErrorPage: Invalid error page path!");	
 	_errorPages.insert(std::make_pair(stringToType<int>(match_res[1]), match_res[2]));
