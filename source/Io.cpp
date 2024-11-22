@@ -45,7 +45,6 @@ bool	Io::read_file(const std::string &filename, std::ostringstream &out)
 
 bool	Io::write_file(const std::string &filename, const std::string &content)
 {
-	//could use try catch here
 	std::ofstream file(filename, std::ios::out | std::ios::binary | std::ios::app);
 	if (!file || file.fail())
 		return false;
