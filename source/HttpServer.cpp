@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/21 17:18:36 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/22 12:55:12 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <Utils.hpp>
 #include <memory>
+#include <regex>
 
 void HttpServer::parseConfig(const std::string &filePath)
 {
@@ -81,13 +82,12 @@ void HttpServer::close_server(void)
 bool HttpServer::init()
 {
 	for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
-	{
-		std::string str = itr->first;
-		size_t delim_pos = str.find(":");
-		std::string ip = str.substr(0, delim_pos);
-		delim_pos += 1;
-		std::string s_port = str.substr(delim_pos, str.length() - delim_pos);
-		int port = std::stoi(s_port);
+	{	
+		std::regex ptrn("(.*):(.*)");
+		std::smatch match_res;
+		std::regex_match(itr->first, match_res, ptrn);
+		std::string ip = match_res[1];
+		int port = stringToType<int>(match_res[2]);
 		
 		int socketFd = itr->second->bind_socket(ip, port);
 		if (socketFd < 0)
@@ -102,7 +102,7 @@ bool HttpServer::init()
 		perror("epoll_create");
 		return false;
 	}
-	for(const auto& so : _socketFdToSockets)
+	for(const auto &so : _socketFdToSockets)
 	{
 		struct epoll_event ev;
 		ev.events = EPOLLIN;
@@ -116,8 +116,6 @@ bool HttpServer::init()
 	}
 	return true;
 }
-
-
 
 void HttpServer::epoll()
 {
