@@ -12,7 +12,12 @@ int main(void)
 {
 	HttpServer server;
 
-	server.parseConfig("test.conf");
+	try {server.parseConfig("test.conf");}
+	catch(const std::exception& e)
+	{
+		std::cerr << "Config parsing failed: " << e.what() << std::endl;
+		return 1;
+	}
 
 	/*ServerConfig *cfg1 = new ServerConfig();
 	ServerConfig *cfg2 = new ServerConfig();
