@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/22 12:55:12 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/22 13:21:07 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -39,7 +39,7 @@ void HttpServer::parseConfig(const std::string &filePath)
 		removeComments(line);
 		if (line.empty())
 			continue;
-		if (line == "server")
+		if (std::regex_match(line, std::regex("^server\\s*$")))
 		{
 			std::shared_ptr<ServerConfig> server(new ServerConfig());
 			server->parseServerConfig(configFile);
@@ -57,6 +57,7 @@ void HttpServer::parseConfig(const std::string &filePath)
 			for (std::string i: server->getNames())
 				std::cout << "Server name: " << i << std::endl;
 			std::cout << "Server max size: " << server->getMaxSize() << std::endl << std::endl;
+			//
 		}
 		else
 			throw std::runtime_error("ParseConfig: Unexpected value outside server block: " + line);
