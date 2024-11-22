@@ -115,9 +115,9 @@ void	Response::handle_get(void)
 		return;
 	}
 	if (flags & FS_ISFILE && Io::read_file(filename, _body))
-			_status_code = STATUS_OK;
+		_status_code = STATUS_OK;
 	if (flags & FS_ISDIR && directory_index(filename))
-			_status_code = STATUS_OK;
+		_status_code = STATUS_OK;
 }
 
 std::string Response::get_content_type(std::string uri)
