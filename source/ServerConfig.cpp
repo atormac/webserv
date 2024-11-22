@@ -12,7 +12,7 @@ void signal_handler(int code)
 		signo = code;
 }
 
-ServerConfig::ServerConfig()
+ServerConfig::ServerConfig(): _maxSize(0)
 {
 	signal(SIGINT, ::signal_handler);
 }
@@ -79,6 +79,8 @@ void ServerConfig::_addMaxSize(std::string &line)
 	std::regex ptrn("^\\tclient_max_body_size\\s+(\\d+)\\s*;\\s*$");
 	std::smatch match_res;
 
+	if (_maxSize)
+		throw std::runtime_error("_addMaxSize: Cannot add multiple client_max_body_size elements!");
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addMaxSize: Expected format: \"client_max_body_size [number];\"");
 	_maxSize = stringToType<size_t>(match_res[1]);
@@ -111,6 +113,8 @@ void ServerConfig::_addListen(std::string &line)
 	std::regex ptrn("^\\tlisten\\s+((?:(?:25[0-5]|(?:2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}):([0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])\\s*;\\s*$");
 	std::smatch match_res;
 
+	if (_ipAddress.length() || _port.length())
+		throw std::runtime_error("_addListen: Cannot add multiple listen elements!");
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addListen: Expected format: \"listen [valid ip]:[valid port];\"");
 	_ipAddress = match_res[1];
