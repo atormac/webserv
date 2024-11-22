@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/22 22:15:57 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/22 22:26:22 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -53,7 +53,6 @@ void Location::parseLocation(std::ifstream &configFile, std::string &location_li
 		if (!std::regex_match(line, match_res, ptrn))
 			break;
 
-		//std::cout << "In location block: |" << match_res[1] << "|" << std::endl;
 		if (match_res[1] == "root")
 			_addRoot(line);
 		else if (match_res[1] == "index")
@@ -96,6 +95,8 @@ void Location::_addRoot(std::string &line)
 	std::smatch match_res;
 	struct stat mode;
 
+	if (_rootPath.size())
+		throw std::runtime_error("_addRoot: Cannot add location root multiple times!");
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addRoot: Expected format: \"root [directory];\"");
 	if (stat(match_res.str(1).c_str(), &mode) != 0)
