@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:26:11 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/22 15:52:45 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/22 22:14:41 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,8 @@ class Location
 			std::string 						_path;
 			std::string 						_rootPath;
 			std::vector<std::string>			_indices;
-			int									_autoIndex;
+			bool								_autoIndex;
+			bool								_autoIndexSet;
 			std::vector<std::string>			_methods;
 			int									_redirectCode;
 			std::string							_redirectPath;

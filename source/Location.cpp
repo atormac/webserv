@@ -6,14 +6,15 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/22 15:57:03 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/22 22:15:57 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
 #include <regex>
 
 Location::Location(ServerConfig *srvConf):	_serverConfig(srvConf),
-											_autoIndex(-1),
+											_autoIndex(false),
+											_autoIndexSet(false),
 											_redirectCode(0) {}
 
 Location::Location(const Location &original): _serverConfig(original._serverConfig),
@@ -127,16 +128,15 @@ void Location::_addAutoIndex(std::string &line)
 	std::regex ptrn("^\\s*autoindex\\s+(on|off)\\s*;\\s*$");
 	std::smatch match_res;
 
-	if (_autoIndex != -1)
+	if (_autoIndexSet)
 		throw std::runtime_error("_addAutoIndex: Cannot add autoindex element multiple times!");
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addAutoIndex: Expected format: \"autoindex [on/off];\"");
 	if (match_res[1] == "on")
 		_autoIndex = 1;
-	else if (match_res[1] == "off")
-		_autoIndex = 0;
 	else
-		throw std::runtime_error("_addAutoIndex: autoindex value other than 'on' or 'off'!");
+		_autoIndex = 0;
+	_autoIndexSet = true;
 	// For debugging
 	std::cout << "Autoindex: " << _autoIndex << std::endl;
 	//	
