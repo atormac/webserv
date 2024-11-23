@@ -151,13 +151,22 @@ void HttpServer::find_config(epoll_event &event)
 	std::string host = client->req->_headers["host"];
 	std::cout << "client host: " << host << std::endl;
 
-	for(const auto &server : _socketFdToSockets[client->socket]->getServers()) {
+	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
+	{
 		std::cout << "server_names: ";
 		for (const auto &name : server->getNames()) {
 			std::cout << name << "|";
 		}
-		std::cout << std::endl;
-		std::cout << server->getIpAddress() << ":" << server->getPort() << "\n";
+		if (host == server->getIpAddress() + ":" + server->getPort())
+		{
+			std::cout << std::endl;
+			std::cout << server->getIpAddress() << ":" << server->getPort() << "\n";
+			for (const auto &loc : server->getLocations())
+			{
+				std::cout << loc->getAutoIndex() << std::endl;
+			}
+			break;
+		}
 	}
 }
 
