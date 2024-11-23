@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:26:11 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/22 22:14:41 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/23 19:19:33 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ class Location
 			void _addCgi(std::string &line);
 			
 			bool getAutoIndex();
+			void dump(void);
 };
 
 #endif

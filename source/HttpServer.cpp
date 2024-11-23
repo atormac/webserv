@@ -163,7 +163,7 @@ void HttpServer::find_config(epoll_event &event)
 			std::cout << server->getIpAddress() << ":" << server->getPort() << "\n";
 			for (const auto &loc : server->getLocations())
 			{
-				std::cout << loc->getAutoIndex() << std::endl;
+				loc->dump();
 			}
 			break;
 		}

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/22 22:26:22 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/23 19:30:53 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -228,3 +228,18 @@ void Location::_addCgi(std::string &line)
 
 // Getters
 bool Location::getAutoIndex() {return _autoIndex;}
+
+
+void Location::dump(void)
+{
+	std::cout << "-- Location.dump() --" << std::endl;
+	for (const auto &m : this->_methods)
+	{
+		std::cout << "\tmethod: " << m << std::endl;
+	}
+	std::cout << "\tpath: " << _path << std::endl;
+	std::cout << "\trootPath: " << _rootPath << std::endl;
+	std::cout << "\tuploadPath: " << _uploadPath << std::endl;
+
+	std::cout << "---------------------" << std::endl;
+}
