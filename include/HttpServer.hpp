@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/21 16:59:30 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/11/23 18:03:08 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -37,6 +37,7 @@ class HttpServer
 			bool	accept_client(int socket_fd);
 			void	handle_read(epoll_event &event);
 			void	handle_write(epoll_event &event);
+			void	find_config(epoll_event &event);
 
 	public:
 			~HttpServer();			

@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   HttpServer.cpp                                     :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/28 13:51:39 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/22 13:21:07 by lopoka           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 #include <HttpServer.hpp>
 #include <unistd.h>
 #include <fcntl.h>
@@ -145,9 +134,30 @@ void HttpServer::epoll()
 			if (e.data.ptr == NULL)
 				continue;
 
-			if (e.events & EPOLLIN) handle_read(e);
-			else if (e.events & EPOLLOUT) handle_write(e);
+			if (e.events & EPOLLIN) {
+				handle_read(e);
+			}
+			else if (e.events & EPOLLOUT) {
+				find_config(e);
+				handle_write(e);
+			}
 		}
+	}
+}
+
+void HttpServer::find_config(epoll_event &event)
+{
+	Client *client = (Client *)event.data.ptr;
+	std::string host = client->req->_headers["host"];
+	std::cout << "client host: " << host << std::endl;
+
+	for(const auto &server : _socketFdToSockets[client->socket]->getServers()) {
+		std::cout << "server_names: ";
+		for (const auto &name : server->getNames()) {
+			std::cout << name << "|";
+		}
+		std::cout << std::endl;
+		std::cout << server->getIpAddress() << ":" << server->getPort() << "\n";
 	}
 }
 
@@ -171,7 +181,7 @@ bool HttpServer::accept_client(int _socket_fd)
 	}
 	ev.events = EPOLLIN | EPOLLET;
 	ev.data.fd = 0;
-	ev.data.ptr = new Client(client_fd, inet_ntoa(peer_addr.sin_addr));
+	ev.data.ptr = new Client(client_fd, _socket_fd, inet_ntoa(peer_addr.sin_addr));
 	Client *client = (Client *)ev.data.ptr;
 
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)

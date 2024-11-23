@@ -11,6 +11,7 @@ class Client
 	private:
 	public:
 		int	fd;
+		int	socket;
 		std::string ip_addr;
 		//Request *req;
 		std::shared_ptr<Request> req;
@@ -18,6 +19,6 @@ class Client
 
 		Client();
 		~Client();
-		Client(int client_fd, std::string ip);
+		Client(int client_fd, int socket_fd, std::string ip);
 };
 #endif
