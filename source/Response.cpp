@@ -114,10 +114,16 @@ std::shared_ptr <Location> Response::find_location(void)
 
 	for (const auto &loc : req->conf->getLocations())
 	{
-		if (loc->_path == req->_uri) {
+		if (req->_uri == loc->_path) {
 			ret = loc;
 			std::cout << "Loc->_path found: " << loc->_path << std::endl;
 			break;
+		}
+		if (req->_uri.rfind(loc->_path, 0) == 0 && loc->_path.back() == '/') {
+
+			if (!ret || loc->_path.size() > ret->_path.size()) {
+				ret = loc;
+			}
 		}
 	}
 	return ret;
