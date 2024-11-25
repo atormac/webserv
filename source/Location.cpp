@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/23 19:30:53 by user             ###   ########.fr       */
+/*   Updated: 2024/11/25 18:36:29 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -22,6 +22,8 @@ Location::Location(const Location &original): _serverConfig(original._serverConf
 											_rootPath(original._rootPath),
 											_autoIndex(original._autoIndex),
 											_methods(original._methods) {}
+
+Location::Location(){}
 
 Location::~Location(){}
 

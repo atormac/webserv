@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:26:11 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/23 19:19:33 by user             ###   ########.fr       */
+/*   Updated: 2024/11/25 18:46:00 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ class	ServerConfig;
 class Location
 {
 	private:
+	public :
 			ServerConfig*						_serverConfig;
 			std::string 						_path;
 			std::string 						_rootPath;
@@ -32,9 +33,9 @@ class Location
 			std::string							_uploadPath;
 			std::map<std::string, std::string>	_cgi;
 
-	public :
 			Location(ServerConfig *serverConfig);
 			Location(const Location &original);
+			Location();
 			~Location();
 			Location &operator = (const Location &original);
 

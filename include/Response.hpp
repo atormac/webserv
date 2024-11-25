@@ -13,6 +13,7 @@
 #include <Cgi.hpp>
 #include <ServerConfig.hpp>
 
+class Location;
 
 class Response
 {
@@ -25,6 +26,8 @@ class Response
 		void	handle_post(void);
 		void	handle_delete(void);
 		void	handle_get(void);
+
+		Location find_location(void);
 
 		bool	directory_index(std::string path);
 		std::string date_now(void);
