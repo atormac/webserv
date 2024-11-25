@@ -47,10 +47,11 @@ Response::Response(std::shared_ptr<Request> request)
 		build_response(req->_error);
 		return;
 	}
-	std::shared_ptr <Location> loc = find_location();
+	//std::shared_ptr <Location> loc = find_location();
+	this->_loc = find_location();
 
-	if (loc)
-		std::cout << "l: " << loc->_path << std::endl;
+	if (this->_loc)
+		std::cout << "l: " << this->_loc->_rootPath << std::endl;
 	//loc->dump();
 	if (Cgi::is_cgi(req->_uri))
 	{
@@ -64,11 +65,9 @@ Response::Response(std::shared_ptr<Request> request)
 		case METHOD_POST: handle_post(); break;
 		case METHOD_DELETE: handle_delete(); break;
 	}
-
 	if (_status_code == STATUS_NOT_FOUND)
-	{
-		Io::read_file("./www/404.html", _body);
-	}
+		Io::read_file(req->conf->_errorPages[404], _body);
+
 	std::cout << _status_code << std::endl;
 	build_response(_status_code);
 }
@@ -97,7 +96,7 @@ void	Response::handle_post(void)
 		{
 			if (part.data.empty() || part.filename.empty())
 				continue;
-			if (Io::write_file("./www/upload/" + part.filename, part.data))
+			if (Io::write_file(this->_loc->_uploadPath + "/" + part.filename, part.data))
 				_status_code = STATUS_OK;
 		}
 	}
@@ -131,7 +130,7 @@ std::shared_ptr <Location> Response::find_location(void)
 
 void	Response::handle_get(void)
 {
-	std::string filename = "./www" + req->_uri;
+	std::string filename = this->_loc->_rootPath + req->_uri;
 	int flags = Io::file_stat(filename);
 
 	if (!(flags & FS_READ))

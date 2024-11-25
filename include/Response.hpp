@@ -20,6 +20,7 @@ class Response
 	private:
 		int	_status_code;
 		std::shared_ptr<Request> req;
+		std::shared_ptr <Location>_loc; 
 
 		void	build_response(int status);
 

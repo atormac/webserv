@@ -23,7 +23,6 @@ class ServerConfig
 	private:
 			std::vector<std::string> _names;
 			size_t _maxSize;
-			std::map<unsigned int, std::string> _errorPages;
 			std::vector<std::shared_ptr<Location>> _locations;
 			std::string _ipAddress;
 			std::string _port;
@@ -35,6 +34,7 @@ class ServerConfig
 			void _addListen(std::string &line);
 
 	public:
+			std::map<unsigned int, std::string> _errorPages;
 			ServerConfig();
 			~ServerConfig();
 
