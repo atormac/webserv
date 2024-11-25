@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/23 18:03:08 by user             ###   ########.fr       */
+/*   Updated: 2024/11/25 18:24:54 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -38,6 +38,7 @@ class HttpServer
 			void	handle_read(epoll_event &event);
 			void	handle_write(epoll_event &event);
 			void	find_config(epoll_event &event);
+			void	set_config(Client *client, std::shared_ptr <Request> req);
 
 	public:
 			~HttpServer();			

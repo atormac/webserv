@@ -138,16 +138,14 @@ void HttpServer::epoll()
 				handle_read(e);
 			}
 			else if (e.events & EPOLLOUT) {
-				find_config(e);
 				handle_write(e);
 			}
 		}
 	}
 }
 
-void HttpServer::find_config(epoll_event &event)
+void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 {
-	Client *client = (Client *)event.data.ptr;
 	std::string host = client->req->_headers["host"];
 	std::cout << "client host: " << host << std::endl;
 
@@ -159,6 +157,7 @@ void HttpServer::find_config(epoll_event &event)
 		}
 		if (host == server->getIpAddress() + ":" + server->getPort())
 		{
+			req->conf = server;
 			std::cout << std::endl;
 			std::cout << server->getIpAddress() << ":" << server->getPort() << "\n";
 			for (const auto &loc : server->getLocations())
@@ -234,6 +233,10 @@ void HttpServer::handle_read(epoll_event &event)
 	ev_new.events = EPOLLET | EPOLLIN;
 	ev_new.data.fd = 0;
 	ev_new.data.ptr = event.data.ptr;
+	if (state == State::Complete)
+	{
+		set_config(client, client->req);
+	}
 	if (state == State::Complete || state == State::Error || bytes_read == 0)
 	{
 		ev_new.events = EPOLLET | EPOLLOUT;

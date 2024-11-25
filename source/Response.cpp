@@ -37,11 +37,12 @@ std::unordered_map<std::string, std::string> mime_map =
 Response::~Response()
 {
 }
-
 Response::Response(std::shared_ptr<Request> request)
 {
 	req = request;
 	_status_code = STATUS_NOT_FOUND;
+	Location *loc = NULL;
+	(void)loc;
 
 	if (req->_error)
 	{

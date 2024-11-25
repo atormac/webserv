@@ -7,6 +7,7 @@
 #include <map>
 #include <algorithm>
 #include <Str.hpp>
+#include <memory>
 
 #define URI_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
 #define FIELD_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
@@ -41,6 +42,8 @@ enum
 	BODY_TYPE_MULTIPART,
 };
 
+class ServerConfig;
+
 class Request
 {
 	private:
@@ -69,6 +72,7 @@ class Request
 		std::map<std::string, std::string> _headers;
 
 		std::vector<Part> parts; //multipart
+		std::shared_ptr <ServerConfig> conf;
 
 
 		size_t		_content_len;
