@@ -27,7 +27,8 @@ class Response
 		void	handle_delete(void);
 		void	handle_get(void);
 
-		Location find_location(void);
+		//Location find_location(void);
+		std::shared_ptr <Location> find_location(void);
 
 		bool	directory_index(std::string path);
 		std::string date_now(void);

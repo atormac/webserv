@@ -47,7 +47,11 @@ Response::Response(std::shared_ptr<Request> request)
 		build_response(req->_error);
 		return;
 	}
-	find_location();
+	std::shared_ptr <Location> loc = find_location();
+
+	if (loc)
+		std::cout << "l: " << loc->_path << std::endl;
+	//loc->dump();
 	if (Cgi::is_cgi(req->_uri))
 	{
 		do_cgi();
@@ -104,14 +108,14 @@ void	Response::handle_delete(void)
 	std::cout << "handle_delete()\n";
 }
 
-Location Response::find_location(void)
+std::shared_ptr <Location> Response::find_location(void)
 {
-	Location ret;
+	std::shared_ptr <Location> ret;
 
 	for (const auto &loc : req->conf->getLocations())
 	{
 		if (loc->_path == req->_uri) {
-			//ret = loc;
+			ret = loc;
 			std::cout << "Loc->_path found: " << loc->_path << std::endl;
 			break;
 		}
