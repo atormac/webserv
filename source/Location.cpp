@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/25 18:36:29 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/26 12:34:41 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "Location.hpp"
@@ -147,13 +147,13 @@ void Location::_addAutoIndex(std::string &line)
 
 void Location::_addMethods(std::string &line)
 {	
-	std::regex ptrn_global("\t{2}methods(\\s+(get|post|delete)){1,3}\\s*;\\s*");
-	std::regex ptrn_local("\\s+(get|post|delete)");
+	std::regex ptrn_global("\t{2}methods(\\s+(GET|POST|DELETE)){1,3}\\s*;\\s*");
+	std::regex ptrn_local("\\s+(GET|POST|DELETE)");
 
 	if (_methods.size())
 		throw std::runtime_error("_addMethods: Cannot add location methods multiple times!");
 	if (!std::regex_match(line, ptrn_global))
-		throw std::runtime_error("_addMethod: Expected format: \"method [list of methods (get/post/delete)];\"");
+		throw std::runtime_error("_addMethod: Expected format: \"method [list of methods (GET/POST/DELETE)];\"");
 	for (std::sregex_iterator itr = std::sregex_iterator(line.begin(), line.end(), ptrn_local); itr != std::sregex_iterator(); itr++)
 	{
 		if (std::find(_methods.begin(), _methods.end(), (*itr)[1]) != _methods.end())
