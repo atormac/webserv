@@ -66,7 +66,10 @@ Response::Response(std::shared_ptr<Request> request)
 		case METHOD_DELETE: handle_delete(); break;
 	}
 	if (_status_code == STATUS_NOT_FOUND)
-		Io::read_file(req->conf->_errorPages[404], _body);
+	{
+		if (req->conf)
+			Io::read_file(req->conf->_errorPages[404], _body);
+	}
 
 	std::cout << _status_code << std::endl;
 	build_response(_status_code);

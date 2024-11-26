@@ -151,11 +151,21 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 
 
 
+	/*
+	for(const auto &so : _socketFdToSockets)
+	{
+		const auto &server = so.second->getServers();
+
+		for (const auto &name : server->getNames()) {
+			std::cout << "SERVER:" << name << std::endl;
+		}
+	}
+	*/
+
 	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
 	{
-		std::cout << "server_names: ";
 		for (const auto &name : server->getNames()) {
-			std::cout << name << "|";
+			std::cout << "SERVER:" << name << std::endl;
 		}
 		if (host == server->getIpAddress() + ":" + server->getPort())
 		{
