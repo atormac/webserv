@@ -111,6 +111,8 @@ std::shared_ptr <Location> Response::find_location(void)
 {
 	std::shared_ptr <Location> ret;
 
+	if (req->conf == nullptr)
+		return nullptr;
 	for (const auto &loc : req->conf->getLocations())
 	{
 		if (req->_uri == loc->_path) {

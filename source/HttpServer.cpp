@@ -149,6 +149,8 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 	std::string host = client->req->_headers["host"];
 	std::cout << "client host: " << host << std::endl;
 
+
+
 	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
 	{
 		std::cout << "server_names: ";
