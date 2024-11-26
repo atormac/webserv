@@ -149,19 +149,22 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 	std::string host = client->req->_headers["host"];
 	std::cout << "client host: " << host << std::endl;
 
-
-
-	/*
 	for(const auto &so : _socketFdToSockets)
 	{
-		const auto &server = so.second->getServers();
+		for (const auto &server : so.second->getServers())
+		{
+			for (const auto &name : server->getNames()) {
 
-		for (const auto &name : server->getNames()) {
-			std::cout << "SERVER:" << name << std::endl;
+				if (name == host)
+				{
+					req->conf = server;
+					return;
+				}
+			}
+
 		}
-	}
-	*/
 
+	}
 	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
 	{
 		for (const auto &name : server->getNames()) {
@@ -176,7 +179,7 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 			{
 				loc->dump();
 			}
-			break;
+			return;
 		}
 	}
 }

@@ -17,6 +17,7 @@ Request::Request()
 	this->_state = State::StatusLine;
 	this->_content_len = 0;
 	this->_body_type = BODY_TYPE_NORMAL;
+	this->conf = nullptr;
 }
 
 Request::~Request()
