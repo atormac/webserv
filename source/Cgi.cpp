@@ -78,6 +78,11 @@ bool Cgi::handle_parent(int pid, int *fd, std::string &body)
 	ssize_t bytes_read;
 
 	waitpid(pid, &status, 0);
+	if (status != 0)
+	{
+		close_pipes(fd);
+		kill(pid, SIGINT);
+	}
 	close(fd[1]);
 	fd[1] = -1;
 
@@ -125,6 +130,7 @@ bool Cgi::execute(std::string &body)
 		close_pipes(fd);
 		return false;
 	}
+	this->_pids.push_back(pid);
 	if (pid == 0)
 	{
 		handle_child(fd, args);
@@ -136,8 +142,6 @@ bool Cgi::execute(std::string &body)
 	return ret;
 }
 
-
-//static funcs
 bool Cgi::is_cgi(std::string uri)
 {
 	if (uri.rfind("/cgi-bin/", 0) != 0)

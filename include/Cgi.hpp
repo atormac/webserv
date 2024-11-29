@@ -15,6 +15,7 @@ class Cgi
 		std::string _interpreter;
 		std::string _script_path;
 		std::vector<std::string> _env;
+		std::vector<int> _pids;
 
 		void close_pipes(int *fd);
 		void env_set(const std::string &key, const std::string &value);

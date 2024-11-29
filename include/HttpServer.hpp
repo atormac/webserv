@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/29 16:29:23 by atorma           ###   ########.fr       */
+/*   Updated: 2024/11/29 17:17:18 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -28,6 +28,7 @@ class HttpServer
 {
 	private:
 			int	_epoll_fd;
+
 			std::map<std::string, std::shared_ptr<Socket>> _portsToSockets;
 			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
 			std::map<int, std::shared_ptr<Client>> _clients;
