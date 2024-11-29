@@ -1,4 +1,5 @@
 #include <Request.hpp>
+#include <HttpServer.hpp>
 #include <Defines.hpp>
 #include <regex>
 #include <sstream>
@@ -192,7 +193,7 @@ bool Request::parse_header_field(size_t pos)
 void	Request::parse_body(void)
 {
 	_state = State::Error;
-	if (_buffer.size() > REQUEST_BODY_LIMIT)
+	if (conf && _buffer.size() > conf->getMaxSize())
 	{
 		_error = STATUS_TOO_LARGE;
 		return;
