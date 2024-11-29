@@ -80,7 +80,7 @@ class Request
 
 		Request();
 		~Request();
-		State parse(char *data, size_t size);
+		State parse(State s_start, char *data, size_t size);
 		void	dump(void);
 };
 

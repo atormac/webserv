@@ -24,11 +24,13 @@ Request::~Request()
 {
 }
 
-State Request::parse(char *data, size_t size)
+State Request::parse(State s_start, char *data, size_t size)
 {
 	_buffer.append(data, size);
 	_bytes_read += size;
 
+	if (_state < s_start)
+		_state = s_start;
 	while (_state != State::Complete && _state != State::Error)
 	{
 		switch (_state)

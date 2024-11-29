@@ -149,6 +149,7 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 	std::string host = client->req->_headers["host"];
 	std::cout << "client host: " << host << std::endl;
 
+	/*
 	for(const auto &so : _socketFdToSockets)
 	{
 		for (const auto &server : so.second->getServers())
@@ -165,6 +166,10 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 		}
 
 	}
+	*/
+	//Fallback to first on the list
+	req->conf = _socketFdToSockets[client->socket]->getServers().front();
+
 	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
 	{
 		for (const auto &name : server->getNames()) {
@@ -243,7 +248,7 @@ void HttpServer::handle_read(epoll_event &event)
 		remove_client(client);
 	}
 
-	State state = client->req->parse(buffer, bytes_read);
+	State state = client->req->parse(State::StatusLine, buffer, bytes_read);
 
 	ev_new.events = EPOLLET | EPOLLIN;
 	ev_new.data.fd = 0;
