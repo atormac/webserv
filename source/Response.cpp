@@ -152,9 +152,14 @@ void	Response::handle_get(void)
 		_status_code = STATUS_NOT_FOUND;
 		return;
 	}
+	if (flags & FS_ISDIR) {
+		if (req->_uri.back() != '/' || !_loc->_autoIndex)
+			return;
+		if (directory_index(filename))
+			_status_code = STATUS_OK;
+		return;
+	}
 	if (flags & FS_ISFILE && Io::read_file(filename, _body))
-		_status_code = STATUS_OK;
-	if (flags & FS_ISDIR && directory_index(filename))
 		_status_code = STATUS_OK;
 }
 
