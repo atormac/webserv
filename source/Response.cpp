@@ -80,7 +80,7 @@ void	Response::build_response(int status)
 	buffer << "Connection: close" << CRLF;
 	buffer << "Date: " << date_now() << CRLF;
 	buffer << "Server: " << SERVER_NAME << CRLF;
-	if (!_loc->_redirectPath.empty()) {
+	if (_loc &&!_loc->_redirectPath.empty()) {
 		buffer << "Location: " << _loc->_redirectPath << CRLF;
 	}
 

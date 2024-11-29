@@ -276,6 +276,7 @@ void	Request::parse_multipart(void)
 		std::cout << "part.data.size: " << part.data.size() << std::endl;
 		this->parts.push_back(part);
 	}
+	std::cout << "MULTIPART REQUEST:\n" << _buffer << std::endl;
 	_state = State::Complete;
 	_body.clear();
 	_buffer.clear();
