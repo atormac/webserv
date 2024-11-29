@@ -8,28 +8,24 @@
 
 void parseConfig(const std::string &filePath);
 
-int main(void)
+int main(int argc, char **argv)
 {
+	if (argc != 2)
+	{
+		std::cerr << "Usage: ./webserv <config file>" << std::endl;
+		return EXIT_FAILURE;
+	}
 	HttpServer server;
 
-	try {server.parseConfig("test.conf");}
+	try
+	{
+		server.parseConfig(argv[1]);
+	}
 	catch(const std::exception& e)
 	{
 		std::cerr << "Config parsing failed: " << e.what() << std::endl;
 		return 1;
 	}
-
-	/*ServerConfig *cfg1 = new ServerConfig();
-	ServerConfig *cfg2 = new ServerConfig();
-	ServerConfig *cfg3 = new ServerConfig();
-	
-	std::string port1("127.0.0.1:7051");
-	std::string port2("127.0.0.1:7052");
-	std::string port3("127.0.0.1:7053");
-
-	server.addSocket(port1, cfg1);
-	server.addSocket(port2, cfg2);
-	server.addSocket(port3, cfg3);*/
 
 	server.init();
 	server.epoll();
