@@ -175,6 +175,10 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
 	{
 		for (const auto &name : server->getNames()) {
+			if (name == host) {
+				req->conf = server;
+				return;
+			}
 			std::cout << "SERVER:" << name << std::endl;
 		}
 		if (host == server->getIpAddress() + ":" + server->getPort())
