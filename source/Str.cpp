@@ -1,5 +1,6 @@
 #include <Str.hpp>
 #include <cstring>
+#include <ctime>
 
 int Str::decode_hex(const char *s)
 {
@@ -44,6 +45,19 @@ std::string Str::url_decode(const std::string &s)
 	}
 	return res;
 }
+
+std::string Str::date_str_now(void)
+{  
+	time_t t;
+	struct tm *time_struct;
+	char buf[128];
+
+	std::time(&t);
+	time_struct = std::gmtime(&t);
+	std::strftime(buf, sizeof(buf) - 1, "%a, %d %b %Y %H:%M:%S GMT", time_struct);
+	return std::string(buf);
+}
+
 std::string	Str::get_key_data(std::string &buf, std::string key)
 {
 	size_t pos = buf.find(key + "=\"");

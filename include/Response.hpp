@@ -18,23 +18,22 @@ class Location;
 class Response
 {
 	private:
+		std::shared_ptr<Request> _request;
+		std::shared_ptr <Location>_location; 
 		int	_status_code;
-		std::shared_ptr<Request> req;
-		std::shared_ptr <Location>_loc; 
 
-		void	build_response(int status);
+		void	create_response(int status);
 
 		void	handle_post(void);
 		void	handle_delete(void);
 		void	handle_get(void);
 
-		//Location find_location(void);
 		std::shared_ptr <Location> find_location(void);
 		void set_error_page(void);
 
 		bool	directory_index(std::string path);
-		std::string date_now(void);
 		std::string get_content_type(std::string uri);
+
 		bool is_cgi(std::string uri);
 		void do_cgi(void);
 	public:
