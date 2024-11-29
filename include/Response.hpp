@@ -30,6 +30,7 @@ class Response
 
 		//Location find_location(void);
 		std::shared_ptr <Location> find_location(void);
+		void set_error_page(void);
 
 		bool	directory_index(std::string path);
 		std::string date_now(void);

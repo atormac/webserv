@@ -47,12 +47,14 @@ Response::Response(std::shared_ptr<Request> request)
 		build_response(req->_error);
 		return;
 	}
-	//std::shared_ptr <Location> loc = find_location();
 	this->_loc = find_location();
 
-	if (this->_loc)
-		std::cout << "l: " << this->_loc->_rootPath << std::endl;
-	//loc->dump();
+	if (this->_loc && !_loc->_redirectPath.empty())
+	{
+		std::cout << "Location: " << this->_loc->_rootPath << std::endl;
+		build_response(_loc->_redirectCode);
+		return;
+	}
 	if (Cgi::is_cgi(req->_uri))
 	{
 		do_cgi();
@@ -65,13 +67,7 @@ Response::Response(std::shared_ptr<Request> request)
 		case METHOD_POST: handle_post(); break;
 		case METHOD_DELETE: handle_delete(); break;
 	}
-	if (_status_code == STATUS_NOT_FOUND)
-	{
-		if (req->conf)
-			Io::read_file(req->conf->_errorPages[404], _body);
-	}
-
-	std::cout << _status_code << std::endl;
+	set_error_page();
 	build_response(_status_code);
 }
 
@@ -84,6 +80,9 @@ void	Response::build_response(int status)
 	buffer << "Connection: close" << CRLF;
 	buffer << "Date: " << date_now() << CRLF;
 	buffer << "Server: " << SERVER_NAME << CRLF;
+	if (!_loc->_redirectPath.empty()) {
+		buffer << "Location: " << _loc->_redirectPath << CRLF;
+	}
 
 	if (bs.size() > 0)
 		buffer << "Content-Type: " << get_content_type(req->_uri) << CRLF;
@@ -131,6 +130,16 @@ std::shared_ptr <Location> Response::find_location(void)
 		}
 	}
 	return ret;
+}
+
+void Response::set_error_page(void)
+{
+	if (!req->conf)
+		return;
+	if (req->conf->_errorPages.count(_status_code) == 0)
+		return;
+	if (!Io::read_file(req->conf->_errorPages[_status_code], _body))
+		_status_code = 500;
 }
 
 void	Response::handle_get(void)
