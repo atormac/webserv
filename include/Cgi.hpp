@@ -9,6 +9,8 @@
 
 extern std::unordered_map<std::string, std::string> cgi_map;
 
+class Location;
+
 class Cgi
 {
 	private:
@@ -24,9 +26,10 @@ class Cgi
 		void handle_child(int *fd, std::vector <char *> args);
 	public:
 		Cgi();
-		Cgi(std::shared_ptr<Request> request);
+		Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request);
 		~Cgi();
 		bool execute(std::string &body);
-		static bool is_cgi(std::string uri);
+		static bool is_cgi(std::shared_ptr <Location> location, std::string uri);
+		//static bool is_cgi(std::string uri);
 };
 #endif

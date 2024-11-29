@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <stdio.h>
+#include <Location.hpp>
 
 std::unordered_map<std::string, std::string> cgi_map =
 			     {{".php",  "/usr/bin/php"},
@@ -19,11 +20,11 @@ Cgi::Cgi()
 {
 }
 
-Cgi::Cgi(std::shared_ptr<Request> request)
+Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 {
 	std::string ext = Io::get_file_ext(request->_uri);
-	_interpreter = cgi_map[ext];
-	_script_path = "./www" + request->_uri;
+	_interpreter = location->_cgi[ext];
+	_script_path = location->_rootPath + request->_uri;
 	env_set_vars(request);
 }
 
@@ -130,26 +131,33 @@ bool Cgi::execute(std::string &body)
 		close_pipes(fd);
 		return false;
 	}
-	this->_pids.push_back(pid);
 	if (pid == 0)
 	{
 		handle_child(fd, args);
 		exit(1);
 	}
+	this->_pids.push_back(pid);
 	ret = handle_parent(pid, fd, body);
 	close_pipes(fd);
 
 	return ret;
 }
 
-bool Cgi::is_cgi(std::string uri)
+bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)
 {
+	if (!location)
+		return false;
+
+	std::string cgi_uri = location->_rootPath + uri;
+	/*
 	if (uri.rfind("/cgi-bin/", 0) != 0)
 		return false;
-	std::string ext = Io::get_file_ext(uri);
-	if (cgi_map.count(ext) == 0)
+	*/
+	std::cout << "cgi_uri: " << cgi_uri << std::endl;
+	std::string ext = Io::get_file_ext(cgi_uri);
+	if (location->_cgi.count(ext) == 0)
 		return false;
-	int flags = Io::file_stat("./www" + uri);
+	int flags = Io::file_stat(cgi_uri);
 	if (!(flags & FS_ISFILE) || !(flags & FS_READ))
 		return false;
 	return true;

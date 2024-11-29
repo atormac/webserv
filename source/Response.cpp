@@ -37,6 +37,7 @@ std::unordered_map<std::string, std::string> mime_map =
 Response::~Response()
 {
 }
+
 Response::Response(std::shared_ptr<Request> request)
 {
 	req = request;
@@ -55,8 +56,9 @@ Response::Response(std::shared_ptr<Request> request)
 		build_response(_loc->_redirectCode);
 		return;
 	}
-	if (Cgi::is_cgi(req->_uri))
+	if (Cgi::is_cgi(this->_loc, req->_uri))
 	{
+		std::cout << "CGI: " << req->_uri;
 		do_cgi();
 		build_response(_status_code);
 		return;
@@ -218,7 +220,7 @@ std::string Response::date_now(void)
 
 void Response::do_cgi(void)
 {	
-	Cgi cgi(req);
+	Cgi cgi(this->_loc, req);
 
 	std::string output;
 	if (!cgi.execute(output))
