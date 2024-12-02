@@ -34,6 +34,9 @@ State Request::parse(State s_start, char *data, size_t size)
 		_state = s_start;
 	while (_state != State::Complete && _state != State::Error)
 	{
+		if (size == 0) {
+			std::cout << "unexpected EOF!" << std::endl;
+		}
 		switch (_state)
 		{
 			case State::PartialStatus:
@@ -77,6 +80,8 @@ void Request::parse_status_line(void)
 		return;
 	if (pos == std::string::npos)
 	{
+		if (_buffer.rfind("GET ") != 0 && _buffer.rfind("POST ") != 0 && _buffer.rfind("DELETE") != 0)
+			return;
 		_state = State::PartialStatus;
 		return;
 	}
@@ -100,25 +105,6 @@ void Request::parse_status_line(void)
 		_query_string = _uri.substr(pos_q + 1, _uri.size());
 		_uri.erase(pos_q, _uri.size());
 	}
-
-	/*
-	 Not sure if it is needed to parse these out manually
-	if (pos_q != std::string::npos && pos_q < pos)
-	{
-		std::string keyval, key, val;
-
-		std::istringstream iss(_uri.substr(pos_q + 1, _uri.size()));
-		while(std::getline(iss, keyval, '&'))
-		{
-			std::istringstream iss(keyval);
-
-			if(std::getline(std::getline(iss, key, '='), val))
-				this->params[key] = val;
-		}
-		_uri.erase(pos_q, _uri.size());
-	}
-	*/
-
 	if (method_map.count(_method_str) == 0)
 	{
 		_error = STATUS_METHOD_NOT_ALLOWED;
