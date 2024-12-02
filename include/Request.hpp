@@ -54,7 +54,7 @@ class Request
 		int	    _body_type;
 	
 		State parse_status_line(void);
-		void parse_header(void);
+		State parse_header(void);
 		bool parse_header_field(size_t pos);
 		void	parse_body(void);
 		void	parse_chunked(void);

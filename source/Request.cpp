@@ -45,7 +45,7 @@ State Request::parse(State s_start, char *data, size_t size)
 				break;
 			case State::PartialHeader:
 			case State::Header:
-				parse_header();
+				_state = parse_header();
 				break;
 			case State::PartialBody:
 			case State::Body:
@@ -90,55 +90,40 @@ State Request::parse_status_line(void)
 	_uri = Str::url_decode(m[2]);
 	_version = m[3];
 
-	size_t pos_q = _uri.find("?");
-	if (pos_q != std::string::npos && pos_q < _uri.size()) {
-
-		_query_string = _uri.substr(pos_q + 1, _uri.size());
-		_uri.erase(pos_q, _uri.size());
-	}
 	if (method_map.count(_method_str) == 0) {
 		_error = STATUS_METHOD_NOT_ALLOWED;
 		return State::Error;
 	}
 	if (_uri.at(0) != '/' || _version != "HTTP/1.1")
 		return State::Error;
+	size_t pos_q = _uri.find("?");
+	if (pos_q != std::string::npos) {
+
+		_query_string = _uri.substr(pos_q + 1, _uri.size());
+		_uri.erase(pos_q, _uri.size());
+	}
 	_method = method_map[_method_str];
 
 	_buffer.erase(0, pos + 2);
 	return State::Header;
 }
 
-void Request::parse_header(void)
+State Request::parse_header(void)
 {
-	_state = State::Error;
         size_t pos = _buffer.find(CRLF);
 
 	if (pos == std::string::npos)
-	{
-		_state = State::PartialHeader;
-		return;
-	}
+		return State::PartialHeader;
 	if (pos == 0)
 	{
-		if (!_headers.count("host"))
-		{
-			_error = STATUS_BAD_REQUEST;
-			return;
-		}
 		_buffer.erase(0, 2);
-		_state = State::Complete;
-		if (_method == METHOD_POST)
-		{
-			if (_body_type == BODY_TYPE_CHUNKED)
-				_state = State::Chunked;
-			else if (_content_len > 0)
-				_state = State::Body;
-		}
-		return;
+		if (_body_type == BODY_TYPE_CHUNKED)
+			return State::Chunked;
+		if (_content_len > 0)
+			return State::Body;
+		return State::Complete;
 	}
-	if (!parse_header_field(pos))
-		return;
-	_state = State::Header;
+	return parse_header_field(pos) ? State::Header : State::Error;
 }
 
 bool Request::parse_header_field(size_t pos)
@@ -164,7 +149,6 @@ bool Request::parse_header_field(size_t pos)
 
 	return true;
 }
-
 
 void	Request::parse_body(void)
 {
