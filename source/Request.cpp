@@ -49,7 +49,7 @@ State Request::parse(State s_start, char *data, size_t size)
 				break;
 			case State::PartialBody:
 			case State::Body:
-				parse_body();
+				_state = parse_body();
 				break;
 			case State::PartialChunked:
 			case State::Chunked:
@@ -150,28 +150,23 @@ bool Request::parse_header_field(size_t pos)
 	return true;
 }
 
-void	Request::parse_body(void)
+State	Request::parse_body(void)
 {
-	_state = State::Error;
+	if (_method != METHOD_POST)
+		return State::Complete;
 	if (conf && _buffer.size() > conf->getMaxSize())
 	{
 		_error = STATUS_TOO_LARGE;
-		return;
+		return State::Error;
 	}
 	if (_buffer.size() < _content_len)
-	{
-		_state = State::PartialBody;
-		return;
-	}
+		return State::PartialBody;
 	if (_body_type == BODY_TYPE_MULTIPART)
-	{
-		_state = State::MultiPart;
-		return;
-	}
+		return  State::MultiPart;
 	_body = _buffer.substr(0, _content_len);
 	_buffer.clear();
-	_state = State::Complete;
 	std::cout << "body: " << _body << std::endl;
+	return State::Complete;
 }
 
 void	Request::parse_chunked(void)
@@ -200,7 +195,6 @@ void	Request::parse_chunked(void)
 	if (_buffer.size() > 0)
 		parse_chunked();
 }
-
 
 void	Request::parse_multipart(void)
 {
