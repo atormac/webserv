@@ -53,7 +53,7 @@ class Request
 
 		int	    _body_type;
 	
-		void parse_status_line(void);
+		State parse_status_line(void);
 		void parse_header(void);
 		bool parse_header_field(size_t pos);
 		void	parse_body(void);

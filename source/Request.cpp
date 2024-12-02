@@ -41,7 +41,7 @@ State Request::parse(State s_start, char *data, size_t size)
 		{
 			case State::PartialStatus:
 			case State::StatusLine:
-				parse_status_line();
+				_state = parse_status_line();
 				break;
 			case State::PartialHeader:
 			case State::Header:
@@ -71,51 +71,41 @@ State Request::parse(State s_start, char *data, size_t size)
 }
 
 
-void Request::parse_status_line(void)
+State Request::parse_status_line(void)
 {
-	_state = State::Error;
 	size_t pos = _buffer.find(CRLF);
 
-	if (pos == 0)
-		return;
 	if (pos == std::string::npos)
 	{
 		if (_buffer.rfind("GET ") != 0 && _buffer.rfind("POST ") != 0 && _buffer.rfind("DELETE") != 0)
-			return;
-		_state = State::PartialStatus;
-		return;
+			return State::Error;
+		return State::PartialStatus;
 	}
-
 	std::string str = _buffer.substr(0, pos);
 	std::regex r(R"((\S+) (\S+) (\S+))");
 	std::smatch m;
 	if (!std::regex_match(str, m, r))
-	{
-		std::cerr << "!regex_match\n";
-		return;
-	}
+		return State::Error;
 	_method_str = m[1];
 	_uri = Str::url_decode(m[2]);
 	_version = m[3];
 
 	size_t pos_q = _uri.find("?");
-
 	if (pos_q != std::string::npos && pos_q < _uri.size()) {
 
 		_query_string = _uri.substr(pos_q + 1, _uri.size());
 		_uri.erase(pos_q, _uri.size());
 	}
-	if (method_map.count(_method_str) == 0)
-	{
+	if (method_map.count(_method_str) == 0) {
 		_error = STATUS_METHOD_NOT_ALLOWED;
-		return; 
+		return State::Error;
 	}
 	if (_uri.at(0) != '/' || _version != "HTTP/1.1")
-		return;
+		return State::Error;
 	_method = method_map[_method_str];
 
 	_buffer.erase(0, pos + 2);
-	_state = State::Header;
+	return State::Header;
 }
 
 void Request::parse_header(void)
