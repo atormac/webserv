@@ -244,9 +244,21 @@ void	Request::parse_chunked(void)
 
 void	Request::parse_multipart(void)
 {
+	// TEST
+	std::regex ptrn(".*boundary=(.*)");
+	std::smatch match_res;
+	std::regex_match(_headers["content-type"], match_res, ptrn);
 	std::string boundary = "--";
-	boundary += Str::trim_start(_headers["content-type"], "boundary=");
+	boundary += match_res[1];
 	boundary += "\r\n";
+
+	//std::string boundary = "--";
+	//boundary += Str::trim_start(_headers["content-type"], "boundary=");
+	//boundary += "\r\n";
+	
+	//std::cout << "Lucas: \t\t|" << boundary2 << "|" << std::endl;
+	//std::cout << "BOUNDARYYYY: \t|" << boundary << "|" << std::endl;
+	//std::cout << "DO THEY EQUAL: |" << (boundary ==  boundary2) << "|" << std::endl;
 
 	size_t pos = 0;
 	while ((pos = _buffer.find(boundary, pos)) != std::string::npos)
@@ -276,7 +288,7 @@ void	Request::parse_multipart(void)
 		std::cout << "part.data.size: " << part.data.size() << std::endl;
 		this->parts.push_back(part);
 	}
-	std::cout << "MULTIPART REQUEST:\n" << _buffer << std::endl;
+	//std::cout << "MULTIPART REQUEST:\n" << _buffer << std::endl;
 	_state = State::Complete;
 	_body.clear();
 	_buffer.clear();
