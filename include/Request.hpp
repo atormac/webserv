@@ -57,7 +57,7 @@ class Request
 		State parse_header(void);
 		bool parse_header_field(size_t pos);
 		State	parse_body(void);
-		void	parse_chunked(void);
+		State	parse_chunked(void);
 		void	parse_multipart(void);
 		std::string	get_key_data(std::string &buf, std::string key);
 		std::string safe_substr(std::string &buf, std::string before, std::string after);

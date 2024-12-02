@@ -53,7 +53,7 @@ State Request::parse(State s_start, char *data, size_t size)
 				break;
 			case State::PartialChunked:
 			case State::Chunked:
-				parse_chunked();
+				_state = parse_chunked();
 				break;
 			case State::MultiPart:
 				parse_multipart();
@@ -117,11 +117,7 @@ State Request::parse_header(void)
 	if (pos == 0)
 	{
 		_buffer.erase(0, 2);
-		if (_body_type == BODY_TYPE_CHUNKED)
-			return State::Chunked;
-		if (_content_len > 0)
-			return State::Body;
-		return State::Complete;
+		return State::Body;
 	}
 	return parse_header_field(pos) ? State::Header : State::Error;
 }
@@ -159,6 +155,8 @@ State	Request::parse_body(void)
 		_error = STATUS_TOO_LARGE;
 		return State::Error;
 	}
+	if (_body_type == BODY_TYPE_CHUNKED)
+		return State::Chunked;
 	if (_buffer.size() < _content_len)
 		return State::PartialBody;
 	if (_body_type == BODY_TYPE_MULTIPART)
@@ -169,31 +167,20 @@ State	Request::parse_body(void)
 	return State::Complete;
 }
 
-void	Request::parse_chunked(void)
+State	Request::parse_chunked(void)
 {
-	std::cout << "parse_chunked\n";
 	size_t pos = _buffer.find(CRLF);
+
 	if (pos == std::string::npos)
-	{
-		_state = State::PartialChunked;
-		return;
-	}
+		return State::PartialChunked;
+
 	int chunk_len = Str::decode_hex(_buffer.c_str());
 	if (chunk_len == -1)
-	{
-		_state = State::Error;
-		return;
-	}
-	if  (chunk_len == 0)
-	{
-		std::cout << "chunked body: " << _body << std::endl;
-		_state = State::Complete;
-		return;
-	}
+		return State::Error;
 	_body += _buffer.substr(pos + 2, chunk_len);
 	_buffer.erase(0, pos + 2 + chunk_len + 1);
-	if (_buffer.size() > 0)
-		parse_chunked();
+
+	return chunk_len ? State::Chunked : State::Complete;
 }
 
 void	Request::parse_multipart(void)

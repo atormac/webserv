@@ -7,10 +7,11 @@ int Str::decode_hex(const char *s)
 	int	ret = 0;
 	int	val = 0;
 	char	c;
+	const char* charset = "0123456789abcdefABCDEF";
 
-	if (*s == '\0')
+	if (std::strchr(charset, *s) == NULL)
 		return -1;
-	while (std::strchr("0123456789abcdefABCDEF", *s))
+	while (std::strchr(charset, *s))
 	{
 		c = *s;
 		if (c >= '0' && c <= '9')
@@ -19,8 +20,6 @@ int Str::decode_hex(const char *s)
 			val = c - 'a' + 10;
 		else if (c >= 'A' && c <= 'F')
 			val = c - 'A' + 10;
-		else
-			return -1;
 		ret = (ret * 16) + val;
 		s++;
 	}
