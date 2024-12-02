@@ -53,12 +53,13 @@ class Request
 
 		int	    _body_type;
 	
-		State parse_status_line(void);
-		State parse_header(void);
-		bool parse_header_field(size_t pos);
+		State	parse_status_line(void);
+		State	parse_header(void);
+		bool	parse_header_field(size_t pos);
 		State	parse_body(void);
 		State	parse_chunked(void);
 		void	parse_multipart(void);
+
 		std::string	get_key_data(std::string &buf, std::string key);
 		std::string safe_substr(std::string &buf, std::string before, std::string after);
 	public:
@@ -83,6 +84,8 @@ class Request
 		~Request();
 		State parse(State s_start, char *data, size_t size);
 		void	dump(void);
+		static bool	is_method_allowed(std::vector <std::string>allowed, std::string method);
 };
+
 
 #endif

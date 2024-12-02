@@ -100,12 +100,16 @@ Response::~Response()
 
 Response::Response(std::shared_ptr<Request> request) : _request(request), _status_code(STATUS_NOT_FOUND)
 {
-	if (_request->_error)
-	{
+	if (_request->_error) {
 		create_response(_request->_error);
 		return;
 	}
 	_location = find_location();
+
+	if (_location && !Request::is_method_allowed(_location->_methods, _request->_method_str)) {
+		create_response(STATUS_METHOD_NOT_ALLOWED);
+		return;
+	}
 
 	if (_location && !_location->_redirectPath.empty())
 	{

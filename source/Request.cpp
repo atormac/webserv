@@ -238,3 +238,11 @@ void	Request::dump(void)
 	if (_content_len > 0)
 		std::cout << "body: " << _body << std::endl;
 }
+
+bool	Request::is_method_allowed(std::vector <std::string>allowed, std::string method)
+{
+	if (std::find(allowed.begin(), allowed.end(), method) == allowed.end()) {
+			return false;
+	}
+	return true;
+}
