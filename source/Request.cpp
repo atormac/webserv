@@ -185,33 +185,23 @@ State	Request::parse_chunked(void)
 
 void	Request::parse_multipart(void)
 {
-	// TEST
 	std::regex ptrn(".*boundary=(.*)");
 	std::smatch match_res;
-	std::regex_match(_headers["content-type"], match_res, ptrn);
-	std::string boundary = "--";
+
+	if (!std::regex_match(_headers["content-type"], match_res, ptrn))
+		std::cout << "HANDLE ERROR HERE" << std::endl;
+	std::string boundary = ""; //= "--";
 	boundary += match_res[1];
-	boundary += "\r\n";
-
-	//std::string boundary = "--";
-	//boundary += Str::trim_start(_headers["content-type"], "boundary=");
 	//boundary += "\r\n";
-	
-	//std::cout << "Lucas: \t\t|" << boundary2 << "|" << std::endl;
-	//std::cout << "BOUNDARYYYY: \t|" << boundary << "|" << std::endl;
-	//std::cout << "DO THEY EQUAL: |" << (boundary ==  boundary2) << "|" << std::endl;
 
-	size_t pos = 0;
+	size_t pos = 0, end = 0, header_end = 0;
 	while ((pos = _buffer.find(boundary, pos)) != std::string::npos)
 	{
-		pos += boundary.size();
-		size_t end = _buffer.find(boundary, pos);
-		if (end == std::string::npos)
+		if ((end = _buffer.find(boundary, pos += boundary.size())) == std::string::npos)
 			break;
-		std::string part_buf = _buffer.substr(pos, (end - pos) - 2); //Extra CRLF ?
+		std::string part_buf = _buffer.substr(pos, end - pos); // - 2); //Extra CRLF ?
 		pos = end;
-		size_t header_end = part_buf.find("\r\n\r\n");
-		if (header_end == std::string::npos)
+		if ((header_end = part_buf.find("\r\n\r\n")) == std::string::npos)
 			continue;
 
 		struct Part part;
