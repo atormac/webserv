@@ -25,4 +25,6 @@ enum
 #define REQUEST_BODY_LIMIT 10 * 1024 * 1024 //10MB
 #define CRLF "\r\n"
 
+#define DEFAULT_404 "<!DOCTYPE html> <html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>"
+
 #endif

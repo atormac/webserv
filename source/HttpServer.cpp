@@ -131,9 +131,6 @@ void HttpServer::epoll()
 				accept_client(e.data.fd);
 				continue;
 			}
-			if (e.data.ptr == NULL)
-				continue;
-
 			if (e.events & EPOLLIN) {
 				handle_read(e);
 			}

@@ -30,7 +30,7 @@ class Response
 		void	handle_get(void);
 
 		std::shared_ptr <Location> find_location(void);
-		void set_error_page(void);
+		void set_error_page(int code);
 
 		bool	directory_index(std::string path);
 		std::string get_content_type(std::string uri);

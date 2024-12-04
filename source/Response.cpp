@@ -100,11 +100,11 @@ Response::~Response()
 
 Response::Response(std::shared_ptr<Request> request) : _request(request), _status_code(STATUS_NOT_FOUND)
 {
-	int errors = this->has_errors();
-	if (errors) {
-		this->_status_code = errors;
-		set_error_page();
-		create_response(this->_status_code);
+	int error_code = this->has_errors();
+
+	if (error_code) {
+		set_error_page(error_code);
+		create_response(error_code);
 		return;
 	}
 
@@ -125,7 +125,7 @@ Response::Response(std::shared_ptr<Request> request) : _request(request), _statu
 		case METHOD_POST: handle_post(); break;
 		case METHOD_DELETE: handle_delete(); break;
 	}
-	set_error_page();
+	set_error_page(_status_code);
 	create_response(_status_code);
 }
 
@@ -136,7 +136,7 @@ int	Response::has_errors(void)
 	}
 
 	_location = find_location();
-	if (_location == NULL) {
+	if (_location == nullptr) {
 		return STATUS_NOT_FOUND;
 	}
 
@@ -188,15 +188,12 @@ void	Response::handle_get(void)
 
 void	Response::handle_post(void)
 {
-	if (_request->_uri == "/submit")
+	for (auto & part : _request->parts)
 	{
-		for (auto & part : _request->parts)
-		{
-			if (part.data.empty() || part.filename.empty())
-				continue;
-			if (Io::write_file(_location->_uploadPath + "/" + part.filename, part.data))
-				_status_code = STATUS_OK;
-		}
+		if (part.data.empty() || part.filename.empty())
+			continue;
+		if (Io::write_file(_location->_uploadPath + "/" + part.filename, part.data))
+			_status_code = STATUS_OK;
 	}
 }
 
@@ -228,14 +225,24 @@ std::shared_ptr <Location> Response::find_location(void)
 	return ret;
 }
 
-void Response::set_error_page(void)
+void Response::set_error_page(int code)
 {
-	if (!_request->conf)
-		return;
-	if (_request->conf->_errorPages.count(_status_code) == 0)
-		return;
-	if (!Io::read_file(_request->conf->_errorPages[_status_code], _body))
-		_status_code = 500;
+	std::string page_path = "";
+
+	if (_request->conf && _request->conf->_errorPages.count(code)) {
+		page_path = _request->conf->_errorPages[code];
+		int flags = Io::file_stat(page_path);
+
+		if (!flags && code == 404)
+			_body << DEFAULT_404;
+	
+		if (flags && flags & FS_READ) {
+			if (!Io::read_file(page_path, _body))
+				code = 500;
+		}
+	}
+
+	this->_status_code = code;
 }
 
 bool	Response::directory_index(std::string path)
