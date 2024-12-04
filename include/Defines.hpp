@@ -26,5 +26,6 @@ enum
 #define CRLF "\r\n"
 
 #define DEFAULT_404 "<!DOCTYPE html> <html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>"
+#define DEFAULT_403 "<!DOCTYPE html> <html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>"
 
 #endif

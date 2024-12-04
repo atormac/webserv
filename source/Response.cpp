@@ -231,18 +231,19 @@ void Response::set_error_page(int code)
 
 	if (_request->conf && _request->conf->_errorPages.count(code)) {
 		page_path = _request->conf->_errorPages[code];
-		int flags = Io::file_stat(page_path);
-
-		if (!flags && code == 404)
-			_body << DEFAULT_404;
-	
-		if (flags && flags & FS_READ) {
-			if (!Io::read_file(page_path, _body))
-				code = 500;
-		}
+		int flags = Io::file_stat(_request->conf->_errorPages[code]);
+		if (!flags || !(flags & FS_READ))
+			page_path = "";
 	}
 
-	this->_status_code = code;
+	if (page_path == "" && code == 404) {
+		this->_status_code = code;
+		_body << DEFAULT_404;
+		return;
+
+	}
+	if (!Io::read_file(page_path, _body))
+		this->_status_code = 500;
 }
 
 bool	Response::directory_index(std::string path)
