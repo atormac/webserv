@@ -153,7 +153,6 @@ bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)
 	if (uri.rfind("/cgi-bin/", 0) != 0)
 		return false;
 	*/
-	std::cout << "cgi_uri: " << cgi_uri << std::endl;
 	std::string ext = Io::get_file_ext(cgi_uri);
 	if (location->_cgi.count(ext) == 0)
 		return false;

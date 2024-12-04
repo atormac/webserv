@@ -100,38 +100,50 @@ Response::~Response()
 
 Response::Response(std::shared_ptr<Request> request) : _request(request), _status_code(STATUS_NOT_FOUND)
 {
-	if (_request->_error) {
-		create_response(_request->_error);
-		return;
-	}
-	_location = find_location();
-
-	if (_location && !Request::is_method_allowed(_location->_methods, _request->_method_str)) {
-		create_response(STATUS_METHOD_NOT_ALLOWED);
+	int errors = this->has_errors();
+	if (errors) {
+		this->_status_code = errors;
+		set_error_page();
+		create_response(this->_status_code);
 		return;
 	}
 
-	if (_location && !_location->_redirectPath.empty())
-	{
+	if (!_location->_redirectPath.empty()) {
 		std::cout << "Location: " << _location->_rootPath << std::endl;
 		create_response(_location->_redirectCode);
 		return;
 	}
-	if (Cgi::is_cgi(_location, _request->_uri))
-	{
+
+	if (Cgi::is_cgi(_location, _request->_uri)) {
 		std::cout << "CGI: " << _request->_uri;
 		do_cgi();
 		create_response(_status_code);
 		return;
 	}
-	switch (_request->_method)
-	{
+	switch (_request->_method) {
 		case METHOD_GET: handle_get(); break;
 		case METHOD_POST: handle_post(); break;
 		case METHOD_DELETE: handle_delete(); break;
 	}
 	set_error_page();
 	create_response(_status_code);
+}
+
+int	Response::has_errors(void)
+{
+	if (_request->_error) {
+		return _request->_error;
+	}
+
+	_location = find_location();
+	if (_location == NULL) {
+		return STATUS_NOT_FOUND;
+	}
+
+	if (!Request::is_method_allowed(_location->_methods, _request->_method_str)) {
+		return STATUS_METHOD_NOT_ALLOWED;
+	}
+	return 0;
 }
 
 void	Response::create_response(int status)
@@ -225,8 +237,6 @@ void Response::set_error_page(void)
 	if (!Io::read_file(_request->conf->_errorPages[_status_code], _body))
 		_status_code = 500;
 }
-
-
 
 bool	Response::directory_index(std::string path)
 {

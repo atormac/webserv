@@ -22,6 +22,7 @@ class Response
 		std::shared_ptr <Location>_location; 
 		int	_status_code;
 
+		int	has_errors(void);
 		void	create_response(int status);
 
 		void	handle_post(void);
