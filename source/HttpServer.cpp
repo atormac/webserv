@@ -86,7 +86,7 @@ bool HttpServer::init()
 		_socketFdToSockets.insert({socketFd, itr->second});
 	}
 
-	_epoll_fd = epoll_create1(0);
+	_epoll_fd = epoll_create(16 * 1024 * 1024); //16KB
 	if (_epoll_fd == -1)
 	{
 		perror("epoll_create");
