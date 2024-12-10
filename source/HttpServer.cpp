@@ -250,6 +250,7 @@ void HttpServer::handle_read(epoll_event &event)
 	if (bytes_read == -1)
 	{
 		remove_client(client);
+		return;
 	}
 
 	State state = client->req->parse(State::StatusLine, buffer, bytes_read);

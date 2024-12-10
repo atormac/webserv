@@ -1,6 +1,7 @@
 #include <Response.hpp>
 #include <Defines.hpp>
 #include <dirent.h>
+#include <filesystem>
 
 std::unordered_map<int, std::string> code_map =
 		{{ 100, "Continue"},
@@ -190,8 +191,6 @@ void	Response::handle_post(void)
 {
 	for (auto & part : _request->parts)
 	{
-		if (part.data.empty() || part.filename.empty())
-			continue;
 		if (Io::write_file(_location->_uploadPath + "/" + part.filename, part.data))
 			_status_code = STATUS_OK;
 	}
@@ -199,7 +198,17 @@ void	Response::handle_post(void)
 
 void	Response::handle_delete(void)
 {
-	std::cout << "handle_delete()\n";
+	std::string filename = _location->_rootPath + _request->_uri;
+	int flags = Io::file_stat(filename);
+	if (!flags) {
+		_status_code = STATUS_NOT_FOUND;
+		return;
+	}
+	if (!std::filesystem::remove(filename.c_str())) {
+		_status_code = 500;
+		return;
+	}
+	_status_code = STATUS_OK;
 }
 
 std::shared_ptr <Location> Response::find_location(void)

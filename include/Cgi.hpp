@@ -22,8 +22,8 @@ class Cgi
 		void close_pipes(int *fd);
 		void env_set(const std::string &key, const std::string &value);
 		void env_set_vars(std::shared_ptr<Request> request);
-		bool handle_parent(int pid, int *fd, std::string &body);
-		void handle_child(int *fd, std::vector <char *> args);
+		bool parent_process(int pid, int *fd, std::string &body);
+		void child_process(int *fd, std::vector <char *> args);
 	public:
 		Cgi();
 		Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request);

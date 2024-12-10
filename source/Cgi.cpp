@@ -72,7 +72,7 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	}
 }
 
-bool Cgi::handle_parent(int pid, int *fd, std::string &body)
+bool Cgi::parent_process(int pid, int *fd, std::string &body)
 {
 	int	status;
 	char	buf[1024];
@@ -82,7 +82,7 @@ bool Cgi::handle_parent(int pid, int *fd, std::string &body)
 	if (status != 0)
 	{
 		close_pipes(fd);
-		kill(pid, SIGTERM);
+		return false;
 	}
 	close(fd[1]);
 	fd[1] = -1;
@@ -96,7 +96,7 @@ bool Cgi::handle_parent(int pid, int *fd, std::string &body)
 	return bytes_read == 0;
 }
 
-void Cgi::handle_child(int *fd, std::vector <char *> args)
+void Cgi::child_process(int *fd, std::vector <char *> args)
 {
 	std::vector<char*> c_env;
 
@@ -133,11 +133,11 @@ bool Cgi::execute(std::string &body)
 	}
 	if (pid == 0)
 	{
-		handle_child(fd, args);
+		child_process(fd, args);
 		exit(1);
 	}
 	this->_pids.push_back(pid);
-	ret = handle_parent(pid, fd, body);
+	ret = parent_process(pid, fd, body);
 	close_pipes(fd);
 
 	return ret;
