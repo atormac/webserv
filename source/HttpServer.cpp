@@ -71,6 +71,7 @@ void HttpServer::close_server(void)
 
 bool HttpServer::init()
 {
+	this->_client_count = 0;
 	for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
 	{	
 		std::regex ptrn("(.*):(.*)");
@@ -86,7 +87,7 @@ bool HttpServer::init()
 		_socketFdToSockets.insert({socketFd, itr->second});
 	}
 
-	_epoll_fd = epoll_create(16 * 1024 * 1024); //16KB
+	_epoll_fd = epoll_create(512);
 	if (_epoll_fd == -1)
 	{
 		perror("epoll_create");
@@ -298,6 +299,7 @@ void HttpServer::handle_write(epoll_event &event)
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 		{
 			perror("epoll_ctl");
+			remove_client(client);
 		}
 		return;
 	}

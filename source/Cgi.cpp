@@ -82,7 +82,7 @@ bool Cgi::handle_parent(int pid, int *fd, std::string &body)
 	if (status != 0)
 	{
 		close_pipes(fd);
-		kill(pid, SIGINT);
+		kill(pid, SIGTERM);
 	}
 	close(fd[1]);
 	fd[1] = -1;

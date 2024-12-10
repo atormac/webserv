@@ -27,9 +27,10 @@ class Cgi
 	public:
 		Cgi();
 		Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request);
+	
 		~Cgi();
+	
 		bool execute(std::string &body);
 		static bool is_cgi(std::shared_ptr <Location> location, std::string uri);
-		//static bool is_cgi(std::string uri);
 };
 #endif

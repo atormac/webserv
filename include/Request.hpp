@@ -49,7 +49,7 @@ class Request
 	private:
 		std::string _buffer;
 		size_t	    _bytes_read;
-		size_t	    _bytes_added;
+		//size_t	    _bytes_added;
 
 		int	    _body_type;
 	
@@ -60,8 +60,6 @@ class Request
 		State	parse_chunked(void);
 		void	parse_multipart(void);
 
-		std::string	get_key_data(std::string &buf, std::string key);
-		std::string safe_substr(std::string &buf, std::string before, std::string after);
 	public:
 		State _state;
 		int	    _error;
