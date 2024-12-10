@@ -229,6 +229,8 @@ void Response::set_error_page(int code)
 {
 	std::string page_path = "";
 
+	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
+		return;
 	if (_request->conf && _request->conf->_errorPages.count(code)) {
 		page_path = _request->conf->_errorPages[code];
 		int flags = Io::file_stat(_request->conf->_errorPages[code]);
@@ -242,6 +244,8 @@ void Response::set_error_page(int code)
 		return;
 
 	}
+
+
 	if (!Io::read_file(page_path, _body))
 		this->_status_code = 500;
 }
