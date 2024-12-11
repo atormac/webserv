@@ -256,6 +256,10 @@ void HttpServer::handle_read(epoll_event &event)
 	State state = client->req->parse(State::StatusLine, buffer, bytes_read);
 	set_config(client, client->req);
 
+	// TEST
+	std::cout << "Is cookie present? " << (client->req->_headers.count("cookie") != 0) << "\n";	
+	//
+
 	ev_new.events = EPOLLET | EPOLLIN;
 	ev_new.data.fd = 0;
 	ev_new.data.ptr = event.data.ptr;
