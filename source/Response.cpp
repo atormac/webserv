@@ -84,7 +84,7 @@ void	Response::handle_get(void)
 	std::string filename = _location->_rootPath + _request->_uri;
 	int flags = Io::file_stat(filename);
 
-	if (!(flags & FS_READ))
+	if (!flags || !(flags & FS_READ))
 	{
 		_status_code = STATUS_NOT_FOUND;
 		return;
