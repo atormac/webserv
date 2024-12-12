@@ -1,5 +1,6 @@
 #include <Cgi.hpp>
 #include <Io.hpp>
+#include <unistd.h>
 #include <unordered_map>
 #include <iostream>
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 #include <string>
 #include <stdio.h>
 #include <Location.hpp>
+#include <filesystem>
 
 std::unordered_map<std::string, std::string> cgi_map =
 			     {{".php",  "/usr/bin/php"},
@@ -24,7 +26,17 @@ Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 {
 	std::string ext = Io::get_file_ext(request->_uri);
 	_interpreter = location->_cgi[ext];
-	_script_path = location->_rootPath + request->_uri;
+	std::filesystem::path p = location->_rootPath;
+	p += request->_uri;
+	_script_path = p.filename();
+	//_script_path = location->_rootPath + request->_uri;
+
+	std::filesystem::path dir = std::filesystem::current_path();
+	dir += "/";
+	dir += location->_rootPath;
+	dir += request->_uri;
+	_script_dir = p.parent_path();
+
 	env_set_vars(request);
 }
 
@@ -103,6 +115,10 @@ void Cgi::child_process(int *fd, std::vector <char *> args)
 	for (const auto& var : _env) {
 		c_env.push_back(const_cast<char*>(var.c_str()));
 	}
+	if (::chdir(_script_dir.c_str()) == -1)
+	{
+		return;
+	}
 	c_env.push_back(NULL);
 
 	close(fd[0]);
@@ -134,6 +150,7 @@ bool Cgi::execute(std::string &body)
 	if (pid == 0)
 	{
 		child_process(fd, args);
+		close_pipes(fd);
 		exit(1);
 	}
 	this->_pids.push_back(pid);
@@ -149,10 +166,6 @@ bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)
 		return false;
 
 	std::string cgi_uri = location->_rootPath + uri;
-	/*
-	if (uri.rfind("/cgi-bin/", 0) != 0)
-		return false;
-	*/
 	std::string ext = Io::get_file_ext(cgi_uri);
 	if (location->_cgi.count(ext) == 0)
 		return false;

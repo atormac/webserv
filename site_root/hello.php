@@ -11,6 +11,7 @@ $num = 5*5;
 $val = (string)$num;
 
 echo("Hello World: <b>" . $val . "</b>\n");
+echo getcwd() . "\n";
 
 echo("<p>REQUEST_METHOD: " . getenv("REQUEST_METHOD") . "</p>");
 echo("<p>SERVER_NAME: " . getenv("SERVER_NAME") . "</p>");

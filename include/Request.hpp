@@ -62,7 +62,7 @@ class Request
 
 	public:
 		State _state;
-		int	    _error;
+		int	    parser_error;
 		int	    _method;
 		std::string _method_str;
 		std::string _uri;

@@ -14,7 +14,7 @@ std::unordered_map<std::string, int> method_map =
 Request::Request()
 {
 	this->_bytes_read = 0;
-	this->_error = 0;
+	this->parser_error = 0;
 	this->_state = State::StatusLine;
 	this->_content_len = 0;
 	this->_body_type = BODY_TYPE_NORMAL;
@@ -34,9 +34,6 @@ State Request::parse(State s_start, char *data, size_t size)
 		_state = s_start;
 	while (_state != State::Complete && _state != State::Error)
 	{
-		if (size == 0) {
-			std::cout << "unexpected EOF!" << std::endl;
-		}
 		switch (_state)
 		{
 			case State::PartialStatus:
@@ -65,8 +62,8 @@ State Request::parse(State s_start, char *data, size_t size)
 		if (_state >= State::PartialStatus && _state <= State::PartialBody)
 			break;
 	}
-	if (_state == State::Error && !_error)
-		_error = STATUS_BAD_REQUEST;
+	if (_state == State::Error && !this->parser_error)
+		this->parser_error = STATUS_BAD_REQUEST;
 	return _state;
 }
 
@@ -91,7 +88,7 @@ State Request::parse_status_line(void)
 	_version = m[3];
 
 	if (method_map.count(_method_str) == 0) {
-		_error = STATUS_METHOD_NOT_ALLOWED;
+		this->parser_error = STATUS_METHOD_NOT_ALLOWED;
 		return State::Error;
 	}
 	if (_uri.at(0) != '/' || _version != "HTTP/1.1")
@@ -152,7 +149,7 @@ State	Request::parse_body(void)
 		return State::Complete;
 	if (conf && _buffer.size() > conf->getMaxSize())
 	{
-		_error = STATUS_TOO_LARGE;
+		this->parser_error = STATUS_TOO_LARGE;
 		return State::Error;
 	}
 	if (_body_type == BODY_TYPE_CHUNKED)

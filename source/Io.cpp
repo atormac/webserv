@@ -21,7 +21,6 @@ int	Io::file_stat(const std::string &filename)
 
 	if(stat(filename.c_str(), &sb) != 0)
 		return flags;
-	flags |= FS_EXISTS;
 	if (S_ISREG(sb.st_mode))
 		flags |= FS_ISFILE;
 	if (S_ISDIR(sb.st_mode))
