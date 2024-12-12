@@ -23,7 +23,7 @@ class Response
 		int	_status_code;
 
 		int	has_errors(void);
-		void	create_response(int status);
+		void	create_response(int status, std::string setCookie);
 
 		void	handle_post(void);
 		void	handle_delete(void);
@@ -42,7 +42,7 @@ class Response
 		std::ostringstream _body;
 		std::ostringstream buffer;
 
-		Response(std::shared_ptr<Request> req);
+		Response(std::shared_ptr<Request> req, std::string setCookie);
 		~Response();
 };
 #endif

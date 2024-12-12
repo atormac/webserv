@@ -16,6 +16,8 @@ class Client
 		//Request *req;
 		std::shared_ptr<Request> req;
 		std::string response;
+		//test
+		std::string _setCookies;
 
 		Client();
 		~Client();

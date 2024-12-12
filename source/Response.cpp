@@ -7,26 +7,26 @@ Response::~Response()
 {
 }
 
-Response::Response(std::shared_ptr<Request> request) : _request(request), _status_code(STATUS_NOT_FOUND)
+Response::Response(std::shared_ptr<Request> request, std::string setCookie): _request(request), _status_code(STATUS_NOT_FOUND)
 {
 	int error_code = this->has_errors();
 
 	if (error_code) {
 		set_error_page(error_code);
-		create_response(error_code);
+		create_response(error_code, setCookie);
 		return;
 	}
 
 	if (!_location->_redirectPath.empty()) {
 		std::cout << "Location: " << _location->_rootPath << std::endl;
-		create_response(_location->_redirectCode);
+		create_response(_location->_redirectCode, setCookie);
 		return;
 	}
 
 	if (Cgi::is_cgi(_location, _request->_uri)) {
 		std::cout << "CGI: " << _request->_uri;
 		do_cgi();
-		create_response(_status_code);
+		create_response(_status_code, setCookie);
 		return;
 	}
 	switch (_request->_method) {
@@ -35,7 +35,7 @@ Response::Response(std::shared_ptr<Request> request) : _request(request), _statu
 		case METHOD_DELETE: handle_delete(); break;
 	}
 	set_error_page(_status_code);
-	create_response(_status_code);
+	create_response(_status_code, setCookie);
 }
 
 int	Response::has_errors(void)
@@ -55,7 +55,7 @@ int	Response::has_errors(void)
 	return 0;
 }
 
-void	Response::create_response(int status)
+void	Response::create_response(int status, std::string setCookie)
 {
 	const std::string &bs = _body.str();
 
@@ -70,6 +70,8 @@ void	Response::create_response(int status)
 
 	if (bs.size() > 0)
 		buffer << "Content-Type: " << get_content_type(_request->_uri) << CRLF;
+	if (!setCookie.empty())
+		buffer << "Set-Cookie: " << setCookie << "\n";
 	buffer << CRLF;
 	buffer << bs;
 }
