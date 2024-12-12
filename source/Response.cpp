@@ -22,33 +22,33 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 	}
 
 	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-	if (_request->_headers.count("cookie") != 0)
+	/*if (_request->_headers.count("cookie") != 0)
 	{
 		int fileStat = Io::file_stat(_request->_headers["cookie"]);
 		if (!(fileStat & FS_ISFILE) || !(fileStat & FS_READ) || !(fileStat & FS_WRITE))
 		{
 			_request->_headers.erase(_request->_headers.find("cookie"));
-			std::cout << "---------------------------REMOVING COOKIE-------------------------------------------------\n";
+			std::cout << "---------------REMOVING COOKIE--------------------\n";
 		}
-	}
+	}*/
 
 	if (_request->_headers.count("cookie") == 0)
 	{
 		std::string charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		std::default_random_engine generator(std::random_device{}());
 		std::uniform_int_distribution<int> distribution(0, 61);
-		std::stringstream ses;
+		std::stringstream session, sessionID;
 		
-		ses << "sessionid=";
+		session << "sessionid=";
 		for (int i = 0; i < 64; ++i)
-			ses << charSet[distribution(generator)];
+			sessionID << charSet[distribution(generator)];
 
-		std::ofstream sessionFile("./sessions_dir/" + ses.str());
+		std::ofstream sessionFile("./sessions_dir/" + sessionID.str());
 		sessionFile.close();
 
-		ses << "; expires=" << Str::date_str_year_from_now() << "; path=/" << "; host=" << _request->_headers["host"];
+		session << sessionID.str() << "; expires=" << Str::date_str_year_from_now() << "; path=/" << "; host=" << _request->_headers["host"];
 
-		_setCookie = ses.str();
+		_setCookie = session.str();
 
 		std::cout << "SETTING COOKIE " << _setCookie << "\n";
 	}
