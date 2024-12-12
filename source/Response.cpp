@@ -22,15 +22,20 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 	}
 
 	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-	/*if (_request->_headers.count("cookie") != 0)
+	if (_request->_headers.count("cookie") != 0)
 	{
-		int fileStat = Io::file_stat(_request->_headers["cookie"]);
+		std::string cookie = _request->_headers["cookie"];
+		size_t equals = cookie.find("=") + 1;
+		cookie = "./sessions_dir/" + cookie.substr(equals);
+		std::cout << "CHECKING FIIIIIILE " << cookie << "\n";
+
+		int fileStat = Io::file_stat(cookie);
 		if (!(fileStat & FS_ISFILE) || !(fileStat & FS_READ) || !(fileStat & FS_WRITE))
 		{
 			_request->_headers.erase(_request->_headers.find("cookie"));
 			std::cout << "---------------REMOVING COOKIE--------------------\n";
 		}
-	}*/
+	}
 
 	if (_request->_headers.count("cookie") == 0)
 	{
