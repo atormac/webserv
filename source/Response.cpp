@@ -45,8 +45,8 @@ Response::Response(std::shared_ptr<Request> request) : _request(request), _statu
 
 int	Response::has_errors(void)
 {
-	if (_request->_error) {
-		return _request->_error;
+	if (_request->parser_error) {
+		return _request->parser_error;
 	}
 
 	_location = find_location();
