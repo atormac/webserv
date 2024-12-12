@@ -2,24 +2,61 @@
 #include <Defines.hpp>
 #include <dirent.h>
 #include <filesystem>
+#include <random>
+#include <functional>
+#include <Str.hpp>
+#include <Io.hpp>
 
 Response::~Response()
 {
 }
 
-Response::Response(std::shared_ptr<Request> request, std::string setCookie): _request(request), _status_code(STATUS_NOT_FOUND)
+Response::Response(std::shared_ptr<Request> request): _request(request), _status_code(STATUS_NOT_FOUND)
 {
 	int error_code = this->has_errors();
 
 	if (error_code) {
 		set_error_page(error_code);
-		create_response(error_code, setCookie);
+		create_response(error_code);
 		return;
 	}
 
+	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+	if (_request->_headers.count("cookie") != 0)
+	{
+		int fileStat = Io::file_stat(_request->_headers["cookie"]);
+		if (!(fileStat & FS_ISFILE) || !(fileStat & FS_READ) || !(fileStat & FS_WRITE))
+		{
+			_request->_headers.erase(_request->_headers.find("cookie"));
+			std::cout << "---------------------------REMOVING COOKIE-------------------------------------------------\n";
+		}
+	}
+
+	if (_request->_headers.count("cookie") == 0)
+	{
+		std::string charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		std::default_random_engine generator(std::random_device{}());
+		std::uniform_int_distribution<int> distribution(0, 61);
+		std::stringstream ses;
+		
+		ses << "sessionid=";
+		for (int i = 0; i < 64; ++i)
+			ses << charSet[distribution(generator)];
+
+		std::ofstream sessionFile("./sessions_dir/" + ses.str());
+		sessionFile.close();
+
+		ses << "; expires=" << Str::date_str_year_from_now() << "; path=/" << "; host=" << _request->_headers["host"];
+
+		_setCookie = ses.str();
+
+		std::cout << "SETTING COOKIE " << _setCookie << "\n";
+	}
+	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+
 	if (!_location->_redirectPath.empty()) {
 		std::cout << "Location: " << _location->_rootPath << std::endl;
-		create_response(_location->_redirectCode, setCookie);
+		create_response(_location->_redirectCode);
 		return;
 	}
 
@@ -40,7 +77,7 @@ Response::Response(std::shared_ptr<Request> request, std::string setCookie): _re
 		}
 	}
 	set_error_page(_status_code);
-	create_response(_status_code, setCookie);
+	create_response(_status_code);
 }
 
 int	Response::has_errors(void)
@@ -60,7 +97,7 @@ int	Response::has_errors(void)
 	return 0;
 }
 
-void	Response::create_response(int status, std::string setCookie)
+void	Response::create_response(int status)
 {
 	const std::string &bs = _body.str();
 
@@ -75,8 +112,8 @@ void	Response::create_response(int status, std::string setCookie)
 
 	if (bs.size() > 0)
 		buffer << "Content-Type: " << get_content_type(_request->_uri) << CRLF;
-	if (!setCookie.empty())
-		buffer << "Set-Cookie: " << setCookie << "\n";
+	if (!_setCookie.empty())
+		buffer << "Set-Cookie: " << _setCookie << "\n";
 	buffer << CRLF;
 	buffer << bs;
 }

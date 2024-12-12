@@ -261,39 +261,6 @@ void HttpServer::handle_read(epoll_event &event)
 	State state = client->req->parse(State::StatusLine, buffer, bytes_read);
 	set_config(client, client->req);
 
-	// TEST
-	if (client->req->_headers.count("cookie") != 0)
-	{
-		int fileStat = Io::file_stat(client->req->_headers["cookie"]);
-		if (!(fileStat & FS_ISFILE) || !(fileStat & FS_READ) || !(fileStat & FS_WRITE))
-		{
-			client->req->_headers.erase(client->req->_headers.find("cookie"));
-			std::cout << "---------------------------REMOVING COOKIE-------------------------------------------------\n";
-		}
-	}
-
-	if (client->req->_headers.count("cookie") == 0)
-	{
-		std::string charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		std::default_random_engine generator(std::random_device{}());
-		std::uniform_int_distribution<int> distribution(0, 61);
-		std::stringstream ses;
-		
-		ses << "sessionid=";
-		for (int i = 0; i < 64; ++i)
-			ses << charSet[distribution(generator)];
-
-		std::ofstream sessionFile("./sessions_dir/" + ses.str());
-		sessionFile.close();
-
-		ses << "; expires=" << Str::date_str_year_from_now() << "; path=/" << "; host=" << client->req->_headers["host"];
-
-		client->_setCookies = ses.str();
-
-		std::cout << "SETTING COOKIE " << client->_setCookies << "\n";
-	}
-	//
-
 	ev_new.events = EPOLLET | EPOLLIN;
 	ev_new.data.fd = 0;
 	ev_new.data.ptr = event.data.ptr;
@@ -317,9 +284,7 @@ void HttpServer::handle_write(epoll_event &event)
 	std::cout << "[webserv] write " << client->ip_addr << std::endl;
 	if (client->response.size() == 0)
 	{
-		//TEST
-		Response resp(client->req, client->_setCookies);
-			
+		Response resp(client->req);
 		client->response = resp.buffer.str(); 
 	}
 
