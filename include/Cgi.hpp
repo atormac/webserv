@@ -6,6 +6,7 @@
 #include <memory>
 #include <Defines.hpp>
 #include <Request.hpp>
+#include <filesystem>
 
 extern std::unordered_map<std::string, std::string> cgi_map;
 
@@ -16,6 +17,7 @@ class Cgi
 	private:
 		std::string _interpreter;
 		std::string _script_path;
+		std::string _script_dir;
 		std::vector<std::string> _env;
 		std::vector<int> _pids;
 

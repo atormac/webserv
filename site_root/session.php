@@ -2,7 +2,7 @@
 
 session_start();
 
-if (isset($_SESSION["session"))
+if (isset($_SESSION["session"]))
 {
 	echo("session is set!");
 }

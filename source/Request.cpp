@@ -34,9 +34,6 @@ State Request::parse(State s_start, char *data, size_t size)
 		_state = s_start;
 	while (_state != State::Complete && _state != State::Error)
 	{
-		if (size == 0) {
-			std::cout << "unexpected EOF!" << std::endl;
-		}
 		switch (_state)
 		{
 			case State::PartialStatus:
