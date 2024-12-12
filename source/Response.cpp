@@ -21,7 +21,6 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 		return;
 	}
 
-	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 	if (_request->_headers.count("cookie") != 0)
 	{
 		std::string cookie = _request->_headers["cookie"];
@@ -57,7 +56,6 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 
 		std::cout << "SETTING COOKIE " << _setCookie << "\n";
 	}
-	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
 	if (!_location->_redirectPath.empty()) {
 		std::cout << "Location: " << _location->_rootPath << std::endl;
