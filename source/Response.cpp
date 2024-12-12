@@ -24,15 +24,20 @@ Response::Response(std::shared_ptr<Request> request) : _request(request), _statu
 	}
 
 	if (Cgi::is_cgi(_location, _request->_uri)) {
-		std::cout << "CGI: " << _request->_uri;
-		do_cgi();
-		create_response(_status_code);
-		return;
+		
+		if (_request->_method != METHOD_DELETE)
+			do_cgi();
+		else
+			_status_code = STATUS_METHOD_NOT_ALLOWED;
+
 	}
-	switch (_request->_method) {
-		case METHOD_GET: handle_get(); break;
-		case METHOD_POST: handle_post(); break;
-		case METHOD_DELETE: handle_delete(); break;
+	else 
+	{
+		switch (_request->_method) {
+			case METHOD_GET: handle_get(); break;
+			case METHOD_POST: handle_post(); break;
+			case METHOD_DELETE: handle_delete(); break;
+		}
 	}
 	set_error_page(_status_code);
 	create_response(_status_code);

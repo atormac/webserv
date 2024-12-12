@@ -150,6 +150,7 @@ bool Cgi::execute(std::string &body)
 	if (pid == 0)
 	{
 		child_process(fd, args);
+		close_pipes(fd);
 		exit(1);
 	}
 	this->_pids.push_back(pid);
@@ -165,10 +166,6 @@ bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)
 		return false;
 
 	std::string cgi_uri = location->_rootPath + uri;
-	/*
-	if (uri.rfind("/cgi-bin/", 0) != 0)
-		return false;
-	*/
 	std::string ext = Io::get_file_ext(cgi_uri);
 	if (location->_cgi.count(ext) == 0)
 		return false;
