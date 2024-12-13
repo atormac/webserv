@@ -158,3 +158,5 @@ bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)
 		return false;
 	return true;
 }
+
+
