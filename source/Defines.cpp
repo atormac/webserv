@@ -88,6 +88,7 @@ std::unordered_map<std::string, std::string> mime_map =
 		{".gz", "application/x-gzip"},
 		{".tar", "application/x-tar"},
 		{".svg", "image/svg+xml"},
+		{".ico", "image/x-icon"},
 		{".css", "text/css"},
 		{"", "text/plain"},
 		{"default", "text/plain"}};

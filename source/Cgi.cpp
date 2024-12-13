@@ -74,6 +74,7 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	env_set("GATEWAY_INTERFACE", "CGI/1.1");
 	env_set("REQUEST_METHOD", request->_method_str);
 	env_set("QUERY_STRING", request->_query_string);
+	env_set("PATH_INFO", request->_uri);
 	env_set("HTTP_ACCEPT", request->_headers["accept"]);
 	env_set("HTTP_USER_AGENT", request->_headers["user-agent"]);
 
