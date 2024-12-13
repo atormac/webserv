@@ -1,15 +1,7 @@
 #ifndef SERVERCONFIG_HPP
 #define SERVERCONFIG_HPP
 
-#include <Client.hpp>
-#include <iostream>
-#include <sys/epoll.h>
-#include <vector>
-#include <Request.hpp>
-#include <Response.hpp>
-#include <algorithm>
-#include <Location.hpp>
-#include <memory>
+#include <HttpServer.hpp>
 
 #define MAX_EVENTS 10
 #define LISTEN_BACKLOG 32

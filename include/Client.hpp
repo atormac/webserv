@@ -1,10 +1,9 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <iostream>
-#include <sys/epoll.h>
-#include <Request.hpp>
-#include <memory>
+ #include <HttpServer.hpp>
+
+class Request;
 
 class Client
 {

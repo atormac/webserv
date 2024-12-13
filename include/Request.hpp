@@ -1,13 +1,7 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include <map>
-#include <algorithm>
-#include <Str.hpp>
-#include <memory>
+#include <HttpServer.hpp>
 
 #define URI_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
 #define FIELD_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"

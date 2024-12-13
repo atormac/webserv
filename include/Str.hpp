@@ -1,7 +1,7 @@
 #ifndef STR_HPP
 #define STR_HPP
 
-#include <iostream>
+#include <HttpServer.hpp>
 
 class Str
 {

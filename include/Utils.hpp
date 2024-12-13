@@ -11,11 +11,8 @@
 /* ************************************************************************** */
 #ifndef UTILS_HPP
 #define UTILS_HPP
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <limits>
-#include <sstream>
+
+#include <HttpServer.hpp>
 
 void removeComments(std::string &line);
 void skipEmptyLines(std::ifstream &configFile, std::string &line);

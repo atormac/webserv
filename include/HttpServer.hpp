@@ -12,16 +12,23 @@
 #ifndef HTTPSERVER_HPP
 #define HTTPSERVER_HPP
 
-#include <map>
-#include <ServerConfig.hpp>
-#include <Socket.hpp>
-#include <sys/epoll.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 class Socket;
+class Client;
+class Request;
+class Response;
+
+#include <StandardHeaders.hpp>
+#include <ServerConfig.hpp>
+#include <Location.hpp>
+#include <Response.hpp>
+#include <Defines.hpp>
+#include <Request.hpp>
+#include <Client.hpp>
+#include <Socket.hpp>
+#include <Utils.hpp>
+#include <Str.hpp>
+#include <Cgi.hpp>
+#include <Io.hpp>
 
 class HttpServer
 {

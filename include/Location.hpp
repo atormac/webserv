@@ -9,11 +9,10 @@
 /*   Updated: 2024/11/25 18:46:00 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 #ifndef LOCATION_HPP
 #define LOCATION_HPP
-#include <ServerConfig.hpp>
-#include <Utils.hpp>
+
+#include <HttpServer.hpp>
 
 class	ServerConfig;
 

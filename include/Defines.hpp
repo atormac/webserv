@@ -1,8 +1,7 @@
 #ifndef DEFINES_HPP
 #define DEFINES_HPP
 
-#include <unordered_map>
-#include <string>
+#include <HttpServer.hpp>
 
 enum
 {

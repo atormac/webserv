@@ -1,12 +1,7 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
-#include <unordered_map>
-#include <iostream>
-#include <memory>
-#include <Defines.hpp>
-#include <Request.hpp>
-#include <filesystem>
+#include <HttpServer.hpp>
 
 extern std::unordered_map<std::string, std::string> cgi_map;
 

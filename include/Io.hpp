@@ -1,11 +1,7 @@
 #ifndef IO_HPP
 #define IO_HPP
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <HttpServer.hpp>
 
 enum
 {

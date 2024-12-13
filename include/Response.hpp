@@ -1,17 +1,7 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-#include <Request.hpp>
-#include <unordered_map>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <cstring>
-#include <memory>
-#include <Io.hpp>
-#include <Cgi.hpp>
-#include <ServerConfig.hpp>
+#include <HttpServer.hpp>
 
 class Location;
 
