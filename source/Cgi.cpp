@@ -68,25 +68,53 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	}
 }
 
-bool Cgi::parent_process(int pid, int *fd, std::string &body)
+bool Cgi::parent_init(int pid, int *fd)
+{
+	close(fd[1]);
+	fd[1] = -1;
+
+	if (dup2(fd[0], STDIN_FILENO) < 0)
+	{
+		kill(pid, SIGTERM);
+		close_pipes(fd);
+		return false;
+	}
+	if (!Io::set_nonblocking(fd[0]))
+	{
+		kill(pid, SIGTERM);
+		close_pipes(fd);
+		return false;
+	}
+	return true;
+}
+
+bool Cgi::parent_read(int pid, int *fd, std::string &body)
 {
 	int	status;
 	char	buf[1024];
 	ssize_t bytes_read;
 
-	waitpid(pid, &status, 0);
-	if (status != 0)
-	{
-		close_pipes(fd);
-		return false;
-	}
-	close(fd[1]);
-	fd[1] = -1;
+	sleep(1);
+	bytes_read = read(fd[0], buf, sizeof(buf));
 
-	if (dup2(fd[0], STDIN_FILENO) < 0)
-		return false;
+	std::cout << "cgi bytes_read: " << bytes_read << std::endl;
+	body += std::string(buf, bytes_read);
+	std::cout << "cgi_body: " << body << std::endl;
+	/*
 	while ((bytes_read = read(fd[0], buf, sizeof(buf))) > 0) {
 		body += std::string(buf, bytes_read);
+	}
+	*/
+	close_pipes(fd);
+	if (waitpid(pid, &status, WNOHANG) == -1)
+	{
+		kill(pid, SIGTERM);
+		return false;
+	}
+	if (status != 0)
+	{
+		kill(pid, SIGTERM);
+		return false;
 	}
 
 	return bytes_read == 0;
@@ -106,13 +134,15 @@ void Cgi::child_process(int *fd, std::vector <char *> args)
 	c_env.push_back(NULL);
 
 	close(fd[0]);
+	fd[0] = -1;
+
 	if (dup2(fd[1], STDOUT_FILENO) < 0) {
 		return;
 	}
 	execve(args.data()[0], args.data(), c_env.data());
 }
 
-bool Cgi::execute(std::string &body)
+bool Cgi::start(std::string &body)
 {
 	bool	ret = false;
 	int	fd[2];
@@ -138,7 +168,8 @@ bool Cgi::execute(std::string &body)
 		exit(1);
 	}
 	this->_pids.push_back(pid);
-	ret = parent_process(pid, fd, body);
+	ret = parent_init(pid, fd);
+	parent_read(pid, fd, body);
 	close_pipes(fd);
 
 	return ret;

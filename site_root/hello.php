@@ -4,6 +4,7 @@
 echo "Content-Type: text/html\r\n";
 echo "Debug-Header: DEBUG\r\n\r\n";
 
+sleep(3);
 
 echo("<html><body>");
 

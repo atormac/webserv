@@ -57,7 +57,9 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 	if (Cgi::is_cgi(_location, _request->_uri)) {
 		
 		if (_request->_method != METHOD_DELETE)
+		{
 			do_cgi();
+		}
 		else
 			_status_code = STATUS_METHOD_NOT_ALLOWED;
 
@@ -259,7 +261,7 @@ void Response::do_cgi(void)
 	Cgi cgi(_location, _request);
 
 	std::string output;
-	if (!cgi.execute(output))
+	if (!cgi.start(output))
 	{
 		_status_code = 404;
 		std::cout << "Cgi.execute failed\n";
@@ -267,5 +269,5 @@ void Response::do_cgi(void)
 	}
 	_body << output;
 	_status_code = 200;
-	std::cout << "CGI RESPONSE: " << output << std::endl;
+	std::cout << "\nCGI RESPONSE: \n" << output << std::endl;
 }

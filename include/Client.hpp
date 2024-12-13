@@ -4,6 +4,7 @@
  #include <HttpServer.hpp>
 
 class Request;
+class Cgi;
 
 class Client
 {
