@@ -126,20 +126,21 @@ void	Response::handle_get(void)
 	std::string filename = _location->_rootPath + _request->_uri;
 	int flags = Io::file_stat(filename);
 
-	if (!flags || !(flags & FS_READ))
-	{
+	if (!flags || !(flags & FS_READ)) {
 		_status_code = STATUS_NOT_FOUND;
 		return;
 	}
-	if (flags & FS_ISDIR) {
+
+	if (flags & FS_ISFILE) {
+		if (Io::read_file(filename, _body))
+			_status_code = STATUS_OK;
+	}
+	else if (flags & FS_ISDIR) {
 		if (_request->_uri.back() != '/' || !_location->_autoIndex)
 			return;
 		if (directory_index(filename))
 			_status_code = STATUS_OK;
-		return;
 	}
-	if (flags & FS_ISFILE && Io::read_file(filename, _body))
-		_status_code = STATUS_OK;
 }
 
 void	Response::handle_post(void)
@@ -223,18 +224,25 @@ bool	Response::directory_index(std::string path)
 		return false;
 	_body << "<html><head><title>Index</title></head><body><h1>Index of " << _request->_uri << "</h1><ul>";
 
-	std::string e;
-	e.reserve(256);
+	std::string href;
+	href.reserve(256);
+	std::string link;
+	href.reserve(256);
+
 	while ((entry = readdir(dir)) != NULL)
 	{
-		e = entry->d_name;
-		if (e == "." || e == "..")
+		href = entry->d_name;
+		if (href == "." || href == "..")
 			continue;
-		std::string link = _request->_uri;
-		if (link.back() != '/')
-			link += "/";
-		link += e;
-		_body << "<li><a href=\"" << link << "\">" << e << "</a></li>";
+
+		link = href;
+		int eflags = Io::file_stat(path + href);
+
+		if (eflags & FS_ISDIR) {
+			href += "/";
+			link = "/" + href;
+		}
+		_body << "<li><a href=\"" << href << "\">" << link << "</a></li>";
 	}
 	_body << "</ul></body></html>";
 
