@@ -48,9 +48,9 @@ void HttpServer::parseConfig(const std::string &filePath)
 			}
 
 			// For testing
-			for (std::string i: server->getNames())
-				std::cout << "Server name: " << i << std::endl;
-			std::cout << "Server max size: " << server->getMaxSize() << std::endl << std::endl;
+			//for (std::string i: server->getNames())
+			//	std::cout << "Server name: " << i << std::endl;
+			//std::cout << "Server max size: " << server->getMaxSize() << std::endl << std::endl;
 			//
 		}
 		else
@@ -102,7 +102,7 @@ bool HttpServer::init()
 	{
 		struct epoll_event ev;
 		ev.events = EPOLLIN;
-		ev.data.fd = so.first; //socket_fd
+		ev.data.fd = so.first;
 
 		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -1)
 		{

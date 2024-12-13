@@ -21,7 +21,7 @@ class Location
 {
 	private:
 	public :
-			ServerConfig*						_serverConfig;
+			ServerConfig						*_serverConfig;
 			std::string 						_path;
 			std::string 						_rootPath;
 			std::vector<std::string>			_indices;

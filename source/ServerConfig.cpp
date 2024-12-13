@@ -39,7 +39,6 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 		if (!std::regex_match(line, match_res, ptrn))
 			break;
 		
-		//std::cout << "In serv block: |" << match_res[1] << "|" << std::endl;*/
 		if (match_res[1] == "server_name")
 			_addName(line);
 		else if (match_res[1] == "client_max_body_size")
@@ -99,8 +98,8 @@ void ServerConfig::_addErrorPage(std::string &line)
 		throw std::runtime_error("_addErrorPage: Invalid error page path!");	
 	_errorPages.insert(std::make_pair(stringToType<int>(match_res[1]), match_res[2]));
 	// For debugging	
-	std::cout << "errno: " << match_res[1] << std::endl;
-	std::cout << "path: " << match_res[2] << std::endl;
+	//std::cout << "errno: " << match_res[1] << std::endl;
+	//std::cout << "path: " << match_res[2] << std::endl;
 	//
 }
 
@@ -122,8 +121,8 @@ void ServerConfig::_addListen(std::string &line)
 	_ipAddress = match_res[1];
 	_port = match_res[2];
 	// For debugging
-	std::cout << _ipAddress << std::endl;	
-	std::cout << _port << std::endl;
+	//std::cout << _ipAddress << std::endl;	
+	//std::cout << _port << std::endl;
 	//
 }
 

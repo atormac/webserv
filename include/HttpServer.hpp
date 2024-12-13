@@ -18,7 +18,6 @@
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-//#include <boost/lexical_cast.hpp>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -34,7 +33,6 @@ class HttpServer
 			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
 			std::map<int, std::shared_ptr<Client>> _clients;
 			
-			//rename for sanity
 			void	remove_client(Client *client);
 			bool	accept_client(int socket_fd);
 			void	handle_read(epoll_event &event);

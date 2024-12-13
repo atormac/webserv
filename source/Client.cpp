@@ -4,9 +4,7 @@ Client::Client()
 {
 	this->req = nullptr;
 }
-Client::~Client()
-{
-}
+Client::~Client() {}
 
 Client::Client(int client_fd, int socket_fd, std::string ip)
 {

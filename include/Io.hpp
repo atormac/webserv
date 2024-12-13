@@ -19,11 +19,11 @@ enum
 class Io
 {
 	public:
-		static bool	set_nonblocking(int fd);
-		static int	file_stat(const std::string &filename);
-		static bool	read_file(const std::string &filename, std::ostringstream &out);
-		static bool	write_file(const std::string &filename, const std::string &content);
-		static std::string get_file_ext(std::string uri);
+			static bool	set_nonblocking(int fd);
+			static int	file_stat(const std::string &filename);
+			static bool	read_file(const std::string &filename, std::ostringstream &out);
+			static bool	write_file(const std::string &filename, const std::string &content);
+			static std::string get_file_ext(std::string uri);
 };
 
 #endif

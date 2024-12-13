@@ -8,17 +8,15 @@
 
 class Client
 {
-	private:
 	public:
-		int	fd;
-		int	socket;
-		std::string ip_addr;
-		//Request *req;
-		std::shared_ptr<Request> req;
-		std::string response;
+			int	fd;
+			int	socket;
+			std::string ip_addr;
+			std::shared_ptr<Request> req;
+			std::string response;
 
-		Client();
-		~Client();
-		Client(int client_fd, int socket_fd, std::string ip);
+			Client();
+			~Client();
+			Client(int client_fd, int socket_fd, std::string ip);
 };
 #endif
