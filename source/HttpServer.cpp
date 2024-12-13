@@ -1,22 +1,4 @@
 #include <HttpServer.hpp>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <iostream>
-#include <stdlib.h>
-#include <sstream>
-#include <sys/epoll.h>
-#include <signal.h>
-#include <Utils.hpp>
-#include <memory>
-#include <regex>
-#include <chrono>
-#include <random>
-#include <functional>
-#include <Str.hpp>
-#include <Io.hpp>
 
 void HttpServer::parseConfig(const std::string &filePath)
 {

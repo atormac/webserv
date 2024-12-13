@@ -1,10 +1,4 @@
-#include <Request.hpp>
 #include <HttpServer.hpp>
-#include <Defines.hpp>
-#include <regex>
-#include <sstream>
-#include <unordered_map>
-#include <Str.hpp>
 
 std::unordered_map<std::string, int> method_map =
 			        {{ "GET", METHOD_GET },
@@ -21,9 +15,7 @@ Request::Request()
 	this->conf = nullptr;
 }
 
-Request::~Request()
-{
-}
+Request::~Request() {}
 
 State Request::parse(State s_start, char *data, size_t size)
 {

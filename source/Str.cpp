@@ -1,6 +1,4 @@
-#include <Str.hpp>
-#include <cstring>
-#include <ctime>
+#include <HttpServer.hpp>
 
 int Str::decode_hex(const char *s)
 {

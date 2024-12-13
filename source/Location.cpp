@@ -9,8 +9,7 @@
 /*   Updated: 2024/11/26 12:34:41 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include "Location.hpp"
-#include <regex>
+#include <HttpServer.hpp>
 
 Location::Location(ServerConfig *srvConf):	_serverConfig(srvConf),
 											_autoIndex(false),

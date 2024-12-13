@@ -1,9 +1,6 @@
-#include <Client.hpp>
+#include <HttpServer.hpp>
 
-Client::Client()
-{
-	this->req = nullptr;
-}
+Client::Client(): req(0) {}
 Client::~Client() {}
 
 Client::Client(int client_fd, int socket_fd, std::string ip)

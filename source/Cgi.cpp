@@ -1,26 +1,11 @@
-#include <Cgi.hpp>
-#include <Io.hpp>
-#include <unistd.h>
-#include <unordered_map>
-#include <iostream>
-#include <stdlib.h>
-#include <stddef.h>
-#include <fcntl.h>
-#include <sys/wait.h>
-#include <vector>
-#include <string>
-#include <stdio.h>
-#include <Location.hpp>
-#include <filesystem>
+#include <HttpServer.hpp>
 
 std::unordered_map<std::string, std::string> cgi_map =
 			     {{".php",  "/usr/bin/php"},
 			     {".py",  "/usr/bin/python3"}};
 
 
-Cgi::Cgi()
-{
-}
+Cgi::Cgi() {}
 
 Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 {
@@ -40,9 +25,7 @@ Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 	env_set_vars(request);
 }
 
-Cgi::~Cgi()
-{
-}
+Cgi::~Cgi() {}
 
 
 void Cgi::close_pipes(int *fd)

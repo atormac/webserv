@@ -1,8 +1,4 @@
-#include <ServerConfig.hpp>
-#include <Location.hpp>
-#include <memory>
-#include <signal.h>
-#include <regex>
+#include <HttpServer.hpp>
 
 int signo = 0;
 

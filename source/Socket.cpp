@@ -9,13 +9,7 @@
 /*   Updated: 2024/11/21 17:04:48 by lopoka           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include <Socket.hpp>
-#include <ServerConfig.hpp>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-
+#include <HttpServer.hpp>
 
 Socket::Socket(std::shared_ptr<ServerConfig> server): _socketFd(-1), _servers{server} {}
 

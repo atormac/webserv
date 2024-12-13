@@ -1,15 +1,6 @@
-#include <Response.hpp>
-#include <Defines.hpp>
-#include <dirent.h>
-#include <filesystem>
-#include <random>
-#include <functional>
-#include <Str.hpp>
-#include <Io.hpp>
+#include <HttpServer.hpp>
 
-Response::~Response()
-{
-}
+Response::~Response() {}
 
 Response::Response(std::shared_ptr<Request> request): _request(request), _status_code(STATUS_NOT_FOUND)
 {
