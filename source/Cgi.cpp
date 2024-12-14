@@ -139,10 +139,11 @@ void Cgi::child_process(int *fd, std::vector <char *> args)
 	if (dup2(fd[1], STDOUT_FILENO) < 0) {
 		return;
 	}
+	//close(fd[1]);
 	execve(args.data()[0], args.data(), c_env.data());
 }
 
-bool Cgi::start(std::string &body)
+bool Cgi::start(Client *client)
 {
 	bool	ret = false;
 	int	fd[2];
@@ -169,8 +170,13 @@ bool Cgi::start(std::string &body)
 	}
 	this->_pids.push_back(pid);
 	ret = parent_init(pid, fd);
-	parent_read(pid, fd, body);
-	close_pipes(fd);
+	if (ret)
+	{
+		client->pipefd[0] = fd[0];
+		client->pipefd[1] = fd[1];
+	}
+	//parent_read(pid, fd, body);
+	//close_pipes(fd);
 
 	return ret;
 }

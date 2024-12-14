@@ -2,7 +2,7 @@
 
 Response::~Response() {}
 
-Response::Response(std::shared_ptr<Request> request): _request(request), _status_code(STATUS_NOT_FOUND)
+Response::Response(Client *client, std::shared_ptr<Request> request): _request(request), _status_code(STATUS_NOT_FOUND)
 {
 	int error_code = this->has_errors();
 
@@ -12,6 +12,7 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 		return;
 	}
 
+	/*
 	if (_request->_headers.count("cookie") != 0)
 	{
 		std::string cookie = _request->_headers["cookie"];
@@ -47,22 +48,19 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 
 		std::cout << "SETTING COOKIE " << _setCookie << "\n";
 	}
+	*/
 
 	if (!_location->_redirectPath.empty()) {
-		std::cout << "Location: " << _location->_rootPath << std::endl;
 		create_response(_location->_redirectCode);
 		return;
 	}
 
 	if (Cgi::is_cgi(_location, _request->_uri)) {
-		
-		if (_request->_method != METHOD_DELETE)
-		{
-			do_cgi();
-		}
-		else
-			_status_code = STATUS_METHOD_NOT_ALLOWED;
 
+		if (init_cgi(client)) {
+			client->status = CL_CGI_INIT;
+			return;
+		}
 	}
 	else 
 	{
@@ -74,6 +72,27 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 	}
 	set_error_page(_status_code);
 	create_response(_status_code);
+}
+
+bool Response::init_cgi(Client *client)
+{	
+	if (_request->_method == METHOD_DELETE) {
+		_status_code = STATUS_METHOD_NOT_ALLOWED;
+		return false;
+	}
+	Cgi cgi(_location, _request);
+
+	if (!cgi.start(client))
+	{
+		_status_code = 404;
+		std::cout << "cgi.start failed\n";
+		return false;
+	}
+	client->status = CL_CGI_INIT;
+	//_body << output;
+	//_status_code = 200;
+	//std::cout << "\nCGI RESPONSE: \n" << output << std::endl;
+	return true;
 }
 
 int	Response::has_errors(void)
@@ -256,18 +275,3 @@ std::string Response::get_content_type(std::string uri)
 }
 
 
-void Response::do_cgi(void)
-{	
-	Cgi cgi(_location, _request);
-
-	std::string output;
-	if (!cgi.start(output))
-	{
-		_status_code = 404;
-		std::cout << "Cgi.execute failed\n";
-		return;
-	}
-	_body << output;
-	_status_code = 200;
-	std::cout << "\nCGI RESPONSE: \n" << output << std::endl;
-}

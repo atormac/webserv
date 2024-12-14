@@ -26,14 +26,14 @@ class Response
 			bool	directory_index(std::string path);
 			std::string get_content_type(std::string uri);
 
-			bool is_cgi(std::string uri);
-			void do_cgi(void);
+			//bool init_cgi(void);
+			bool init_cgi(Client *client);
 	public:
 			int status;
 			std::ostringstream _body;
 			std::ostringstream buffer;
 
-			Response(std::shared_ptr<Request> req);
+			Response(Client *client, std::shared_ptr<Request> req);
 			~Response();
 };
 #endif
