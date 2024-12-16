@@ -14,7 +14,7 @@ Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 	std::filesystem::path p = location->_rootPath;
 	p += request->_uri;
 	_script_path = p.filename();
-	//_script_path = location->_rootPath + request->_uri;
+
 
 	std::filesystem::path dir = std::filesystem::current_path();
 	dir += "/";
@@ -52,22 +52,11 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	{
 		env_set("CONTENT_TYPE", "application/x-www-form-urlencoded");
 		env_set("CONTENT_LENGTH", std::to_string(request->_body.size()));
-		//std::cout << "request->_body: " << request->_body.data() << std::endl;
 	}
 }
 
 bool Cgi::parent_init(int pid, int *fd_from, int *fd_to)
 {
-
-	/*
-	if (dup2(fd[0], STDIN_FILENO) < 0)
-	{
-		kill(pid, SIGTERM);
-		close_pipes(fd);
-		return false;
-	}
-	*/
-	//if (!Io::set_nonblocking(fd_from[0]))
 	if (!Io::set_nonblocking(fd_to[1]) || !Io::set_nonblocking(fd_from[0]))
 	{
 		kill(pid, SIGTERM);
