@@ -237,7 +237,7 @@ void HttpServer::handle_read(Client *client)
 	ev_new.data.fd = 0;
 	ev_new.data.ptr = client;
 
-	if (state == State::Complete || state == State::Error || bytes_read == 0)
+	if (state == State::Ok || state == State::Error || bytes_read == 0)
 	{
 		ev_new.events = EPOLLET | EPOLLOUT;
 		client->req->dump();
