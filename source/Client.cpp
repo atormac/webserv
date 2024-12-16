@@ -3,6 +3,7 @@
 Client::Client()
 {
 	this->req = nullptr;
+	this->resp = nullptr;
 	this->status = CL_NORMAL;
 	this->start_time = 0;
 }
@@ -19,5 +20,6 @@ Client::Client(int client_fd, int socket_fd, std::string ip)
 
 	this->ip_addr = ip;
 	this->req = std::make_shared<Request>();
+	this->resp = nullptr;
 }
 

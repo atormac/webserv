@@ -59,6 +59,7 @@ Response::Response(Client *client, std::shared_ptr<Request> request): _request(r
 
 		if (init_cgi(client)) {
 			client->status = CL_CGI_INIT;
+			this->_status_code = 200;
 			return;
 		}
 	}
@@ -70,6 +71,19 @@ Response::Response(Client *client, std::shared_ptr<Request> request): _request(r
 			case METHOD_DELETE: handle_delete(); break;
 		}
 	}
+	finish_response();
+}
+
+void Response::finish_response(void)
+{
+	std::cout << "FINISH_RESPONSE BODY: \n" << _body.str() << std::endl;
+	set_error_page(_status_code);
+	create_response(_status_code);
+}
+
+void Response::finish_with_body(std::string body)
+{
+	_body << body;
 	set_error_page(_status_code);
 	create_response(_status_code);
 }
@@ -89,9 +103,6 @@ bool Response::init_cgi(Client *client)
 		return false;
 	}
 	client->status = CL_CGI_INIT;
-	//_body << output;
-	//_status_code = 200;
-	//std::cout << "\nCGI RESPONSE: \n" << output << std::endl;
 	return true;
 }
 

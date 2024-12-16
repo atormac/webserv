@@ -135,11 +135,13 @@ void HttpServer::epoll(void)
 				remove_client(((Client *)e.data.ptr)->fd);
 				continue;
 			}
-			if (this->_socketFdToSockets.count(e.data.fd))
+			if (e.data.fd > 0 && this->_socketFdToSockets.count(e.data.fd))
 			{
 				accept_client(e.data.fd);
 				continue;
 			}
+			Client *cl = (Client *)e.data.ptr;
+
 			//on pipe close EPOLLHUP means EOF here
 			//mark the event as OK to catch errors directly from read/write
 			//calls
@@ -148,9 +150,9 @@ void HttpServer::epoll(void)
 
 
 			if (e.events & EPOLLIN)
-				handle_read(e);
+				handle_read(cl);
 			else if (e.events & EPOLLOUT)
-				handle_write(e);
+				handle_write(cl);
 		}
 	}
 }
@@ -203,9 +205,8 @@ void HttpServer::remove_client(int fd)
 	_clients.erase(fd);
 }
 
-void HttpServer::handle_read(epoll_event &event)
+void HttpServer::handle_read(Client *client)
 {
-	Client *client = (Client *)event.data.ptr;
 	struct epoll_event ev_new;
 	char buffer[READ_BUFFER_SIZE];
 
@@ -224,8 +225,8 @@ void HttpServer::handle_read(epoll_event &event)
 			return;
 		}
 		
-		client->old->response += std::string(buffer, bytes_read);
-		std::cout << "cgi_read: \n" << client->old->response << std::endl;
+		client->resp->_body << std::string(buffer, bytes_read);
+		//std::cout << "cgi_body: \n" << client->resp->_body << std::endl;
 		return;
 	}
 
@@ -234,7 +235,7 @@ void HttpServer::handle_read(epoll_event &event)
 
 	ev_new.events = EPOLLET | EPOLLIN;
 	ev_new.data.fd = 0;
-	ev_new.data.ptr = event.data.ptr;
+	ev_new.data.ptr = client;
 
 	if (state == State::Complete || state == State::Error || bytes_read == 0)
 	{
@@ -252,7 +253,10 @@ void HttpServer::finish_cgi_client(Client *client)
 {
 	struct epoll_event ev_new;
 
-	std::cout << "cgi_read finished: \n" << client->old->response << std::endl;
+	client->resp->finish_response();
+	client->old->response = client->resp->buffer.str();
+	std::cout << "HttpServer::finish_cgi_client" << std::endl;
+
 	ev_new.events = EPOLLET | EPOLLOUT; //send back to waiting connection
 	ev_new.data.fd = 0;
 	ev_new.data.ptr = client->old;
@@ -260,39 +264,53 @@ void HttpServer::finish_cgi_client(Client *client)
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->old->fd, &ev_new) == -1)
 	{
 		perror("epoll_ctl");
-		//remove_client(client->fd);
+		remove_client(client->fd);
+		return;
 	}
 	remove_client(client->fd);
-	return;
 }
 
-void HttpServer::add_cgi_client(Client *cl)
+void HttpServer::add_cgi_fds(Client *current)
 {
 
 	struct epoll_event ev;
-	ev.events = EPOLLIN | EPOLLET;
+	ev.events = EPOLLET | EPOLLIN;
 	ev.data.fd = 0;
-	ev.data.ptr = new Client(cl->pipefd[0], cl->socket, cl->ip_addr);
+	ev.data.ptr = new Client(current->pipefd[0], current->socket, current->ip_addr);
 
 	Client *cl_cgi = (Client *)ev.data.ptr;
 	cl_cgi->status = CL_CGI_READ;
-	cl_cgi->old = cl;
+	cl_cgi->old = current;
+	cl_cgi->resp = current->resp;
 
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, cl->pipefd[0], &ev) == -1)
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->pipefd[0], &ev) == -1)
 	{
 		perror("epoll_ctl");
-		//remove_client(cl->fd);
+		remove_client(current->fd);
 		return;
 	}
+	_cgis.emplace(current->pipefd[0], cl_cgi);
 	std::cout << "HttpServer::add_cgi_client OK\n";
 }
 
-void HttpServer::handle_write(epoll_event &event)
+void HttpServer::handle_write(Client *client)
 {
-	Client *client = (Client *)event.data.ptr;
 	struct epoll_event ev_new;
 
 	std::cout << "[webserv] write " << client->fd << " | "<< client->status << std::endl;
+
+	if (client->resp == nullptr)
+	{
+		client->resp = std::make_shared<Response>(client, client->req);
+		if (client->status == CL_CGI_INIT)
+		{
+			add_cgi_fds(client);
+			return;
+		}
+
+		client->response = client->resp->buffer.str();
+	}
+	/*
 	if (client->response.size() == 0)
 	{
 		Response resp(client, client->req);
@@ -303,6 +321,7 @@ void HttpServer::handle_write(epoll_event &event)
 		}
 		client->response = resp.buffer.str(); 
 	}
+	*/
 
 	ssize_t resp_size = client->response.size();
 	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
@@ -317,7 +336,7 @@ void HttpServer::handle_write(epoll_event &event)
 		client->response.erase(0, bytes_written);
 		ev_new.events = EPOLLET | EPOLLOUT;
 		ev_new.data.fd = 0;
-		ev_new.data.ptr = event.data.ptr;
+		ev_new.data.ptr = client;
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 		{
 			perror("epoll_ctl");

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/12/14 02:02:11 by user             ###   ########.fr       */
+/*   Updated: 2024/12/16 17:27:13 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -45,13 +45,14 @@ class HttpServer
 			void	remove_client(int fd);
 			void	cull_clients(void);
 			bool	accept_client(int socket_fd);
-			void	handle_read(epoll_event &event);
+
+			void	handle_read(Client *client);
+			void	handle_write(Client *client);
 
 			void finish_cgi_client(Client *client);
-			void	add_cgi_client(Client *cl);
+			void	add_cgi_fds(Client *cl);
 
 
-			void	handle_write(epoll_event &event);
 			void	find_config(epoll_event &event);
 			void	set_config(Client *client, std::shared_ptr <Request> req);
 

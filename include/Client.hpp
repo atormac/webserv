@@ -28,7 +28,10 @@ class Client
 			int	pipefd[2];
 
 			std::string ip_addr;
+
 			std::shared_ptr<Request> req;
+			std::shared_ptr<Response> resp;
+
 			std::string response;
 
 			Client();

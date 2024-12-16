@@ -34,6 +34,8 @@ class Response
 			std::ostringstream buffer;
 
 			Response(Client *client, std::shared_ptr<Request> req);
+			void finish_response(void);
+			void finish_with_body(std::string body);
 			~Response();
 };
 #endif
