@@ -67,6 +67,7 @@ bool Cgi::parent_init(int pid, int *fd_from, int *fd_to)
 		return false;
 	}
 	*/
+	//if (!Io::set_nonblocking(fd_from[0]))
 	if (!Io::set_nonblocking(fd_to[1]) || !Io::set_nonblocking(fd_from[0]))
 	{
 		kill(pid, SIGTERM);
@@ -103,12 +104,6 @@ void Cgi::child_process(std::vector <char *> args, int *fd_from, int *fd_to)
 	if (dup2(fd_to[0], STDIN_FILENO) < 0 || dup2(fd_from[1], STDOUT_FILENO) < 0) {
 		return;
 	}
-	/*
-	close(fd_to[0]);
-	fd_to[0] = -1;
-	close(fd_from[1]);
-	fd_from[1] = -1;
-	*/
 	execve(args.data()[0], args.data(), c_env.data());
 }
 

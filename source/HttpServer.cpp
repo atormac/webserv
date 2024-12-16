@@ -275,7 +275,6 @@ void HttpServer::add_cgi_fds(Client *current)
 
 	if (current->req->_body.size() > 0)
 	{
-		sleep(1);
 		ssize_t wr = write(current->cgi_to[WRITE], current->req->_body.data(), current->req->_body.size());
 		std::cout << "wrote POST body to cgi size: " << wr << "\n";
 

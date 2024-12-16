@@ -6,6 +6,7 @@ echo "Content-Type: text/html\r\n";
 echo "Debug-Header: DEBUG\r\n\r\n";
 
 sleep(3);
+echo("post_size: " . getenv("CONTENT_LENGTH") . "\n");
 echo("post_data: " . $post_data . "\n");
 
 echo("<html><body>");
