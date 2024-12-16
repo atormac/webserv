@@ -28,19 +28,6 @@ Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 Cgi::~Cgi() {}
 
 
-void Cgi::close_pipes(int *fd)
-{
-	if (fd[0] >= 0)
-	{
-		close(fd[0]);
-		fd[0] = -1;
-	}
-	if (fd[1] >= 0)
-	{
-		close(fd[1]);
-		fd[1] = -1;
-	}
-}
 
 void Cgi::env_set(const std::string &key, const std::string &value)
 {
@@ -88,6 +75,7 @@ bool Cgi::parent_init(int pid, int *fd)
 	return true;
 }
 
+/*
 bool Cgi::parent_read(int pid, int *fd, std::string &body)
 {
 	int	status;
@@ -100,11 +88,9 @@ bool Cgi::parent_read(int pid, int *fd, std::string &body)
 	std::cout << "cgi bytes_read: " << bytes_read << std::endl;
 	body += std::string(buf, bytes_read);
 	std::cout << "cgi_body: " << body << std::endl;
-	/*
 	while ((bytes_read = read(fd[0], buf, sizeof(buf))) > 0) {
 		body += std::string(buf, bytes_read);
 	}
-	*/
 	close_pipes(fd);
 	if (waitpid(pid, &status, WNOHANG) == -1)
 	{
@@ -119,6 +105,7 @@ bool Cgi::parent_read(int pid, int *fd, std::string &body)
 
 	return bytes_read == 0;
 }
+*/
 
 void Cgi::child_process(int *fd, std::vector <char *> args)
 {
@@ -174,11 +161,48 @@ bool Cgi::start(Client *client)
 	{
 		client->pipefd[0] = fd[0];
 		client->pipefd[1] = fd[1];
+		client->pid = pid;
 	}
 	//parent_read(pid, fd, body);
 	//close_pipes(fd);
 
 	return ret;
+}
+
+bool Cgi::finish(int pid, int *fd)
+{
+	int	status;
+
+	close_pipes(fd);
+
+	if (pid < 0)
+		return false;
+	if (waitpid(pid, &status, WNOHANG) == -1)
+	{
+		kill(pid, SIGTERM);
+		return false;
+	}
+	if (status != 0)
+	{
+		kill(pid, SIGTERM);
+		return false;
+	}
+	std::cout << "CGI::finish success" << std::endl;
+	return true;
+}
+
+void Cgi::close_pipes(int *fd)
+{
+	if (fd[0] >= 0)
+	{
+		close(fd[0]);
+		fd[0] = -1;
+	}
+	if (fd[1] >= 0)
+	{
+		close(fd[1]);
+		fd[1] = -1;
+	}
 }
 
 bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)

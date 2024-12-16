@@ -226,7 +226,6 @@ void HttpServer::handle_read(Client *client)
 		}
 		
 		client->resp->_body << std::string(buffer, bytes_read);
-		//std::cout << "cgi_body: \n" << client->resp->_body << std::endl;
 		return;
 	}
 
@@ -253,6 +252,7 @@ void HttpServer::finish_cgi_client(Client *client)
 {
 	struct epoll_event ev_new;
 
+	Cgi::finish(client->pid, client->pipefd);
 	client->resp->finish_response();
 	client->old->response = client->resp->buffer.str();
 	std::cout << "HttpServer::finish_cgi_client" << std::endl;
@@ -282,6 +282,7 @@ void HttpServer::add_cgi_fds(Client *current)
 	cl_cgi->status = CL_CGI_READ;
 	cl_cgi->old = current;
 	cl_cgi->resp = current->resp;
+	cl_cgi->pid = current->pid;
 
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->pipefd[0], &ev) == -1)
 	{
@@ -310,18 +311,6 @@ void HttpServer::handle_write(Client *client)
 
 		client->response = client->resp->buffer.str();
 	}
-	/*
-	if (client->response.size() == 0)
-	{
-		Response resp(client, client->req);
-		if (client->status == CL_CGI_INIT)
-		{
-			add_cgi_client(client);
-			return;
-		}
-		client->response = resp.buffer.str(); 
-	}
-	*/
 
 	ssize_t resp_size = client->response.size();
 	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
@@ -332,7 +321,6 @@ void HttpServer::handle_write(Client *client)
 	}
 	if (bytes_written < resp_size)
 	{
-		std::cout << "writing chunk\n";	
 		client->response.erase(0, bytes_written);
 		ev_new.events = EPOLLET | EPOLLOUT;
 		ev_new.data.fd = 0;

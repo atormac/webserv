@@ -27,6 +27,8 @@ class Client
 			int	status;
 			int	pipefd[2];
 
+			int	pid;
+
 			std::string ip_addr;
 
 			std::shared_ptr<Request> req;

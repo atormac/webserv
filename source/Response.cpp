@@ -76,7 +76,7 @@ Response::Response(Client *client, std::shared_ptr<Request> request): _request(r
 
 void Response::finish_response(void)
 {
-	std::cout << "FINISH_RESPONSE BODY: \n" << _body.str() << std::endl;
+	//std::cout << "FINISH_RESPONSE BODY: \n" << _body.str() << std::endl;
 	set_error_page(_status_code);
 	create_response(_status_code);
 }
