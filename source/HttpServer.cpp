@@ -252,7 +252,7 @@ void HttpServer::finish_cgi_client(Client *client)
 {
 	struct epoll_event ev_new;
 
-	Cgi::finish(client->pid, client->pipefd);
+	Cgi::finish(client->pid, client->cgi_from, client->cgi_from);
 	client->resp->finish_response();
 	client->old->response = client->resp->buffer.str();
 	std::cout << "HttpServer::finish_cgi_client" << std::endl;
@@ -273,10 +273,17 @@ void HttpServer::finish_cgi_client(Client *client)
 void HttpServer::add_cgi_fds(Client *current)
 {
 
+	if (current->req->_body.size() > 0)
+	{
+		sleep(1);
+		ssize_t wr = write(current->cgi_to[WRITE], current->req->_body.data(), current->req->_body.size());
+		std::cout << "wrote POST body to cgi size: " << wr << "\n";
+
+	}
 	struct epoll_event ev;
 	ev.events = EPOLLET | EPOLLIN;
 	ev.data.fd = 0;
-	ev.data.ptr = new Client(current->pipefd[0], current->socket, current->ip_addr);
+	ev.data.ptr = new Client(current->cgi_from[0], current->socket, current->ip_addr);
 
 	Client *cl_cgi = (Client *)ev.data.ptr;
 	cl_cgi->status = CL_CGI_READ;
@@ -284,13 +291,13 @@ void HttpServer::add_cgi_fds(Client *current)
 	cl_cgi->resp = current->resp;
 	cl_cgi->pid = current->pid;
 
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->pipefd[0], &ev) == -1)
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->cgi_from[0], &ev) == -1)
 	{
 		perror("epoll_ctl");
 		remove_client(current->fd);
 		return;
 	}
-	_cgis.emplace(current->pipefd[0], cl_cgi);
+	_cgis.emplace(current->cgi_from[0], cl_cgi);
 	std::cout << "HttpServer::add_cgi_client OK\n";
 }
 

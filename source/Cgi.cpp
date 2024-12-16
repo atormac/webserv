@@ -52,88 +52,71 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	{
 		env_set("CONTENT_TYPE", "application/x-www-form-urlencoded");
 		env_set("CONTENT_LENGTH", std::to_string(request->_body.size()));
+		//std::cout << "request->_body: " << request->_body.data() << std::endl;
 	}
 }
 
-bool Cgi::parent_init(int pid, int *fd)
+bool Cgi::parent_init(int pid, int *fd_from, int *fd_to)
 {
-	close(fd[1]);
-	fd[1] = -1;
 
+	/*
 	if (dup2(fd[0], STDIN_FILENO) < 0)
 	{
 		kill(pid, SIGTERM);
 		close_pipes(fd);
 		return false;
 	}
-	if (!Io::set_nonblocking(fd[0]))
+	*/
+	if (!Io::set_nonblocking(fd_to[1]) || !Io::set_nonblocking(fd_from[0]))
 	{
 		kill(pid, SIGTERM);
-		close_pipes(fd);
+		close_pipes(fd_from);
+		close_pipes(fd_to);
 		return false;
 	}
+	close(fd_to[0]);
+	fd_to[0] = -1;
+	close(fd_from[1]);
+	fd_from[1] = -1;
 	return true;
 }
 
-/*
-bool Cgi::parent_read(int pid, int *fd, std::string &body)
-{
-	int	status;
-	char	buf[1024];
-	ssize_t bytes_read;
-
-	sleep(1);
-	bytes_read = read(fd[0], buf, sizeof(buf));
-
-	std::cout << "cgi bytes_read: " << bytes_read << std::endl;
-	body += std::string(buf, bytes_read);
-	std::cout << "cgi_body: " << body << std::endl;
-	while ((bytes_read = read(fd[0], buf, sizeof(buf))) > 0) {
-		body += std::string(buf, bytes_read);
-	}
-	close_pipes(fd);
-	if (waitpid(pid, &status, WNOHANG) == -1)
-	{
-		kill(pid, SIGTERM);
-		return false;
-	}
-	if (status != 0)
-	{
-		kill(pid, SIGTERM);
-		return false;
-	}
-
-	return bytes_read == 0;
-}
-*/
-
-void Cgi::child_process(int *fd, std::vector <char *> args)
+void Cgi::child_process(std::vector <char *> args, int *fd_from, int *fd_to)
 {
 	std::vector<char*> c_env;
 
 	for (const auto& var : _env) {
 		c_env.push_back(const_cast<char*>(var.c_str()));
 	}
-	if (::chdir(_script_dir.c_str()) == -1)
-	{
+
+	if (::chdir(_script_dir.c_str()) == -1) {
 		return;
 	}
+
 	c_env.push_back(NULL);
 
-	close(fd[0]);
-	fd[0] = -1;
+	close(fd_to[1]);
+	fd_to[1] = -1;
+	close(fd_from[0]);
+	fd_from[0] = -1;
 
-	if (dup2(fd[1], STDOUT_FILENO) < 0) {
+	if (dup2(fd_to[0], STDIN_FILENO) < 0 || dup2(fd_from[1], STDOUT_FILENO) < 0) {
 		return;
 	}
-	//close(fd[1]);
+	/*
+	close(fd_to[0]);
+	fd_to[0] = -1;
+	close(fd_from[1]);
+	fd_from[1] = -1;
+	*/
 	execve(args.data()[0], args.data(), c_env.data());
 }
 
 bool Cgi::start(Client *client)
 {
 	bool	ret = false;
-	int	fd[2];
+	int	fd_from[2] = { -1, -1 }; //read cgi output
+	int	fd_to[2] = { -1, -1 }; //write cgi input
 	int	pid;
 
 
@@ -142,38 +125,47 @@ bool Cgi::start(Client *client)
 	args.push_back(const_cast<char *>(_script_path.c_str()));
 	args.push_back(nullptr);
 
-	if (pipe(fd) == -1)
+	if (pipe(fd_from) == -1 || pipe(fd_to) == -1)
+	{
+		close_pipes(fd_from);
+		close_pipes(fd_to);
 		return false;
+	}
 	if ((pid = fork()) == -1)
 	{
-		close_pipes(fd);
+		close_pipes(fd_from);
+		close_pipes(fd_to);
 		return false;
 	}
 	if (pid == 0)
 	{
-		child_process(fd, args);
-		close_pipes(fd);
+		child_process(args, fd_from, fd_to);
+		close_pipes(fd_from);
+		close_pipes(fd_to);
 		exit(1);
 	}
 	this->_pids.push_back(pid);
-	ret = parent_init(pid, fd);
+
+	ret = parent_init(pid, fd_from, fd_to);
 	if (ret)
 	{
-		client->pipefd[0] = fd[0];
-		client->pipefd[1] = fd[1];
+		client->cgi_from[READ] = fd_from[READ];
+		client->cgi_from[WRITE] = fd_from[WRITE];
+		client->cgi_to[READ] = fd_to[READ];
+		client->cgi_to[WRITE] = fd_to[WRITE];
 		client->pid = pid;
 	}
-	//parent_read(pid, fd, body);
 	//close_pipes(fd);
 
 	return ret;
 }
 
-bool Cgi::finish(int pid, int *fd)
+bool Cgi::finish(int pid, int *fd_from, int *fd_to)
 {
 	int	status;
 
-	close_pipes(fd);
+	close_pipes(fd_from);
+	close_pipes(fd_to);
 
 	if (pid < 0)
 		return false;

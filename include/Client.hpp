@@ -25,7 +25,8 @@ class Client
 			time_t	start_time;
 	
 			int	status;
-			int	pipefd[2];
+			int	cgi_to[2];
+			int	cgi_from[2];
 
 			int	pid;
 

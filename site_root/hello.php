@@ -1,10 +1,12 @@
 <?php
+$post_data = file_get_contents('php://input');
 //header("Content-Type: text/html");
 //header("X-Debug: CGI Test");
 echo "Content-Type: text/html\r\n";
 echo "Debug-Header: DEBUG\r\n\r\n";
 
 sleep(3);
+echo("post_data: " . $post_data . "\n");
 
 echo("<html><body>");
 

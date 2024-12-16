@@ -23,5 +23,9 @@ Client::Client(int client_fd, int socket_fd, std::string ip)
 	this->req = std::make_shared<Request>();
 	this->resp = nullptr;
 	this->pid = -1;
+	this->cgi_to[0] = -1;
+	this->cgi_to[1] = -1;
+	this->cgi_from[0] = -1;
+	this->cgi_from[1] = -1;
 }
 

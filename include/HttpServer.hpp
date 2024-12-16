@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/12/16 17:27:13 by user             ###   ########.fr       */
+/*   Updated: 2024/12/16 21:37:11 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -41,6 +41,7 @@ class HttpServer
 
 			std::map<int, std::shared_ptr<Client>> _clients;
 			std::map<int, std::shared_ptr<Client>> _cgis;
+			std::map<int, int> _cgi_to_client;
 			
 			void	remove_client(int fd);
 			void	cull_clients(void);
