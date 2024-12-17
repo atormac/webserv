@@ -24,7 +24,7 @@ enum
 #define READ 0
 #define WRITE 1
 
-#define READ_BUFFER_SIZE 1024
+#define READ_BUFFER_SIZE 2048
 
 #define SERVER_NAME "webserv"
 #define REQUEST_BODY_LIMIT 10 * 1024 * 1024 //10MB

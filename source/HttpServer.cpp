@@ -146,7 +146,11 @@ void HttpServer::epoll(void)
 			//mark the event as OK to catch errors directly from read/write
 			//calls
 			if (e.events & EPOLLHUP) 
+			{
 				e.events |= EPOLLIN;
+				std::cerr << "EOF: " << cl->fd << " | " << cl->status << "\n";
+				
+			}
 
 
 			if (e.events & EPOLLIN)
@@ -226,6 +230,7 @@ void HttpServer::handle_read(Client *client)
 		}
 		
 		client->resp->_body << std::string(buffer, bytes_read);
+		//std::cout << "body: " << std::string(buffer, bytes_read) << std::endl;
 		return;
 	}
 
@@ -270,19 +275,36 @@ void HttpServer::finish_cgi_client(Client *client)
 	remove_client(client->fd);
 }
 
+//garbage code
 void HttpServer::add_cgi_fds(Client *current)
 {
+	struct epoll_event ev;
 
+	std::cout << __FUNCTION__ << ": cgi read fd: " << current->cgi_from[READ] << std::endl;
+	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
 	if (current->req->_body.size() > 0)
 	{
-		ssize_t wr = write(current->cgi_to[WRITE], current->req->_body.data(), current->req->_body.size());
-		std::cout << "wrote POST body to cgi size: " << wr << "\n";
+		ev.events = EPOLLET | EPOLLOUT;
+		ev.data.fd = 0;
+		ev.data.ptr = new Client(current->cgi_to[WRITE], current->socket, current->ip_addr);
+
+		Client *cgi_write = (Client *)ev.data.ptr;
+		cgi_write->status = CL_CGI_WRITE;
+		cgi_write->pid = current->pid;
+		cgi_write->response = current->req->_body;
+
+		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->cgi_to[WRITE], &ev) == -1)
+		{
+			perror("epoll_ctl");
+			remove_client(current->fd);
+			return;
+		}
+		std::cout << __FUNCTION__ << ": " << "added cgi write end to epoll list\n";
 
 	}
-	struct epoll_event ev;
 	ev.events = EPOLLET | EPOLLIN;
 	ev.data.fd = 0;
-	ev.data.ptr = new Client(current->cgi_from[0], current->socket, current->ip_addr);
+	ev.data.ptr = new Client(current->cgi_from[READ], current->socket, current->ip_addr);
 
 	Client *cl_cgi = (Client *)ev.data.ptr;
 	cl_cgi->status = CL_CGI_READ;
@@ -290,7 +312,7 @@ void HttpServer::add_cgi_fds(Client *current)
 	cl_cgi->resp = current->resp;
 	cl_cgi->pid = current->pid;
 
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->cgi_from[0], &ev) == -1)
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->cgi_from[READ], &ev) == -1)
 	{
 		perror("epoll_ctl");
 		remove_client(current->fd);
@@ -304,9 +326,8 @@ void HttpServer::handle_write(Client *client)
 {
 	struct epoll_event ev_new;
 
-	std::cout << "[webserv] write " << client->fd << " | "<< client->status << std::endl;
 
-	if (client->resp == nullptr)
+	if (client->status == CL_NORMAL && client->resp == nullptr)
 	{
 		client->resp = std::make_shared<Response>(client, client->req);
 		if (client->status == CL_CGI_INIT)
@@ -320,6 +341,9 @@ void HttpServer::handle_write(Client *client)
 
 	ssize_t resp_size = client->response.size();
 	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
+
+	std::cout << "[webserv] write " << client->fd << " | "<< client->status << " | " << bytes_written << " | " << client->response.size() << std::endl;
+
 	if (bytes_written <= 0)
 	{
 		remove_client(client->fd);
@@ -331,6 +355,7 @@ void HttpServer::handle_write(Client *client)
 		ev_new.events = EPOLLET | EPOLLOUT;
 		ev_new.data.fd = 0;
 		ev_new.data.ptr = client;
+
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 		{
 			perror("epoll_ctl");
