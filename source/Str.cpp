@@ -55,7 +55,7 @@ std::string Str::date_str_now(void)
 	return std::string(buf);
 }
 
-std::string Str::date_str_year_from_now(void)
+std::string Str::date_str_hour_from_now(void)
 {  
 	time_t t;
 	struct tm *time_struct;
@@ -63,7 +63,7 @@ std::string Str::date_str_year_from_now(void)
 
 	std::time(&t);
 	time_struct = std::gmtime(&t);
-	time_struct->tm_year += 1;
+	time_struct->tm_hour = (time_struct->tm_hour + 1) % 24;
 	std::strftime(buf, sizeof(buf) - 1, "%a, %d %b %Y %H:%M:%S GMT", time_struct);
 	return std::string(buf);
 }

@@ -20,11 +20,52 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 		std::cout << "CHECKING FIIIIIILE " << cookie << "\n";
 
 		int fileStat = Io::file_stat(cookie);
+
 		if (!(fileStat & FS_ISFILE) || !(fileStat & FS_READ) || !(fileStat & FS_WRITE))
 		{
 			_request->_headers.erase(_request->_headers.find("cookie"));
-			std::cout << "---------------REMOVING COOKIE--------------------\n";
+			std::cout << "Removing invalid cookie from request header!\n";
 		}
+
+		//
+			std::fstream sessionFile(cookie);
+			std::string str_date;
+
+			std::getline(sessionFile, str_date);
+			std::cout << "STR DATE: " << str_date << "\n";
+			sessionFile.close();
+
+
+			struct tm expr;
+			strptime(str_date.c_str(), "%a, %d %b %Y %H:%M:%S GMT", &expr);
+			std::cout << "GMT expire time:\t" << asctime(&expr);
+
+
+			time_t now;
+			struct tm *date;
+
+			std::time(&now);
+			date = std::gmtime(&now);
+			std::cout << "GMT now time:\t\t" << asctime(date);
+
+			time_t t1 = mktime(&expr);
+			time_t t2 = mktime(date);
+			float diffSecs = difftime(t1, t2);
+			std::cout << "DIFFFFF SECONDS: " << diffSecs << "\n";
+
+			if (0 < diffSecs && (diffSecs / 3600) < 1)
+			{
+				std::fstream sessionFile(cookie);
+				sessionFile << Str::date_str_hour_from_now();
+				sessionFile.close();
+			}
+			else
+			{
+				_request->_headers.erase(_request->_headers.find("cookie"));
+				std::cout << "Removing invalid cookie from request header!\n";
+			}
+
+		//
 	}
 
 	if (_request->_headers.count("cookie") == 0)
@@ -39,9 +80,10 @@ Response::Response(std::shared_ptr<Request> request): _request(request), _status
 			sessionID << charSet[distribution(generator)];
 
 		std::ofstream sessionFile("./sessions_dir/" + sessionID.str());
+		sessionFile << Str::date_str_hour_from_now();
 		sessionFile.close();
 
-		session << sessionID.str() << "; expires=" << Str::date_str_year_from_now() << "; path=/" << "; host=" << _request->_headers["host"];
+		session << sessionID.str() << "; expires=" << Str::date_str_hour_from_now() << "; path=/" << "; host=" << _request->_headers["host"];
 
 		_setCookie = session.str();
 
