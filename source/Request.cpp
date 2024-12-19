@@ -152,7 +152,7 @@ State	Request::parse_body(void)
 		return  State::MultiPart;
 	_body = _buffer.substr(0, _content_len);
 	_buffer.clear();
-	std::cout << "body: " << _body << std::endl;
+	//std::cout << "body: " << _body << std::endl;
 	return State::Ok;
 }
 

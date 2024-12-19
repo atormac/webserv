@@ -119,6 +119,7 @@ void HttpServer::epoll(void)
 
 	while (true)
 	{
+		std::cout << "[webserv] epoll_wait()\n";
 		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, -1);
 
 		if (nfds == -1)
@@ -199,7 +200,7 @@ void HttpServer::remove_client(int fd)
 {
 	if (fd < 0)
 		return;
-	std::cout << "[webserv] remove_client" << fd << " | "<< std::endl;
+	std::cout << "[webserv] removing fd: " << fd << " | "<< std::endl;
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
 	{
 		perror("remove_client epoll_ctl");
@@ -228,9 +229,15 @@ void HttpServer::handle_read(Client *client)
 			finish_cgi_client(client);
 			return;
 		}
-		
 		client->resp->_body << std::string(buffer, bytes_read);
-		//std::cout << "body: " << std::string(buffer, bytes_read) << std::endl;
+		ev_new.events = EPOLLET | EPOLLIN;
+		ev_new.data.fd = 0;
+		ev_new.data.ptr = client;
+		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
+		{
+			perror("epoll_ctl");
+			remove_client(client->fd);
+		}
 		return;
 	}
 
@@ -318,7 +325,7 @@ void HttpServer::add_cgi_fds(Client *current)
 		remove_client(current->fd);
 		return;
 	}
-	_cgis.emplace(current->cgi_from[0], cl_cgi);
+	//_cgis.emplace(current->cgi_from[0], cl_cgi);
 	std::cout << "HttpServer::add_cgi_client OK\n";
 }
 
