@@ -32,6 +32,7 @@ class Response
 			void _handleCookies();
 			void _validateCookie();
 			void _createCookie();
+			void _removeInvalidCookie(std::string cookie_path);
 
 	public:
 			int status;
