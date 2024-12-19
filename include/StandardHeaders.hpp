@@ -17,6 +17,7 @@
 #include <sstream>
 #include <dirent.h>
 #include <filesystem>
+#include <cstdio>
 
 #include <limits>
 

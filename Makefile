@@ -7,7 +7,7 @@ LDFLAGS :=
 SOURCE_DIR = source
 SOURCES := main.cpp Defines.cpp HttpServer.cpp ServerConfig.cpp Client.cpp Socket.cpp \
 	   Request.cpp Response.cpp Utils.cpp Location.cpp \
-	   Str.cpp Io.cpp Cgi.cpp
+	   Str.cpp Io.cpp Cgi.cpp Cookies.cpp
 
 OBJ_DIR := obj
 #OBJECTS := $(addprefix $(SOURCE_DIR)/,$(SOURCES:.cpp=.o))

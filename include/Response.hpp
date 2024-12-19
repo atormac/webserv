@@ -28,6 +28,11 @@ class Response
 
 			bool is_cgi(std::string uri);
 			void do_cgi(void);
+
+			void _handleCookies();
+			void _validateCookie();
+			void _createCookie();
+
 	public:
 			int status;
 			std::ostringstream _body;
