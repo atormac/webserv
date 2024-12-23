@@ -408,7 +408,7 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 				req->conf = server;
 				return;
 			}
-			std::cout << "SERVER:" << name << std::endl;
+			//std::cout << "SERVER:" << name << std::endl;
 		}
 		if (host == server->getIpAddress() + ":" + server->getPort())
 		{
@@ -417,7 +417,8 @@ void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)
 			std::cout << server->getIpAddress() << ":" << server->getPort() << "\n";
 			for (const auto &loc : server->getLocations())
 			{
-				loc->dump();
+				//loc->dump();
+				(void)loc;
 			}
 			return;
 		}

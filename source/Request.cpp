@@ -226,8 +226,10 @@ void	Request::dump(void)
 	{
 		std::cout << "\t" << e.first << ": " << e.second << std::endl;
 	}
+	/*
 	if (_content_len > 0)
 		std::cout << "body: " << _body << std::endl;
+	*/
 }
 
 bool	Request::is_method_allowed(std::vector <std::string>allowed, std::string method)
