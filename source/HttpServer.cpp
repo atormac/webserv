@@ -60,8 +60,6 @@ void HttpServer::cull_clients(void)
 	std::time(&now);
 	for (auto const &cl : _clients) {
 	
-		if (cl.first == 0 || cl.second == nullptr)
-			continue;
 		time_t delta = now - cl.second->start_time;
 	
 		if (delta > 60) {
@@ -83,7 +81,7 @@ void HttpServer::epoll(void)
 		if (nfds == -1)
 			break;
 
-		//cull_clients();
+		cull_clients();
 
 		for (int i = 0; i < nfds; i++)
 		{
