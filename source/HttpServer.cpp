@@ -66,7 +66,7 @@ void HttpServer::cull_clients(void)
 	
 		if (delta > 60) {
 			std::cout << "client timeout: " << cl.first << std::endl;
-			remove_client(cl.first);
+			remove_fd(cl.first);
 		}
 	}
 }
@@ -91,7 +91,7 @@ void HttpServer::epoll(void)
 
 			if ((e.events & EPOLLERR) || (e.events & EPOLLRDHUP))
 			{
-				remove_client(((Client *)e.data.ptr)->fd);
+				remove_fd(((Client *)e.data.ptr)->fd);
 				continue;
 			}
 			if (e.data.fd > 0 && this->_socketFdToSockets.count(e.data.fd))
@@ -160,7 +160,7 @@ bool HttpServer::add_fd(int fd, int mask, void *ptr)
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, fd, &ev) == -1)
 	{
 		std::cerr << "epoll_ctl accept failed" << std::endl;
-		remove_client(fd);
+		remove_fd(fd);
 		return false;
 	}
 	_clients.emplace(fd, cl);
@@ -168,7 +168,7 @@ bool HttpServer::add_fd(int fd, int mask, void *ptr)
 	return true;
 }
 
-void HttpServer::remove_client(int fd)
+void HttpServer::remove_fd(int fd)
 {
 	if (fd < 0)
 		return;
@@ -177,7 +177,7 @@ void HttpServer::remove_client(int fd)
 	_clients.erase(fd);
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
 	{
-		perror("remove_client epoll_ctl");
+		perror("remove_fd epoll_ctl");
 	}
 	std::cout << "[webserv] fd: " << fd << " removed"<< std::endl;
 }
@@ -190,7 +190,7 @@ void HttpServer::handle_read(Client *client)
 	ssize_t bytes_read = read(client->fd, buffer, READ_BUFFER_SIZE);
 	if (bytes_read == -1)
 	{
-		remove_client(client->fd);
+		remove_fd(client->fd);
 		return;
 	}
 	if (client->status == CL_CGI_READ)
@@ -208,7 +208,7 @@ void HttpServer::handle_read(Client *client)
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 		{
 			perror("epoll_ctl");
-			remove_client(client->fd);
+			remove_fd(client->fd);
 		}
 		return;
 	}
@@ -228,7 +228,7 @@ void HttpServer::handle_read(Client *client)
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 	{
 		perror("epoll_ctl");
-		remove_client(client->fd);
+		remove_fd(client->fd);
 	}
 }
 
@@ -248,16 +248,18 @@ void HttpServer::finish_cgi_client(Client *client)
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->ref->fd, &ev_new) == -1)
 	{
 		perror("epoll_ctl");
-		remove_client(client->fd);
+		remove_fd(client->fd);
 		return;
 	}
-	remove_client(client->fd);
+	remove_fd(client->fd);
 }
 
 //garbage code
 void HttpServer::add_cgi_fds(Client *current)
 {
 	int pid_cgi = current->pid;
+
+	_cgi_pids.emplace(pid_cgi, current);
 
 	std::cout << __FUNCTION__ << ": cgi read fd: " << current->cgi_from[READ] << std::endl;
 	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
@@ -300,7 +302,7 @@ void HttpServer::handle_write(Client *client)
 
 	if (bytes_written <= 0)
 	{
-		remove_client(client->fd);
+		remove_fd(client->fd);
 		return;
 	}
 	if (bytes_written < resp_size)
@@ -313,11 +315,11 @@ void HttpServer::handle_write(Client *client)
 		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
 		{
 			perror("epoll_ctl");
-			remove_client(client->fd);
+			remove_fd(client->fd);
 		}
 		return;
 	}
-	remove_client(client->fd);
+	remove_fd(client->fd);
 }
 
 void HttpServer::set_config(Client *client, std::shared_ptr <Request> req)

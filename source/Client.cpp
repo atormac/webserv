@@ -14,7 +14,6 @@ Client::Client()
 	this->cgi_from[1] = -1;
 
 	std::time(&this->start_time);
-	std::cout << "client default constructor called\n";
 }
 Client::~Client() {}
 
