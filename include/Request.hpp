@@ -17,7 +17,7 @@ enum class State
 	PartialBody,
 	Chunked,
 	MultiPart,
-	Complete,
+	Ok,
 	Error,
 };
 

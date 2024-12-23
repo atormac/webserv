@@ -16,19 +16,19 @@ class Cgi
 			std::vector<std::string> _env;
 			std::vector<int> _pids;
 
-			void close_pipes(int *fd);
 			void env_set(const std::string &key, const std::string &value);
 			void env_set_vars(std::shared_ptr<Request> request);
 	
-			bool parent_init(int pid, int *fd);
-			bool parent_read(int pid, int *fd, std::string &body);
-			void child_process(int *fd, std::vector <char *> args);
+			bool parent_init(int pid, int *fd_from, int *fd_to);
+			void child_process(std::vector <char *> args, int *fd_from, int *fd_to);
 	public:
 			Cgi();
 			Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request);
 			~Cgi();
 		
-			bool start(std::string &body);
+			bool start(Client *client);
+			static bool finish(int pid, int *fd_from, int *fd_to);
+			static void close_pipes(int *fd);
 			static bool is_cgi(std::shared_ptr <Location> location, std::string uri);
 };
 #endif

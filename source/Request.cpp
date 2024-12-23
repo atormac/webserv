@@ -24,7 +24,7 @@ State Request::parse(State s_start, char *data, size_t size)
 
 	if (_state < s_start)
 		_state = s_start;
-	while (_state != State::Complete && _state != State::Error)
+	while (_state != State::Ok && _state != State::Error)
 	{
 		switch (_state)
 		{
@@ -138,7 +138,7 @@ bool Request::parse_header_field(size_t pos)
 State	Request::parse_body(void)
 {
 	if (_method != METHOD_POST)
-		return State::Complete;
+		return State::Ok;
 	if (conf && _buffer.size() > conf->getMaxSize())
 	{
 		this->parser_error = STATUS_TOO_LARGE;
@@ -152,8 +152,8 @@ State	Request::parse_body(void)
 		return  State::MultiPart;
 	_body = _buffer.substr(0, _content_len);
 	_buffer.clear();
-	std::cout << "body: " << _body << std::endl;
-	return State::Complete;
+	//std::cout << "body: " << _body << std::endl;
+	return State::Ok;
 }
 
 State	Request::parse_chunked(void)
@@ -169,7 +169,7 @@ State	Request::parse_chunked(void)
 	_body += _buffer.substr(pos + 2, chunk_len);
 	_buffer.erase(0, pos + 2 + chunk_len + 1);
 
-	return chunk_len ? State::Chunked : State::Complete;
+	return chunk_len ? State::Chunked : State::Ok;
 }
 
 void	Request::parse_multipart(void)
@@ -209,7 +209,7 @@ void	Request::parse_multipart(void)
 		this->parts.push_back(part);
 	}
 	//std::cout << "MULTIPART REQUEST:\n" << _buffer << std::endl;
-	_state = State::Complete;
+	_state = State::Ok;
 	_body.clear();
 	_buffer.clear();
 	std::cout << "multipart parsed.\n";
@@ -226,8 +226,10 @@ void	Request::dump(void)
 	{
 		std::cout << "\t" << e.first << ": " << e.second << std::endl;
 	}
+	/*
 	if (_content_len > 0)
 		std::cout << "body: " << _body << std::endl;
+	*/
 }
 
 bool	Request::is_method_allowed(std::vector <std::string>allowed, std::string method)

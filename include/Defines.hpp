@@ -21,7 +21,13 @@ enum
 	METHOD_DELETE
 };
 
-#define READ_BUFFER_SIZE 1024
+#define CLIENT_TIMEOUT (1 * 60)
+#define CGI_TIMEOUT (5 * 60)
+
+#define READ 0
+#define WRITE 1
+
+#define READ_BUFFER_SIZE 2048
 
 #define SERVER_NAME "webserv"
 #define REQUEST_BODY_LIMIT 10 * 1024 * 1024 //10MB

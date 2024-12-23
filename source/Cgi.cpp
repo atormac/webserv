@@ -14,7 +14,7 @@ Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 	std::filesystem::path p = location->_rootPath;
 	p += request->_uri;
 	_script_path = p.filename();
-	//_script_path = location->_rootPath + request->_uri;
+
 
 	std::filesystem::path dir = std::filesystem::current_path();
 	dir += "/";
@@ -28,19 +28,6 @@ Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 Cgi::~Cgi() {}
 
 
-void Cgi::close_pipes(int *fd)
-{
-	if (fd[0] >= 0)
-	{
-		close(fd[0]);
-		fd[0] = -1;
-	}
-	if (fd[1] >= 0)
-	{
-		close(fd[1]);
-		fd[1] = -1;
-	}
-}
 
 void Cgi::env_set(const std::string &key, const std::string &value)
 {
@@ -68,44 +55,102 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	}
 }
 
-bool Cgi::parent_init(int pid, int *fd)
+bool Cgi::parent_init(int pid, int *fd_from, int *fd_to)
 {
-	close(fd[1]);
-	fd[1] = -1;
-
-	if (dup2(fd[0], STDIN_FILENO) < 0)
+	if (!Io::set_nonblocking(fd_to[WRITE]) || !Io::set_nonblocking(fd_from[READ]))
 	{
 		kill(pid, SIGTERM);
-		close_pipes(fd);
+		close_pipes(fd_from);
+		close_pipes(fd_to);
 		return false;
 	}
-	if (!Io::set_nonblocking(fd[0]))
-	{
-		kill(pid, SIGTERM);
-		close_pipes(fd);
-		return false;
-	}
+	close(fd_to[0]);
+	fd_to[0] = -1;
+	close(fd_from[1]);
+	fd_from[1] = -1;
 	return true;
 }
 
-bool Cgi::parent_read(int pid, int *fd, std::string &body)
+void Cgi::child_process(std::vector <char *> args, int *fd_from, int *fd_to)
+{
+	std::vector<char*> c_env;
+
+	for (const auto& var : _env) {
+		c_env.push_back(const_cast<char*>(var.c_str()));
+	}
+
+	if (::chdir(_script_dir.c_str()) == -1) {
+		return;
+	}
+
+	c_env.push_back(NULL);
+
+	close(fd_to[1]);
+	close(fd_from[0]);
+
+	if (dup2(fd_to[0], STDIN_FILENO) < 0 || dup2(fd_from[1], STDOUT_FILENO) < 0) {
+		return;
+	}
+	close(fd_to[0]);
+	close(fd_from[1]);
+	execve(args.data()[0], args.data(), c_env.data());
+}
+
+bool Cgi::start(Client *client)
+{
+	bool	ret = false;
+	int	fd_from[2] = { -1, -1 }; //read cgi output
+	int	fd_to[2] = { -1, -1 }; //write cgi input
+	int	pid;
+
+
+	std::vector <char *> args;
+	args.push_back(const_cast<char *>(_interpreter.c_str()));
+	args.push_back(const_cast<char *>(_script_path.c_str()));
+	args.push_back(nullptr);
+
+	if (pipe(fd_from) == -1 || pipe(fd_to) == -1)
+	{
+		close_pipes(fd_from);
+		close_pipes(fd_to);
+		return false;
+	}
+	if ((pid = fork()) == -1)
+	{
+		close_pipes(fd_from);
+		close_pipes(fd_to);
+		return false;
+	}
+	if (pid == 0)
+	{
+		child_process(args, fd_from, fd_to);
+		close_pipes(fd_from);
+		close_pipes(fd_to);
+		exit(1);
+	}
+	this->_pids.push_back(pid);
+
+	ret = parent_init(pid, fd_from, fd_to);
+	if (ret)
+	{
+		client->cgi_from[READ] = fd_from[READ];
+		client->cgi_from[WRITE] = fd_from[WRITE];
+		client->cgi_to[READ] = fd_to[READ];
+		client->cgi_to[WRITE] = fd_to[WRITE];
+		client->pid = pid;
+	}
+	//close_pipes(fd);
+
+	return ret;
+}
+
+bool Cgi::finish(int pid, int *fd_from, int *fd_to)
 {
 	int	status;
-	char	buf[1024];
-	ssize_t bytes_read;
 
-	sleep(1);
-	bytes_read = read(fd[0], buf, sizeof(buf));
+	close_pipes(fd_from);
+	close_pipes(fd_to);
 
-	std::cout << "cgi bytes_read: " << bytes_read << std::endl;
-	body += std::string(buf, bytes_read);
-	std::cout << "cgi_body: " << body << std::endl;
-	/*
-	while ((bytes_read = read(fd[0], buf, sizeof(buf))) > 0) {
-		body += std::string(buf, bytes_read);
-	}
-	*/
-	close_pipes(fd);
 	if (waitpid(pid, &status, WNOHANG) == -1)
 	{
 		kill(pid, SIGTERM);
@@ -116,63 +161,22 @@ bool Cgi::parent_read(int pid, int *fd, std::string &body)
 		kill(pid, SIGTERM);
 		return false;
 	}
-
-	return bytes_read == 0;
+	std::cout << "CGI::finish success" << std::endl;
+	return true;
 }
 
-void Cgi::child_process(int *fd, std::vector <char *> args)
+void Cgi::close_pipes(int *fd)
 {
-	std::vector<char*> c_env;
-
-	for (const auto& var : _env) {
-		c_env.push_back(const_cast<char*>(var.c_str()));
-	}
-	if (::chdir(_script_dir.c_str()) == -1)
+	if (fd[0] >= 0)
 	{
-		return;
+		close(fd[0]);
+		fd[0] = -1;
 	}
-	c_env.push_back(NULL);
-
-	close(fd[0]);
-	fd[0] = -1;
-
-	if (dup2(fd[1], STDOUT_FILENO) < 0) {
-		return;
-	}
-	execve(args.data()[0], args.data(), c_env.data());
-}
-
-bool Cgi::start(std::string &body)
-{
-	bool	ret = false;
-	int	fd[2];
-	int	pid;
-
-
-	std::vector <char *> args;
-	args.push_back(const_cast<char *>(_interpreter.c_str()));
-	args.push_back(const_cast<char *>(_script_path.c_str()));
-	args.push_back(nullptr);
-
-	if (pipe(fd) == -1)
-		return false;
-	if ((pid = fork()) == -1)
+	if (fd[1] >= 0)
 	{
-		close_pipes(fd);
-		return false;
+		close(fd[1]);
+		fd[1] = -1;
 	}
-	if (pid == 0)
-	{
-		child_process(fd, args);
-		close_pipes(fd);
-		exit(1);
-	}
-	this->_pids.push_back(pid);
-	ret = parent_init(pid, fd);
-	parent_read(pid, fd, body);
-	close_pipes(fd);
-
-	return ret;
 }
 
 bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)
