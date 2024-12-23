@@ -104,7 +104,7 @@ void	Response::create_response(int status)
 	if (bs.size() > 0)
 		buffer << "Content-Type: " << get_content_type(_request->_uri) << CRLF;
 	if (!_setCookie.empty())
-		buffer << "Set-Cookie: " << _setCookie << "\n";
+		buffer << "Set-Cookie: " << _setCookie << CRLF;
 	buffer << CRLF;
 	buffer << bs;
 }

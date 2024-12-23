@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/12/16 21:37:11 by user             ###   ########.fr       */
+/*   Updated: 2024/12/23 17:07:05 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -46,6 +46,7 @@ class HttpServer
 			void	remove_client(int fd);
 			void	cull_clients(void);
 			bool	accept_client(int socket_fd);
+			bool	add_fd(int fd, int mask, void *ptr);
 
 			void	handle_read(Client *client);
 			void	handle_write(Client *client);

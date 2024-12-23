@@ -124,8 +124,12 @@ bool HttpServer::accept_client(int _socket_fd)
 {
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addr_size = sizeof(peer_addr);
-	struct epoll_event ev;
 
+	if (_clients.size() > 512)
+	{
+		std::cout << "Error: too many connections\n";
+		return false;
+	}
 	int client_fd = accept(_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
 	if (client_fd == -1)
 	{
@@ -138,19 +142,29 @@ bool HttpServer::accept_client(int _socket_fd)
 		close(client_fd);
 		return false;
 	}
-	ev.events = EPOLLIN | EPOLLET;
-	ev.data.fd = 0;
-	ev.data.ptr = new Client(client_fd, _socket_fd, inet_ntoa(peer_addr.sin_addr));
-	Client *client = (Client *)ev.data.ptr;
+	Client *cl = new Client(client_fd, _socket_fd, inet_ntoa(peer_addr.sin_addr));
 
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, client_fd, &ev) == -1)
+	std::cout << "client added\n";
+	return add_fd(client_fd, EPOLLIN, cl);
+}
+
+bool HttpServer::add_fd(int fd, int mask, void *ptr)
+{
+	Client *cl = (Client *)ptr;
+	struct epoll_event ev;
+
+	ev.events = EPOLLET | mask;
+	ev.data.fd = 0;
+	ev.data.ptr = cl;
+
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, fd, &ev) == -1)
 	{
 		std::cerr << "epoll_ctl accept failed" << std::endl;
-		remove_client(client_fd);
+		remove_client(fd);
 		return false;
 	}
-	_clients.emplace(client_fd, client);
-	std::cout << "client added\n";
+	_clients.emplace(fd, cl);
+	std::cout << "[webserv] fd: " << fd << " added"<< std::endl;
 	return true;
 }
 
@@ -158,14 +172,13 @@ void HttpServer::remove_client(int fd)
 {
 	if (fd < 0)
 		return;
-	std::cout << "[webserv] removing fd: " << fd << " | "<< std::endl;
+	close(fd);
+	_clients.erase(fd);
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
 	{
 		perror("remove_client epoll_ctl");
-		return;
 	}
-	close(fd);
-	_clients.erase(fd);
+	std::cout << "[webserv] fd: " << fd << " removed"<< std::endl;
 }
 
 void HttpServer::handle_read(Client *client)
@@ -243,54 +256,31 @@ void HttpServer::finish_cgi_client(Client *client)
 //garbage code
 void HttpServer::add_cgi_fds(Client *current)
 {
-	struct epoll_event ev;
-
 	std::cout << __FUNCTION__ << ": cgi read fd: " << current->cgi_from[READ] << std::endl;
 	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
 	if (current->req->_body.size() > 0)
 	{
-		ev.events = EPOLLET | EPOLLOUT;
-		ev.data.fd = 0;
-		ev.data.ptr = new Client(current->cgi_to[WRITE], current->socket, current->ip_addr);
+		Client *write_cgi = new Client(current->cgi_to[WRITE], current->socket, current->ip_addr);
 
-		Client *cgi_write = (Client *)ev.data.ptr;
-		cgi_write->status = CL_CGI_WRITE;
-		cgi_write->pid = current->pid;
-		cgi_write->response = current->req->_body;
+		write_cgi->status = CL_CGI_WRITE;
+		write_cgi->pid = current->pid;
+		write_cgi->response = current->req->_body;
 
-		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->cgi_to[WRITE], &ev) == -1)
-		{
-			perror("epoll_ctl");
-			remove_client(current->fd);
-			return;
-		}
-		std::cout << __FUNCTION__ << ": " << "added cgi write end to epoll list\n";
+		add_fd(current->cgi_to[WRITE], EPOLLOUT, write_cgi);
 
 	}
-	ev.events = EPOLLET | EPOLLIN;
-	ev.data.fd = 0;
-	ev.data.ptr = new Client(current->cgi_from[READ], current->socket, current->ip_addr);
+	Client *read_cgi = new Client(current->cgi_from[READ], current->socket, current->ip_addr);
+	read_cgi->status = CL_CGI_READ;
+	read_cgi->old = current;
+	read_cgi->resp = current->resp;
+	read_cgi->pid = current->pid;
 
-	Client *cl_cgi = (Client *)ev.data.ptr;
-	cl_cgi->status = CL_CGI_READ;
-	cl_cgi->old = current;
-	cl_cgi->resp = current->resp;
-	cl_cgi->pid = current->pid;
-
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, current->cgi_from[READ], &ev) == -1)
-	{
-		perror("epoll_ctl");
-		remove_client(current->fd);
-		return;
-	}
-	//_cgis.emplace(current->cgi_from[0], cl_cgi);
-	std::cout << "HttpServer::add_cgi_client OK\n";
+	add_fd(current->cgi_from[READ], EPOLLIN, read_cgi);
 }
 
 void HttpServer::handle_write(Client *client)
 {
 	struct epoll_event ev_new;
-
 
 	if (client->status == CL_NORMAL && client->resp == nullptr)
 	{
