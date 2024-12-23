@@ -107,7 +107,7 @@ void HttpServer::epoll(void)
 			if (e.events & EPOLLHUP) 
 			{
 				e.events |= EPOLLIN;
-				std::cerr << "EOF: " << cl->fd << " | " << cl->status << "\n";
+				std::cerr << "EOF: " << cl->fd << " | " << cl->conn_type << "\n";
 				
 			}
 
@@ -173,12 +173,19 @@ void HttpServer::remove_fd(int fd)
 	if (fd < 0)
 		return;
 
-	close(fd);
-	_clients.erase(fd);
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
-	{
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1) {
 		perror("remove_fd epoll_ctl");
 	}
+
+
+	/*
+	Client *cl = _clients[fd];
+	if (cl != nullptr && cl->pid >= 0) {
+
+	}
+	*/
+	close(fd);
+	_clients.erase(fd);
 	std::cout << "[webserv] fd: " << fd << " removed"<< std::endl;
 }
 
@@ -193,7 +200,7 @@ void HttpServer::handle_read(Client *client)
 		remove_fd(client->fd);
 		return;
 	}
-	if (client->status == CL_CGI_READ)
+	if (client->conn_type == CONN_CGI)
 	{
 		std::cout << "bytes_read: " << bytes_read << " | " << client->fd << std::endl;
 		if (bytes_read == 0)
@@ -266,14 +273,12 @@ void HttpServer::add_cgi_fds(Client *current)
 	if (current->req->_body.size() > 0)
 	{
 		Client *write_cgi = new Client(current->cgi_to[WRITE], pid_cgi, current);
-		write_cgi->status = CL_CGI_WRITE;
 		write_cgi->response = current->req->_body;
 
 		add_fd(current->cgi_to[WRITE], EPOLLOUT, write_cgi);
 	}
 
 	Client *read_cgi = new Client(current->cgi_from[READ], pid_cgi, current);
-	read_cgi->status = CL_CGI_READ;
 	read_cgi->resp = current->resp;
 
 	add_fd(current->cgi_from[READ], EPOLLIN, read_cgi);
@@ -283,10 +288,10 @@ void HttpServer::handle_write(Client *client)
 {
 	struct epoll_event ev_new;
 
-	if (client->status == CL_NORMAL && client->resp == nullptr)
+	if (client->conn_type == CONN_REGULAR && client->resp == nullptr)
 	{
 		client->resp = std::make_shared<Response>(client, client->req);
-		if (client->status == CL_CGI_INIT)
+		if (client->conn_type == CONN_WAIT_CGI)
 		{
 			add_cgi_fds(client);
 			return;
@@ -298,7 +303,7 @@ void HttpServer::handle_write(Client *client)
 	ssize_t resp_size = client->response.size();
 	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
 
-	std::cout << "[webserv] write " << client->fd << " | "<< client->status << " | " << bytes_written << " | " << client->response.size() << std::endl;
+	std::cout << "[webserv] write " << client->fd << " | "<< client->conn_type << " | " << bytes_written << " | " << client->response.size() << std::endl;
 
 	if (bytes_written <= 0)
 	{

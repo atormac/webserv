@@ -8,22 +8,21 @@ class Cgi;
 
 enum 
 {
-	CL_NORMAL,
-	CL_CGI_INIT,
-	CL_CGI_WRITE,
-	CL_CGI_READ,
+	CONN_REGULAR,
+	CONN_WAIT_CGI,
+	CONN_CGI,
 };
 
 class Client
 {
 	public:
 
+			int	conn_type;
 			int	fd;
 			int	socket;
 
 			time_t	start_time;
 	
-			int	status;
 
 			Client	*ref;
 			int	cgi_to[2];

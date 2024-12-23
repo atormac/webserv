@@ -23,7 +23,6 @@ Response::Response(Client *client, std::shared_ptr<Request> request): _request(r
 	if (Cgi::is_cgi(_location, _request->_uri)) {
 
 		if (init_cgi(client)) {
-			client->status = CL_CGI_INIT;
 			this->_status_code = 200;
 			return;
 		}
@@ -67,7 +66,7 @@ bool Response::init_cgi(Client *client)
 		std::cout << "cgi.start failed\n";
 		return false;
 	}
-	client->status = CL_CGI_INIT;
+	client->conn_type = CONN_WAIT_CGI;
 	return true;
 }
 
@@ -249,5 +248,3 @@ std::string Response::get_content_type(std::string uri)
 	}
 	return mime_map[".html"];
 }
-
-
