@@ -148,26 +148,26 @@ bool HttpServer::accept_client(int _socket_fd)
 	std::shared_ptr cl = std::make_shared<Client>(client_fd, _socket_fd, inet_ntoa(peer_addr.sin_addr));
 
 	std::cout << "client added\n";
-	return add_fd(client_fd, EPOLLIN, cl);
+	return add_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
 }
 
-bool HttpServer::add_fd(int fd, int mask, std::shared_ptr<Client> cl)
+bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 {
-	struct epoll_event ev = {};
+	struct epoll_event ev;
 
 	std::memset(&ev, 0, sizeof(epoll_event));
 	ev.events = EPOLLET | mask;
 	ev.data.fd = fd;
 
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_ADD, fd, &ev) == -1)
+	if (epoll_ctl(this->_epoll_fd, ctl, fd, &ev) == -1)
 	{
 		std::cerr << "epoll_ctl accept failed" << std::endl;
 		remove_fd(fd);
 		return false;
 	}
 	_clients[fd] = cl;
-	std::cout << "[webserv] fd: " << fd << " added"<< std::endl;
-	std::cout << "[webserv] fd: " << cl->fd << " added"<< std::endl;
+	if (mask == EPOLL_CTL_ADD)
+		std::cout << "[webserv] fd: " << fd << " added"<< std::endl;
 	return true;
 }
 
@@ -186,9 +186,6 @@ void HttpServer::remove_fd(int fd)
 
 void HttpServer::handle_read(std::shared_ptr <Client> client)
 {
-	struct epoll_event ev_new;
-	std::memset(&ev_new, 0, sizeof(epoll_event));
-
 	char buffer[READ_BUFFER_SIZE];
 
 	ssize_t bytes_read = read(client->fd, buffer, READ_BUFFER_SIZE);
@@ -206,58 +203,35 @@ void HttpServer::handle_read(std::shared_ptr <Client> client)
 			return;
 		}
 		client->resp->_body << std::string(buffer, bytes_read);
-		ev_new.events = EPOLLET | EPOLLIN;
-		ev_new.data.fd = client->fd;
-
-		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
-		{
-			perror("epoll_ctl");
-			remove_fd(client->fd);
-		}
+		add_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
 		return;
 	}
 
 	State state = client->req->parse(State::StatusLine, buffer, bytes_read);
 	set_config(client, client->req);
 
-	ev_new.events = EPOLLET | EPOLLIN;
-	ev_new.data.fd = client->fd;
+	int mask = EPOLLIN;
 	std::cout << "adding write epoll: " << client->fd << std::endl;
 
 	if (state == State::Ok || state == State::Error || bytes_read == 0)
 	{
-		ev_new.events = EPOLLET | EPOLLOUT;
+		mask = EPOLLOUT;
 		client->req->dump();
 	}
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
-	{
-		perror("epoll_ctl");
-		remove_fd(client->fd);
-	}
+	add_fd(client->fd, EPOLL_CTL_MOD, mask, client);
 }
 
 void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 {
-	struct epoll_event ev_new;
-	std::memset(&ev_new, 0, sizeof(epoll_event));
-
 	int read_fd = client->ref->cgi_from[READ];
 	int write_fd = client->ref->cgi_to[WRITE];
 
 	Cgi::finish(client->pid, client->ref->cgi_from, client->ref->cgi_from);
 	
-
 	client->resp->finish_response();
 	client->ref->response = client->resp->buffer.str();
-	std::cout << "HttpServer::finish_cgi_client, size: " << _cgi_to_client.size() << std::endl;
 
-	ev_new.events = EPOLLET | EPOLLOUT; //send back to waiting connection
-	ev_new.data.fd = client->ref->fd;
-
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->ref->fd, &ev_new) == -1)
-	{
-		perror("epoll_ctl");
-	}
+	add_fd(client->ref->fd, EPOLL_CTL_MOD, EPOLLOUT, client->ref);
 	remove_fd(client->fd);
 	remove_fd(read_fd);
 	remove_fd(write_fd);
@@ -276,22 +250,19 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 		std::shared_ptr write_cgi = std::make_shared<Client>(current->cgi_to[WRITE], pid_cgi, current);
 		write_cgi->response = current->req->_body;
 
-		add_fd(current->cgi_to[WRITE], EPOLLOUT, write_cgi);
+		add_fd(current->cgi_to[WRITE], EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
 	}
 
 	std::shared_ptr read_cgi = std::make_shared<Client>(current->cgi_from[READ], pid_cgi, current);
 	read_cgi->resp = current->resp;
 
-	add_fd(current->cgi_from[READ], EPOLLIN, read_cgi);
+	add_fd(current->cgi_from[READ], EPOLL_CTL_ADD, EPOLLIN, read_cgi);
 	_cgi_to_client.emplace(current->cgi_from[READ], current);
 	_cgi_to_client.emplace(current->cgi_to[WRITE], current);
 }
 
 void HttpServer::handle_write(std::shared_ptr <Client> client)
 {
-	struct epoll_event ev_new;
-	std::memset(&ev_new, 0, sizeof(epoll_event));
-
 	if (client->conn_type == CONN_REGULAR && client->resp == nullptr)
 	{
 		client->resp = std::make_shared<Response>(client, client->req);
@@ -317,14 +288,7 @@ void HttpServer::handle_write(std::shared_ptr <Client> client)
 	if (bytes_written < resp_size)
 	{
 		client->response.erase(0, bytes_written);
-		ev_new.events = EPOLLET | EPOLLOUT;
-		ev_new.data.fd = client->fd;
-
-		if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->fd, &ev_new) == -1)
-		{
-			perror("epoll_ctl");
-			remove_fd(client->fd);
-		}
+		add_fd(client->fd, EPOLL_CTL_MOD, EPOLLOUT, client);
 		return;
 	}
 	remove_fd(client->fd);
