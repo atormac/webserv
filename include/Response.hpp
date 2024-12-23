@@ -34,13 +34,13 @@ class Response
 			void _createCookie();
 			void _removeInvalidCookie(std::string cookie_path);
 
-			bool init_cgi(Client *client);
+			bool init_cgi(std::shared_ptr <Client> client);
 	public:
 			int status;
 			std::ostringstream _body;
 			std::ostringstream buffer;
 
-			Response(Client *client, std::shared_ptr<Request> req);
+			Response(std::shared_ptr <Client> client, std::shared_ptr<Request> req);
 			void finish_response(void);
 			void finish_with_body(std::string body);
 			~Response();

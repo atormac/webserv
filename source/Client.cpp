@@ -27,12 +27,12 @@ Client::Client(int client_fd, int socket_fd, std::string ip) : Client()
 }
 
 //cgi
-Client::Client(int client_fd, int pid, Client *ref) : Client()
+Client::Client(int client_fd, int pid, std::shared_ptr<Client> ref_ptr) : Client()
 {
 	this->conn_type = CONN_CGI;
 	this->fd = client_fd;
 	this->pid = pid;
-	this->ref = ref;
+	this->ref = ref_ptr;
 	this->req = std::make_shared<Request>();
 }
 

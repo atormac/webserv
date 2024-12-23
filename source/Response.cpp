@@ -2,7 +2,7 @@
 
 Response::~Response() {}
 
-Response::Response(Client *client, std::shared_ptr<Request> request): _request(request), _status_code(STATUS_NOT_FOUND)
+Response::Response(std::shared_ptr <Client> client, std::shared_ptr<Request> req): _request(req), _status_code(STATUS_NOT_FOUND)
 {
 	int error_code = this->has_errors();
 
@@ -52,7 +52,7 @@ void Response::finish_with_body(std::string body)
 	create_response(_status_code);
 }
 
-bool Response::init_cgi(Client *client)
+bool Response::init_cgi(std::shared_ptr <Client> client)
 {	
 	if (_request->_method == METHOD_DELETE) {
 		_status_code = STATUS_METHOD_NOT_ALLOWED;

@@ -24,7 +24,8 @@ class Client
 			time_t	start_time;
 	
 
-			Client	*ref;
+			std::shared_ptr<Client> ref;
+
 			int	cgi_to[2];
 			int	cgi_from[2];
 
@@ -40,6 +41,6 @@ class Client
 			Client();
 			~Client();
 			Client(int client_fd, int socket_fd, std::string ip);
-			Client(int client_fd, int pid, Client *ref);
+			Client(int client_fd, int pid, std::shared_ptr<Client> ref_ptr);
 };
 #endif

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/12/23 18:05:21 by user             ###   ########.fr       */
+/*   Updated: 2024/12/23 20:17:06 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -40,24 +40,22 @@ class HttpServer
 			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
 
 			std::map<int, std::shared_ptr<Client>> _clients;
-			std::map<int, std::shared_ptr<Client>> _cgi_pids;
+			std::map<int, std::shared_ptr<Client>> _cgi_to_client;
 
-			std::map<int, int> _cgi_to_client;
-			
 			void	remove_fd(int fd);
 			void	cull_clients(void);
 			bool	accept_client(int socket_fd);
-			bool	add_fd(int fd, int mask, void *ptr);
+			bool	add_fd(int fd, int mask, std::shared_ptr<Client> cl);
 
-			void	handle_read(Client *client);
-			void	handle_write(Client *client);
+			void 	handle_read(std::shared_ptr <Client> client);
+			void 	handle_write(std::shared_ptr <Client> client);
 
-			void finish_cgi_client(Client *client);
-			void	add_cgi_fds(Client *cl);
+			void	finish_cgi_client(std::shared_ptr <Client> client);
+			void	add_cgi_fds(std::shared_ptr <Client> current);
 
 
 			void	find_config(epoll_event &event);
-			void	set_config(Client *client, std::shared_ptr <Request> req);
+			void 	set_config(std::shared_ptr <Client> client, std::shared_ptr <Request> req);
 
 	public:
 			~HttpServer();			

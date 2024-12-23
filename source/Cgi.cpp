@@ -96,7 +96,7 @@ void Cgi::child_process(std::vector <char *> args, int *fd_from, int *fd_to)
 	execve(args.data()[0], args.data(), c_env.data());
 }
 
-bool Cgi::start(Client *client)
+bool Cgi::start(std::shared_ptr <Client> client)
 {
 	bool	ret = false;
 	int	fd_from[2] = { -1, -1 }; //read cgi output
