@@ -172,6 +172,7 @@ void HttpServer::remove_client(int fd)
 {
 	if (fd < 0)
 		return;
+
 	close(fd);
 	_clients.erase(fd);
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
@@ -237,14 +238,14 @@ void HttpServer::finish_cgi_client(Client *client)
 
 	Cgi::finish(client->pid, client->cgi_from, client->cgi_from);
 	client->resp->finish_response();
-	client->old->response = client->resp->buffer.str();
+	client->ref->response = client->resp->buffer.str();
 	std::cout << "HttpServer::finish_cgi_client" << std::endl;
 
 	ev_new.events = EPOLLET | EPOLLOUT; //send back to waiting connection
 	ev_new.data.fd = 0;
-	ev_new.data.ptr = client->old;
+	ev_new.data.ptr = client->ref;
 
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->old->fd, &ev_new) == -1)
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_MOD, client->ref->fd, &ev_new) == -1)
 	{
 		perror("epoll_ctl");
 		remove_client(client->fd);
@@ -256,24 +257,22 @@ void HttpServer::finish_cgi_client(Client *client)
 //garbage code
 void HttpServer::add_cgi_fds(Client *current)
 {
+	int pid_cgi = current->pid;
+
 	std::cout << __FUNCTION__ << ": cgi read fd: " << current->cgi_from[READ] << std::endl;
 	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
 	if (current->req->_body.size() > 0)
 	{
-		Client *write_cgi = new Client(current->cgi_to[WRITE], current->socket, current->ip_addr);
-
+		Client *write_cgi = new Client(current->cgi_to[WRITE], pid_cgi, current);
 		write_cgi->status = CL_CGI_WRITE;
-		write_cgi->pid = current->pid;
 		write_cgi->response = current->req->_body;
 
 		add_fd(current->cgi_to[WRITE], EPOLLOUT, write_cgi);
-
 	}
-	Client *read_cgi = new Client(current->cgi_from[READ], current->socket, current->ip_addr);
+
+	Client *read_cgi = new Client(current->cgi_from[READ], pid_cgi, current);
 	read_cgi->status = CL_CGI_READ;
-	read_cgi->old = current;
 	read_cgi->resp = current->resp;
-	read_cgi->pid = current->pid;
 
 	add_fd(current->cgi_from[READ], EPOLLIN, read_cgi);
 }

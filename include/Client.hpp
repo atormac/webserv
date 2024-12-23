@@ -17,7 +17,6 @@ enum
 class Client
 {
 	public:
-			Client	*old;
 
 			int	fd;
 			int	socket;
@@ -25,6 +24,8 @@ class Client
 			time_t	start_time;
 	
 			int	status;
+
+			Client	*ref;
 			int	cgi_to[2];
 			int	cgi_from[2];
 
@@ -40,5 +41,6 @@ class Client
 			Client();
 			~Client();
 			Client(int client_fd, int socket_fd, std::string ip);
+			Client(int client_fd, int pid, Client *ref);
 };
 #endif
