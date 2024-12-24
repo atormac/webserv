@@ -89,7 +89,7 @@ void HttpServer::epoll(void)
 
 			if ((e.events & EPOLLERR) || (e.events & EPOLLRDHUP))
 			{
-				remove_fd(((Client *)e.data.ptr)->fd);
+				remove_fd(e.data.fd);
 				continue;
 			}
 			if (this->_socketFdToSockets.count(e.data.fd))
