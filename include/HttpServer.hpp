@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/12/23 21:00:56 by user             ###   ########.fr       */
+/*   Updated: 2024/12/27 15:11:48 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -39,6 +39,7 @@ class HttpServer
 			std::map<std::string, std::shared_ptr<Socket>> _portsToSockets;
 			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
 
+			//std::vector <pair(int, std::shared_ptr<Client> _clients;
 			std::map<int, std::shared_ptr<Client>> _clients;
 			std::map<int, std::shared_ptr<Client>> _cgi_to_client;
 

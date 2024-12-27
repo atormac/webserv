@@ -6,11 +6,11 @@ void HttpServer::close_server(void)
 {
 	if (this->_epoll_fd == -1)
 		return;
+	close(this->_epoll_fd);
 	for(const auto& e : this->_socketFdToSockets)
 	{
 		e.second->close_socket();
 	}
-	close(this->_epoll_fd);
 	this->_epoll_fd = -1;
 }
 

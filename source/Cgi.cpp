@@ -39,11 +39,12 @@ void Cgi::env_set(const std::string &key, const std::string &value)
 
 void Cgi::env_set_vars(std::shared_ptr<Request> request)
 {
+	env_set("REQUEST_METHOD", request->_method_str);
+	env_set("QUERY_STRING", request->_query_string);
+
 	env_set("SERVER_NAME", SERVER_NAME);
 	env_set("SERVER_PROTOCOL", "HTTP/1.1");
 	env_set("GATEWAY_INTERFACE", "CGI/1.1");
-	env_set("REQUEST_METHOD", request->_method_str);
-	env_set("QUERY_STRING", request->_query_string);
 	env_set("PATH_INFO", request->_uri);
 	env_set("HTTP_ACCEPT", request->_headers["accept"]);
 	env_set("HTTP_USER_AGENT", request->_headers["user-agent"]);
@@ -75,15 +76,17 @@ void Cgi::child_process(std::vector <char *> args, int *fd_from, int *fd_to)
 {
 	std::vector<char*> c_env;
 
+	c_env.reserve(_env.size() + 1);
 	for (const auto& var : _env) {
 		c_env.push_back(const_cast<char*>(var.c_str()));
+		std::cout << "cgi_env: " << var << std::endl;
 	}
+	c_env.push_back(nullptr);
 
 	if (::chdir(_script_dir.c_str()) == -1) {
 		return;
 	}
 
-	c_env.push_back(NULL);
 
 	close(fd_to[1]);
 	close(fd_from[0]);

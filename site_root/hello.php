@@ -28,5 +28,4 @@ echo("<p>REQUEST_METHOD: " . getenv("REQUEST_METHOD") . "</p>");
 echo("<p>SERVER_NAME: " . getenv("SERVER_NAME") . "</p>");
 
 echo("</body></html>");
-var_dump($HTTP_RAW_POST_DATA);
 ?>
