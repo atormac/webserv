@@ -12,7 +12,17 @@ Client::Client()
 	this->cgi_from[1] = -1;
 
 }
-Client::~Client() {}
+Client::~Client()
+{
+	if (this->fd >= 0)
+	{
+		close(this->fd);
+
+		std::cout << "[webserv] client decons: " << fd << " removed "<< std::endl;
+
+		this->fd = -1;
+	}
+}
 
 //normal
 Client::Client(int client_fd, int socket_fd, std::string ip) : Client()

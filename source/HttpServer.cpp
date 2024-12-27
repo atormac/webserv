@@ -14,10 +14,6 @@ void HttpServer::close_server(void)
 {
 	if (this->_epoll_fd == -1)
 		return;
-	for (auto const &cl : _clients) {
-		remove_fd(cl.first);
-	}
-
 	for(const auto& e : this->_socketFdToSockets) {
 		e.second->close_socket();
 	}
@@ -188,7 +184,7 @@ void HttpServer::remove_fd(int fd)
 		std::cerr << "epoll_ctl error fd: " << fd << std::endl;
 		perror("remove_fd epoll_ctl");
 	}
-	close(fd);
+	//close(fd);
 	_clients.erase(fd);
 	_cgi_to_client.erase(fd);
 
@@ -266,20 +262,20 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
 	std::cout << __FUNCTION__ << ": cgi req body size: " << current->req->_body.size() << std::endl;
 
-	if (current->req->_body.size() > 0)
-	{
+	//if (current->req->_body.size() > 0)
+	//{
 		std::shared_ptr write_cgi = std::make_shared<Client>(current->cgi_to[WRITE], pid_cgi, current);
 		write_cgi->response = current->req->_body;
 
 		add_fd(current->cgi_to[WRITE], EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
-	}
+		_cgi_to_client.emplace(current->cgi_to[WRITE], current);
+	//}
 
 	std::shared_ptr read_cgi = std::make_shared<Client>(current->cgi_from[READ], pid_cgi, current);
 	read_cgi->resp = current->resp;
 
 	add_fd(current->cgi_from[READ], EPOLL_CTL_ADD, EPOLLIN, read_cgi);
 	_cgi_to_client.emplace(current->cgi_from[READ], current);
-	_cgi_to_client.emplace(current->cgi_to[WRITE], current);
 }
 
 void HttpServer::handle_write(std::shared_ptr <Client> client)
