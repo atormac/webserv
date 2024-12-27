@@ -64,8 +64,8 @@ void HttpServer::cull_clients(void)
 	while (not this->deque.empty() and (now - this->deque.front().second) > 60) {
 		std::cout << "fd timed out: " << this->deque.front().first << std::endl;
 		//this->_clients.erase(deque.front().first);
-		remove_fd(this->deque.front().first);
 		this->deque.pop_front();
+		remove_fd(this->deque.front().first);
 	}
 	/*for (auto const &cl : _clients) {
 
@@ -79,13 +79,13 @@ void HttpServer::cull_clients(void)
 }
 
 bool HttpServer::insert_map(int const& k, std::shared_ptr <Client> const& v) {
-  std::pair<std::map<int, std::shared_ptr <Client>>::iterator, bool> result =
-	  _clients.insert(std::make_pair(k, v));
+  //std::pair<std::map<int, std::shared_ptr <Client>>::iterator, bool> result =
+	_clients[k] = v;
 
 	time_t t;
 	std::time(&t);
 	this->deque.push_back(std::make_pair(k, t));
-	return result.second;
+	return true;
 }
 
 void HttpServer::epoll(void)
@@ -94,12 +94,21 @@ void HttpServer::epoll(void)
 
 	while (true)
 	{
-		std::cout << "[webserv] epoll_wait()\n";
-		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, -1);
+		int timeout = -1;
+		time_t now;
+		std::time(&now);
+
+		if (!this->deque.empty()) {
+			int diff = now - this->deque.front().second;
+			timeout = (60 - diff) * 1000;
+			if (timeout <= 0) timeout = 1000;
+		}
+		std::cout << "[webserv] epoll_wait(), timeout: " << timeout << "\n";
+		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, timeout);
 
 		if (nfds == -1)
 			break;
-
+	
 		cull_clients();
 
 		for (int i = 0; i < nfds; i++)
@@ -192,7 +201,7 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 
 void HttpServer::remove_fd(int fd)
 {
-	if (fd < 0 || _clients.count(fd) == 0)
+	if (fd < 0)
 		return;
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1) {
 		perror("remove_fd epoll_ctl");
@@ -200,6 +209,17 @@ void HttpServer::remove_fd(int fd)
 	close(fd);
 	_clients.erase(fd);
 	_cgi_to_client.erase(fd);
+	/*
+	if (!this->deque.empty()) {
+		for (auto it = this->deque.begin(); it != this->deque.end(); ++it)
+		{
+			if (it->first == fd) {
+				std::cout << "dequeu erase\n";
+				this->deque.erase(it);
+			}
+		}
+	}
+	*/
 	std::cout << "[webserv] fd: " << fd << " removed "<< std::endl;
 }
 
@@ -264,6 +284,7 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 
 	std::cout << __FUNCTION__ << ": cgi read fd: " << current->cgi_from[READ] << std::endl;
 	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
+	std::cout << __FUNCTION__ << ": cgi req body size: " << current->req->_body.size() << std::endl;
 	if (current->req->_body.size() > 0)
 	{
 		std::shared_ptr write_cgi = std::make_shared<Client>(current->cgi_to[WRITE], pid_cgi, current);
