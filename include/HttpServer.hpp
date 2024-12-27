@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/12/27 16:02:06 by atorma           ###   ########.fr       */
+/*   Updated: 2024/12/27 21:25:25 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -43,7 +43,7 @@ class HttpServer
 			std::map<int, std::shared_ptr<Client>> _clients;
 			std::map<int, std::shared_ptr<Client>> _cgi_to_client;
 
-			std::deque<std::pair<int, time_t>> deque;
+			std::deque<std::pair<int, time_t>> _deque;
 
 			void	remove_fd(int fd);
 			void	cull_clients(void);
@@ -68,6 +68,8 @@ class HttpServer
 			void close_server(void);
 			bool init();
 			void epoll(void);
+
+			static void signal_handler(int code);
 };
 
 #endif

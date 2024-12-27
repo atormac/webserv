@@ -1,16 +1,8 @@
 #include <HttpServer.hpp>
 
-int signo = 0;
-
-void signal_handler(int code)
-{
-	if (code == SIGINT)
-		signo = code;
-}
 
 ServerConfig::ServerConfig(): _maxSize(0)
 {
-	signal(SIGINT, ::signal_handler);
 }
 
 ServerConfig::~ServerConfig()

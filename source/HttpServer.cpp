@@ -2,6 +2,14 @@
 
 HttpServer::~HttpServer() {}
 
+int signo = 0;
+
+void HttpServer::signal_handler(int code)
+{
+	if (code == SIGINT)
+		signo = code;
+}
+
 void HttpServer::close_server(void)
 {
 	if (this->_epoll_fd == -1)
@@ -19,6 +27,9 @@ void HttpServer::close_server(void)
 
 bool HttpServer::init()
 {
+	if (signal(SIGINT, HttpServer::signal_handler) == SIG_ERR)
+		return false;
+
 	this->_client_count = 0;
 	for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
 	{	
@@ -58,60 +69,26 @@ bool HttpServer::init()
 
 void HttpServer::cull_clients(void)
 {
-	time_t now;
+	for (auto const &cl : _clients) {
 
-	std::time(&now);
-	while (not this->deque.empty() and (now - this->deque.front().second) > 60) {
-		std::cout << "fd timed out: " << this->deque.front().first << std::endl;
-		//this->_clients.erase(deque.front().first);
-		this->deque.pop_front();
-		remove_fd(this->deque.front().first);
-	}
-	/*for (auto const &cl : _clients) {
-
-		time_t delta = now - cl.second->start_time;
-
-		if (delta > 60) {
-			std::cout << "client timeout: " << cl.first << std::endl;
+		if (cl.second->has_timed_out()) {
 			remove_fd(cl.first);
 		}
-	} */
-}
-
-bool HttpServer::insert_map(int const& k, std::shared_ptr <Client> const& v) {
-  //std::pair<std::map<int, std::shared_ptr <Client>>::iterator, bool> result =
-	_clients[k] = v;
-
-	time_t t;
-	std::time(&t);
-	this->deque.push_back(std::make_pair(k, t));
-	return true;
+	}
 }
 
 void HttpServer::epoll(void)
 {
 	struct epoll_event events[MAX_EVENTS];
 
-	while (true)
+	while (!signo)
 	{
-		int timeout = -1;
-		/*
-		time_t now;
-		std::time(&now);
+		int timeout = 1 * 1000;
 
-		if (!this->deque.empty()) {
-			int diff = now - this->deque.front().second;
-			timeout = (60 - diff) * 1000;
-			if (timeout <= 0) timeout = 1000;
-		}
-		*/
 		std::cout << "[webserv] epoll_wait(), timeout: " << timeout << "\n";
 		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, timeout);
 
-		if (nfds == -1)
-			break;
-	
-		//cull_clients();
+		cull_clients();
 
 		for (int i = 0; i < nfds; i++)
 		{
@@ -195,7 +172,6 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 	}
 	_clients[fd] = cl;
 	if (mask == EPOLL_CTL_ADD) {
-		//insert_map(fd, cl);
 		std::cout << "[webserv] fd: " << fd << " added"<< std::endl;
 	}
 	return true;

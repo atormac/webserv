@@ -15,13 +15,14 @@ enum
 
 class Client
 {
+	private:
+			time_t	_last_active;
 	public:
 
 			int	conn_type;
 			int	fd;
 			int	socket;
 
-			time_t	start_time;
 	
 
 			std::shared_ptr<Client> ref;
@@ -42,5 +43,8 @@ class Client
 			~Client();
 			Client(int client_fd, int socket_fd, std::string ip);
 			Client(int client_fd, int pid, std::shared_ptr<Client> ref_ptr);
+
+			void	update_time(void);
+			bool	has_timed_out(void);
 };
 #endif

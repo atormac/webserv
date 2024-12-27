@@ -21,7 +21,7 @@ enum
 	METHOD_DELETE
 };
 
-#define CLIENT_TIMEOUT (1 * 60)
+#define TIMEOUT_SECONDS (1 * 60)
 #define CGI_TIMEOUT (5 * 60)
 
 #define READ 0
