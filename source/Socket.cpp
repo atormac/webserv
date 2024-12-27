@@ -6,20 +6,29 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:28:21 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/21 17:04:48 by lopoka           ###   ########.fr       */
+/*   Updated: 2024/12/27 22:26:51 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
 
 Socket::Socket(std::shared_ptr<ServerConfig> server): _socketFd(-1), _servers{server} {}
 
-Socket::~Socket() {}
+Socket::~Socket()
+{
+	close_socket();
+}
 
 void Socket::close_socket(void)
 {
-	close(this->_socketFd);
-	std::cout << "socket: " << _socketFd << " closed" << std::endl;
+	if (this->_socketFd >= 0)
+	{
+		std::cout << "socket: " << _socketFd << " closed" << std::endl;
+
+		close(this->_socketFd);
+		this->_socketFd = -1;
+	}
 }
+
 void Socket::addServer(std::shared_ptr<ServerConfig> server)
 {
 	_servers.push_back(server);

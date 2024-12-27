@@ -1,5 +1,11 @@
 #include <HttpServer.hpp>
 
+HttpServer::HttpServer()
+{
+	this->_epoll_fd = -1;
+	this->_client_count = 0;
+}
+
 HttpServer::~HttpServer() {}
 
 int signo = 0;
@@ -26,7 +32,6 @@ bool HttpServer::init()
 	if (signal(SIGINT, HttpServer::signal_handler) == SIG_ERR)
 		return false;
 
-	this->_client_count = 0;
 	for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
 	{	
 		std::regex ptrn("(.*):(.*)");

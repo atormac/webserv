@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/12/27 21:25:25 by user             ###   ########.fr       */
+/*   Updated: 2024/12/27 22:29:48 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -62,6 +62,7 @@ class HttpServer
 			void 	set_config(std::shared_ptr <Client> client, std::shared_ptr <Request> req);
 
 	public:
+			HttpServer();			
 			~HttpServer();			
 
 			void parseConfig(const std::string &filePath);
