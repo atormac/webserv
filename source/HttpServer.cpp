@@ -6,6 +6,9 @@ void HttpServer::close_server(void)
 {
 	if (this->_epoll_fd == -1)
 		return;
+	for (auto const &cl : _clients) {
+		remove_fd(cl.first);
+	}
 	close(this->_epoll_fd);
 	for(const auto& e : this->_socketFdToSockets)
 	{
@@ -58,15 +61,31 @@ void HttpServer::cull_clients(void)
 	time_t now;
 
 	std::time(&now);
-	for (auto const &cl : _clients) {
-	
+	while (not this->deque.empty() and (now - this->deque.front().second) > 60) {
+		std::cout << "fd timed out: " << this->deque.front().first << std::endl;
+		//this->_clients.erase(deque.front().first);
+		remove_fd(this->deque.front().first);
+		this->deque.pop_front();
+	}
+	/*for (auto const &cl : _clients) {
+
 		time_t delta = now - cl.second->start_time;
-	
+
 		if (delta > 60) {
 			std::cout << "client timeout: " << cl.first << std::endl;
 			remove_fd(cl.first);
 		}
-	}
+	} */
+}
+
+bool HttpServer::insert_map(int const& k, std::shared_ptr <Client> const& v) {
+  std::pair<std::map<int, std::shared_ptr <Client>>::iterator, bool> result =
+	  _clients.insert(std::make_pair(k, v));
+
+	time_t t;
+	std::time(&t);
+	this->deque.push_back(std::make_pair(k, t));
+	return result.second;
 }
 
 void HttpServer::epoll(void)
@@ -163,9 +182,11 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 		remove_fd(fd);
 		return false;
 	}
-	_clients[fd] = cl;
-	if (mask == EPOLL_CTL_ADD)
+	//_clients[fd] = cl;
+	if (mask == EPOLL_CTL_ADD) {
+		insert_map(fd, cl);
 		std::cout << "[webserv] fd: " << fd << " added"<< std::endl;
+	}
 	return true;
 }
 
