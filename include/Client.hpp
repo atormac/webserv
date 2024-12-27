@@ -45,6 +45,6 @@ class Client
 			Client(int client_fd, int pid, std::shared_ptr<Client> ref_ptr);
 
 			void	update_time(void);
-			bool	has_timed_out(void);
+			bool	has_timed_out(time_t now);
 };
 #endif

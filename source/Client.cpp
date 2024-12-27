@@ -43,10 +43,8 @@ void Client::update_time(void)
 	std::time(&this->_last_active);
 }
 
-bool Client::has_timed_out(void)
+bool Client::has_timed_out(time_t now)
 {
-	time_t now;
-	std::time(&now);
 
 	time_t delta = now - this->_last_active;
 

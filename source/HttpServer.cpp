@@ -69,9 +69,12 @@ bool HttpServer::init()
 
 void HttpServer::cull_clients(void)
 {
+	time_t now;
+	std::time(&now);
+
 	for (auto const &cl : _clients) {
 
-		if (cl.second->has_timed_out()) {
+		if (cl.second->has_timed_out(now)) {
 			remove_fd(cl.first);
 		}
 	}
@@ -188,17 +191,7 @@ void HttpServer::remove_fd(int fd)
 	close(fd);
 	_clients.erase(fd);
 	_cgi_to_client.erase(fd);
-	/*
-	if (!this->deque.empty()) {
-		for (auto it = this->deque.begin(); it != this->deque.end(); ++it)
-		{
-			if (it->first == fd) {
-				std::cout << "dequeu erase\n";
-				this->deque.erase(it);
-			}
-		}
-	}
-	*/
+
 	std::cout << "[webserv] fd: " << fd << " removed "<< std::endl;
 }
 
