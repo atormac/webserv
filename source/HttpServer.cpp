@@ -95,6 +95,7 @@ void HttpServer::epoll(void)
 	while (true)
 	{
 		int timeout = -1;
+		/*
 		time_t now;
 		std::time(&now);
 
@@ -103,13 +104,14 @@ void HttpServer::epoll(void)
 			timeout = (60 - diff) * 1000;
 			if (timeout <= 0) timeout = 1000;
 		}
+		*/
 		std::cout << "[webserv] epoll_wait(), timeout: " << timeout << "\n";
 		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, timeout);
 
 		if (nfds == -1)
 			break;
 	
-		cull_clients();
+		//cull_clients();
 
 		for (int i = 0; i < nfds; i++)
 		{
@@ -154,7 +156,7 @@ bool HttpServer::accept_client(int _socket_fd)
 	std::memset(&peer_addr, 0, sizeof(sockaddr_in));
 	socklen_t peer_addr_size = sizeof(peer_addr);
 
-	if (_clients.size() > 512)
+	if (_clients.size() >= 512)
 	{
 		std::cout << "Error: too many connections\n";
 		return false;
@@ -191,9 +193,9 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 		remove_fd(fd);
 		return false;
 	}
-	//_clients[fd] = cl;
+	_clients[fd] = cl;
 	if (mask == EPOLL_CTL_ADD) {
-		insert_map(fd, cl);
+		//insert_map(fd, cl);
 		std::cout << "[webserv] fd: " << fd << " added"<< std::endl;
 	}
 	return true;
@@ -201,9 +203,10 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 
 void HttpServer::remove_fd(int fd)
 {
-	if (fd < 0)
+	if (fd < 0 || _clients.count(fd) == 0)
 		return;
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1) {
+		std::cerr << "epoll_ctl error fd: " << fd << std::endl;
 		perror("remove_fd epoll_ctl");
 	}
 	close(fd);
@@ -265,15 +268,23 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 	int read_fd = client->ref->cgi_from[READ];
 	int write_fd = client->ref->cgi_to[WRITE];
 
+	remove_fd(read_fd);
+	remove_fd(write_fd);
+
+	client->ref->cgi_from[READ] = -1;
+	client->ref->cgi_to[WRITE] = -1;
+
+	std::cout << __FUNCTION__ << ": FDS: " << read_fd << "|" << write_fd << "\n";
+
 	Cgi::finish(client->pid, client->ref->cgi_from, client->ref->cgi_from);
 	
 	client->resp->finish_response();
 	client->ref->response = client->resp->buffer.str();
 
 	add_fd(client->ref->fd, EPOLL_CTL_MOD, EPOLLOUT, client->ref);
-	remove_fd(client->fd);
-	remove_fd(read_fd);
-	remove_fd(write_fd);
+	//remove_fd(client->fd);
+	//remove_fd(read_fd);
+	//remove_fd(write_fd);
 }
 
 //garbage code
@@ -285,6 +296,7 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 	std::cout << __FUNCTION__ << ": cgi read fd: " << current->cgi_from[READ] << std::endl;
 	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
 	std::cout << __FUNCTION__ << ": cgi req body size: " << current->req->_body.size() << std::endl;
+
 	if (current->req->_body.size() > 0)
 	{
 		std::shared_ptr write_cgi = std::make_shared<Client>(current->cgi_to[WRITE], pid_cgi, current);
@@ -360,7 +372,7 @@ void HttpServer::set_config(std::shared_ptr <Client> client, std::shared_ptr <Re
 	if (client->req->_headers.count("host") == 0)
 		return;
 	const std::string host = client->req->_headers["host"];
-	std::cout << "client host: " << host << std::endl;
+	//std::cout << "client host: " << host << std::endl;
 
 	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
 	{
