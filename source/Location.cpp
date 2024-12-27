@@ -203,8 +203,8 @@ void Location::_addUpload(std::string &line)
 
 void Location::_addCgi(std::string &line)
 {
-	std::regex ptrn_global("^\\t{2}cgi(\\s+(.py|.php)\\s+([^\\s]*\\/(?:python3|php)))+\\s*;\\s*$");
-	std::regex ptrn_local("\\s+(.py|.php)\\s+([^\\s]*\\/(?:python3|php))");
+	std::regex ptrn_global("^\\t{2}cgi(\\s+(.py|.php)\\s+([^\\s]*\\/(?:python3|php|php-cgi)))+\\s*;\\s*$");
+	std::regex ptrn_local("\\s+(.py|.php)\\s+([^\\s]*\\/(?:python3|php|php-cgi))");
 	struct stat mode;
 
 	if (!_cgi.empty())
