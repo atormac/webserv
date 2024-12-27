@@ -9,11 +9,11 @@ void HttpServer::close_server(void)
 	for (auto const &cl : _clients) {
 		remove_fd(cl.first);
 	}
-	close(this->_epoll_fd);
-	for(const auto& e : this->_socketFdToSockets)
-	{
+
+	for(const auto& e : this->_socketFdToSockets) {
 		e.second->close_socket();
 	}
+	close(this->_epoll_fd);
 	this->_epoll_fd = -1;
 }
 
