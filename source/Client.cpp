@@ -18,9 +18,6 @@ Client::~Client()
 	if (this->fd >= 0)
 	{
 		close(this->fd);
-
-		std::cout << "[webserv] client decons: " << fd << " removed "<< std::endl;
-
 		this->fd = -1;
 	}
 }
