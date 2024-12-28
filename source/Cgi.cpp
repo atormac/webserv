@@ -72,7 +72,7 @@ bool Cgi::parent_init(int pid, int *fd_from, int *fd_to)
 	return true;
 }
 
-void Cgi::child_process(std::vector <char *> args, int *fd_from, int *fd_to)
+void Cgi::child_process(std::shared_ptr <Client> client, std::vector <char *> args, int *fd_from, int *fd_to)
 {
 	std::vector<char*> c_env;
 
@@ -96,6 +96,7 @@ void Cgi::child_process(std::vector <char *> args, int *fd_from, int *fd_to)
 	}
 	close(fd_to[0]);
 	close(fd_from[1]);
+	client->cleanup_child();
 	execve(args.data()[0], args.data(), c_env.data());
 }
 
@@ -126,7 +127,7 @@ bool Cgi::start(std::shared_ptr <Client> client)
 	}
 	if (pid == 0)
 	{
-		child_process(args, fd_from, fd_to);
+		child_process(client, args, fd_from, fd_to);
 		close_pipes(fd_from);
 		close_pipes(fd_to);
 		exit(1);

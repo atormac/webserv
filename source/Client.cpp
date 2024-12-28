@@ -2,6 +2,7 @@
 
 Client::Client()
 {
+	this->instance = nullptr;
 	this->req = nullptr;
 	this->resp = nullptr;
 	this->ref = nullptr;
@@ -25,8 +26,9 @@ Client::~Client()
 }
 
 //normal
-Client::Client(int client_fd, int socket_fd, std::string ip) : Client()
+Client::Client(HttpServer *inst, int client_fd, int socket_fd, std::string ip) : Client()
 {
+	this->instance = inst;
 	this->conn_type = CONN_REGULAR;
 	this->fd = client_fd;
 	this->socket = socket_fd;
@@ -37,8 +39,9 @@ Client::Client(int client_fd, int socket_fd, std::string ip) : Client()
 }
 
 //cgi
-Client::Client(int client_fd, int pid, std::shared_ptr<Client> ref_ptr) : Client()
+Client::Client(HttpServer *inst, int client_fd, int pid, std::shared_ptr<Client> ref_ptr) : Client()
 {
+	this->instance = inst;
 	this->conn_type = CONN_CGI;
 	this->fd = client_fd;
 	this->pid = pid;
@@ -63,5 +66,13 @@ bool Client::has_timed_out(time_t now)
 		return true;
 	}
 	return false;
+}
+
+void Client::cleanup_child(void)
+{
+	if (!this->instance)
+		return;
+	this->instance->close_server();
+	close(this->fd);
 }
 

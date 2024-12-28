@@ -13,10 +13,13 @@ enum
 	CONN_CGI,
 };
 
+class HttpServer;
+
 class Client
 {
 	private:
-			time_t	_last_active;
+			HttpServer	*instance;
+			time_t		_last_active;
 	public:
 
 			int	conn_type;
@@ -41,10 +44,11 @@ class Client
 
 			Client();
 			~Client();
-			Client(int client_fd, int socket_fd, std::string ip);
-			Client(int client_fd, int pid, std::shared_ptr<Client> ref_ptr);
+			Client(HttpServer *inst, int client_fd, int socket_fd, std::string ip);
+			Client(HttpServer *inst, int client_fd, int pid, std::shared_ptr<Client> ref_ptr);
 
 			void	update_time(void);
 			bool	has_timed_out(time_t now);
+			void	cleanup_child(void);
 };
 #endif

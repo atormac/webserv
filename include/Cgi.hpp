@@ -20,7 +20,7 @@ class Cgi
 			void env_set_vars(std::shared_ptr<Request> request);
 	
 			bool parent_init(int pid, int *fd_from, int *fd_to);
-			void child_process(std::vector <char *> args, int *fd_from, int *fd_to);
+			void child_process(std::shared_ptr <Client> client, std::vector <char *> args, int *fd_from, int *fd_to);
 	public:
 			Cgi();
 			Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request);

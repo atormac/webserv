@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2024/12/27 22:29:48 by user             ###   ########.fr       */
+/*   Updated: 2024/12/28 01:14:33 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -40,8 +40,8 @@ class HttpServer
 			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
 
 			//std::vector <pair(int, std::shared_ptr<Client> _clients;
-			std::map<int, std::shared_ptr<Client>> _clients;
-			std::map<int, std::shared_ptr<Client>> _cgi_to_client;
+			std::unordered_map<int, std::shared_ptr<Client>> _clients;
+			std::unordered_map<int, std::shared_ptr<Client>> _cgi_to_client;
 
 			std::deque<std::pair<int, time_t>> _deque;
 

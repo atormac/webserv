@@ -18,8 +18,11 @@ void HttpServer::signal_handler(int code)
 
 void HttpServer::close_server(void)
 {
+	std::cerr << "close_server() called\n";
 	if (this->_epoll_fd == -1)
 		return;
+	this->_clients.clear();
+	this->_cgi_to_client.clear();
 	for(const auto& e : this->_socketFdToSockets) {
 		e.second->close_socket();
 	}
@@ -53,6 +56,8 @@ bool HttpServer::init()
 		perror("epoll_create");
 		return false;
 	}
+	int flags = 0;
+	fcntl(_epoll_fd, F_SETFL, flags | FD_CLOEXEC);
 	for(const auto &so : _socketFdToSockets)
 	{
 		struct epoll_event ev;
@@ -154,7 +159,7 @@ bool HttpServer::accept_client(int _socket_fd)
 		close(client_fd);
 		return false;
 	}
-	std::shared_ptr cl = std::make_shared<Client>(client_fd, _socket_fd, inet_ntoa(peer_addr.sin_addr));
+	std::shared_ptr cl = std::make_shared<Client>(this, client_fd, _socket_fd, inet_ntoa(peer_addr.sin_addr));
 
 	std::cout << "client added\n";
 	return add_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
@@ -174,8 +179,8 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 		remove_fd(fd);
 		return false;
 	}
-	_clients[fd] = cl;
 	if (mask == EPOLL_CTL_ADD) {
+		_clients[fd] = cl;
 		std::cout << "[webserv] fd: " << fd << " added"<< std::endl;
 	}
 	return true;
@@ -269,14 +274,14 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 
 	//if (current->req->_body.size() > 0)
 	//{
-		std::shared_ptr write_cgi = std::make_shared<Client>(current->cgi_to[WRITE], pid_cgi, current);
+		std::shared_ptr write_cgi = std::make_shared<Client>(this, current->cgi_to[WRITE], pid_cgi, current);
 		write_cgi->response = current->req->_body;
 
 		add_fd(current->cgi_to[WRITE], EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
 		_cgi_to_client.emplace(current->cgi_to[WRITE], current);
 	//}
 
-	std::shared_ptr read_cgi = std::make_shared<Client>(current->cgi_from[READ], pid_cgi, current);
+	std::shared_ptr read_cgi = std::make_shared<Client>(this, current->cgi_from[READ], pid_cgi, current);
 	read_cgi->resp = current->resp;
 
 	add_fd(current->cgi_from[READ], EPOLL_CTL_ADD, EPOLLIN, read_cgi);
