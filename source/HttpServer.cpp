@@ -56,8 +56,6 @@ bool HttpServer::init()
 		perror("epoll_create");
 		return false;
 	}
-	int flags = 0;
-	fcntl(_epoll_fd, F_SETFL, flags | FD_CLOEXEC);
 	for(const auto &so : _socketFdToSockets)
 	{
 		struct epoll_event ev;
