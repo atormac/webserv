@@ -84,9 +84,6 @@ void Location::_addPath(std::string &line)
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addPath: Expected format: \"location [/path/];\"");
 	_path = match_res[1];
-	// For debugging
-	//std::cout << "location path: " << _path << std::endl;
-	//	
 }
 
 
@@ -105,9 +102,6 @@ void Location::_addRoot(std::string &line)
 	if (!(mode.st_mode & S_IFDIR))
 		throw(std::runtime_error("_addRoot: Specified path isn't a directory!"));
 	_rootPath = match_res[1];
-	// For debugging
-	//std::cout << "root path: " << _rootPath << std::endl;
-	//	
 }
 
 void Location::_addIndex(std::string &line)
@@ -119,10 +113,6 @@ void Location::_addIndex(std::string &line)
 		throw std::runtime_error("_addIndex: Expected format: \"index [list of indices];\"");
 	for (std::sregex_iterator itr = std::sregex_iterator(line.begin(), line.end(), ptrn_local); itr != std::sregex_iterator(); itr++)
 		_indices.push_back((*itr)[1]);
-	// For debugging
-	//for (std::string s: _indices)
-    //	std::cout << "Location Index: " << s << std::endl;
-	//
 }
 
 void Location::_addAutoIndex(std::string &line)
@@ -139,9 +129,6 @@ void Location::_addAutoIndex(std::string &line)
 	else
 		_autoIndex = 0;
 	_autoIndexSet = true;
-	// For debugging
-	//std::cout << "Autoindex: " << _autoIndex << std::endl;
-	//	
 }
 
 void Location::_addMethods(std::string &line)
@@ -159,10 +146,6 @@ void Location::_addMethods(std::string &line)
 			throw std::runtime_error("_addMethods: Adding duplicate location methods!");
 		_methods.push_back((*itr)[1]);
 	}
-	// For debugging
-	//for (std::string s: _methods)
-    //	std::cout << "Location method: " << s << std::endl;
-	//
 }
 
 void Location::_addRedirect(std::string &line)
@@ -176,9 +159,6 @@ void Location::_addRedirect(std::string &line)
 		throw std::runtime_error("_addRedirect: Expected format: \"return [code] [HTTP/HTTPS URL];\"");
 	_redirectCode = stringToType<int>(match_res[1]);
 	_redirectPath = match_res[2];
-	// For debugging
-	//std::cout << "Location redir, code: " << _redirectCode << " path: " << _redirectPath << std::endl;
-	//	
 }
 
 void Location::_addUpload(std::string &line)
@@ -196,9 +176,6 @@ void Location::_addUpload(std::string &line)
 	if (!(mode.st_mode & S_IFDIR))
 		throw(std::runtime_error("_addUpload: Specified path isn't a directory!"));
 	_uploadPath = match_res[1];
-	// For debugging
-	//std::cout << "upload path: " << _uploadPath << std::endl;
-	//	
 }
 
 void Location::_addCgi(std::string &line)
@@ -221,10 +198,6 @@ void Location::_addCgi(std::string &line)
 			throw(std::runtime_error("_addCgi: Specified path isn't a file!"));
 		_cgi.insert(std::make_pair(itr->str(1), itr->str(2)));
 	}
-	// For debugging
-	//for (auto s: _cgi)
-    //	std::cout << "Location cgi: |" << s.first << "| " << s.second << std::endl;
-	//
 }
 
 // Getters

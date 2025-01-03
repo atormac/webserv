@@ -1,9 +1,6 @@
 #include <HttpServer.hpp>
 
-
-ServerConfig::ServerConfig(): _maxSize(0)
-{
-}
+ServerConfig::ServerConfig(): _maxSize(0) {}
 
 ServerConfig::~ServerConfig()
 {
@@ -85,10 +82,6 @@ void ServerConfig::_addErrorPage(std::string &line)
 	if (!fileExists(match_res[2]))
 		throw std::runtime_error("_addErrorPage: Invalid error page path!");	
 	_errorPages.insert(std::make_pair(stringToType<int>(match_res[1]), match_res[2]));
-	// For debugging	
-	//std::cout << "errno: " << match_res[1] << std::endl;
-	//std::cout << "path: " << match_res[2] << std::endl;
-	//
 }
 
 void ServerConfig::_addLocation(std::shared_ptr<Location> location)
@@ -108,10 +101,6 @@ void ServerConfig::_addListen(std::string &line)
 		throw std::runtime_error("_addListen: Expected format: \"listen [valid ip]:[valid port];\"");
 	_ipAddress = match_res[1];
 	_port = match_res[2];
-	// For debugging
-	//std::cout << _ipAddress << std::endl;	
-	//std::cout << _port << std::endl;
-	//
 }
 
 // Getters

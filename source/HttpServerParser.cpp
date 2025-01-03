@@ -28,12 +28,6 @@ void HttpServer::parseConfig(const std::string &filePath)
 				std::shared_ptr<Socket> socket(new Socket(server));
 				_portsToSockets.insert(std::make_pair(ip_and_port, socket));
 			}
-
-			// For testing
-			//for (std::string i: server->getNames())
-			//	std::cout << "Server name: " << i << std::endl;
-			//std::cout << "Server max size: " << server->getMaxSize() << std::endl << std::endl;
-			//
 		}
 		else
 			throw std::runtime_error("ParseConfig: Unexpected value outside server block: " + line);

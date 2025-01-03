@@ -1,7 +1,5 @@
 #include <HttpServer.hpp>
 
-void parseConfig(const std::string &filePath);
-
 int main(int argc, char **argv)
 {
 	if (argc != 2)
