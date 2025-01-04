@@ -132,7 +132,6 @@ bool Cgi::start(std::shared_ptr <Client> client)
 		close_pipes(fd_to);
 		exit(1);
 	}
-	this->_pids.push_back(pid);
 
 	ret = parent_init(pid, fd_from, fd_to);
 	if (ret)
@@ -146,6 +145,14 @@ bool Cgi::start(std::shared_ptr <Client> client)
 	//close_pipes(fd);
 
 	return ret;
+}
+
+void Cgi::wait_kill(int pid)
+{
+	int status;
+
+	if (waitpid(pid, &status, WNOHANG) == -1)
+		kill(pid, SIGTERM);
 }
 
 bool Cgi::finish(int pid, int *fd_from, int *fd_to)

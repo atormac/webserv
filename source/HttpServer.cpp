@@ -23,9 +23,10 @@ void HttpServer::close_server(void)
 		return;
 	this->_clients.clear();
 	this->_cgi_to_client.clear();
-	for(const auto& e : this->_socketFdToSockets) {
+	for(const auto& e : this->_socketFdToSockets)
 		e.second->close_socket();
-	}
+	for (const auto &pid : this->_pids)
+		Cgi::wait_kill(pid);
 	close(this->_epoll_fd);
 	this->_epoll_fd = -1;
 }
@@ -250,6 +251,8 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 	std::cout << __FUNCTION__ << ": FDS: " << read_fd << "|" << write_fd << "\n";
 
 	Cgi::finish(client->pid, client->ref->cgi_from, client->ref->cgi_from);
+
+	_pids.erase(client->pid);
 	
 	client->resp->finish_response();
 	client->ref->response = client->resp->buffer.str();
@@ -263,8 +266,9 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 //garbage code
 void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 {
-	int pid_cgi = current->pid;
+	int pid = current->pid;
 
+	_pids.insert(pid);
 
 	std::cout << __FUNCTION__ << ": cgi read fd: " << current->cgi_from[READ] << std::endl;
 	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
@@ -272,14 +276,14 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 
 	//if (current->req->_body.size() > 0)
 	//{
-		std::shared_ptr write_cgi = std::make_shared<Client>(this, current->cgi_to[WRITE], pid_cgi, current);
+		std::shared_ptr write_cgi = std::make_shared<Client>(this, current->cgi_to[WRITE], pid, current);
 		write_cgi->response = current->req->_body;
 
 		add_fd(current->cgi_to[WRITE], EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
 		_cgi_to_client.emplace(current->cgi_to[WRITE], current);
 	//}
 
-	std::shared_ptr read_cgi = std::make_shared<Client>(this, current->cgi_from[READ], pid_cgi, current);
+	std::shared_ptr read_cgi = std::make_shared<Client>(this, current->cgi_from[READ], pid, current);
 	read_cgi->resp = current->resp;
 
 	add_fd(current->cgi_from[READ], EPOLL_CTL_ADD, EPOLLIN, read_cgi);

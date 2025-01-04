@@ -14,7 +14,6 @@ class Cgi
 			std::string _script_path;
 			std::string _script_dir;
 			std::vector<std::string> _env;
-			std::vector<int> _pids;
 
 			void env_set(const std::string &key, const std::string &value);
 			void env_set_vars(std::shared_ptr<Request> request);
@@ -27,6 +26,7 @@ class Cgi
 			~Cgi();
 		
 			bool start(std::shared_ptr <Client> client);
+			static void wait_kill(int pid);
 			static bool finish(int pid, int *fd_from, int *fd_to);
 			static void close_pipes(int *fd);
 			static bool is_cgi(std::shared_ptr <Location> location, std::string uri);
