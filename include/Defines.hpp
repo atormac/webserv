@@ -33,9 +33,6 @@ enum
 #define REQUEST_BODY_LIMIT 10 * 1024 * 1024 //10MB
 #define CRLF "\r\n"
 
-#define DEFAULT_404 "<!DOCTYPE html> <html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1></body></html>"
-#define DEFAULT_403 "<!DOCTYPE html> <html><head><title>403 Forbidden</title></head><body><h1>403 Forbidden</h1></body></html>"
-
 extern std::unordered_map<int, std::string> code_map;
 extern std::unordered_map<std::string, std::string> mime_map;
 

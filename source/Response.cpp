@@ -179,26 +179,29 @@ std::shared_ptr <Location> Response::find_location(void)
 
 void Response::set_error_page(int code)
 {
-	std::string page_path = "";
 
 	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
+	{
+		generate_error_page(code);
 		return;
-	if (_request->conf && _request->conf->_errorPages.count(code)) {
-		page_path = _request->conf->_errorPages[code];
-		int flags = Io::file_stat(_request->conf->_errorPages[code]);
-		if (!flags || !(flags & FS_READ))
-			page_path = "";
 	}
 
-	if (page_path == "" && code == 404) {
-		this->_status_code = code;
-		_body << DEFAULT_404;
-		return;
-
-	}
-
+	std::string page_path = _request->conf->_errorPages[code];
 	if (!Io::read_file(page_path, _body))
+	{
 		this->_status_code = 500;
+		generate_error_page(this->_status_code);
+	}
+}
+
+void Response::generate_error_page(int code)
+{
+	std::string msg = std::to_string(code) + " " + code_map[code];
+	_body << "<!DOCTYPE html><html><head><title>";
+	_body << msg;
+	_body << "</title></head><body><h1>";
+	_body << msg;
+	_body << "</h1></body></html>";
 }
 
 bool	Response::directory_index(std::string path)
