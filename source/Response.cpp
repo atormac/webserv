@@ -179,7 +179,8 @@ std::shared_ptr <Location> Response::find_location(void)
 
 void Response::set_error_page(int code)
 {
-
+	if (!(code >= 400 && code >= 599))
+		return;
 	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
 	{
 		generate_error_page(code);
