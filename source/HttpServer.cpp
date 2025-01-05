@@ -160,7 +160,6 @@ bool HttpServer::accept_client(int _socket_fd)
 	}
 	std::shared_ptr cl = std::make_shared<Client>(this, client_fd, _socket_fd, inet_ntoa(peer_addr.sin_addr));
 
-	std::cout << "client added\n";
 	return add_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
 }
 
@@ -180,7 +179,6 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 	}
 	if (mask == EPOLL_CTL_ADD) {
 		_clients[fd] = cl;
-		std::cout << "[webserv] fd: " << fd << " added"<< std::endl;
 	}
 	return true;
 }
@@ -364,13 +362,6 @@ void HttpServer::set_config(std::shared_ptr <Client> client, std::shared_ptr <Re
 		if (host == server->getIpAddress() + ":" + server->getPort())
 		{
 			req->conf = server;
-			std::cout << std::endl;
-			std::cout << server->getIpAddress() << ":" << server->getPort() << "\n";
-			for (const auto &loc : server->getLocations())
-			{
-				//loc->dump();
-				(void)loc;
-			}
 			return;
 		}
 	}
