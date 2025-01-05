@@ -18,7 +18,6 @@ void HttpServer::signal_handler(int code)
 
 void HttpServer::close_server(void)
 {
-	std::cerr << "close_server() called\n";
 	if (this->_epoll_fd == -1)
 		return;
 	this->_clients.clear();
