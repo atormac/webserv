@@ -11,9 +11,11 @@ enum class State
 	StatusLine,
 	Header,
 	Body,
+	CgiBody,
 	PartialStatus,
 	PartialHeader,
 	PartialChunked,
+	PartialCgiBody,
 	PartialBody,
 	Chunked,
 	MultiPart,
@@ -45,11 +47,13 @@ class Request
 			size_t	    _bytes_read;
 
 			int	    _body_type;
+			bool        _cgi;
 		
 			State	parse_status_line(void);
 			State	parse_header(void);
 			bool	parse_header_field(size_t pos);
 			State	parse_body(void);
+			State	parse_body_cgi(void);
 			State	parse_chunked(void);
 			void	parse_multipart(void);
 
@@ -72,6 +76,7 @@ class Request
 			std::string	_body;
 
 			Request();
+			Request(bool cgi);
 			~Request();
 			State parse(State s_start, char *data, size_t size);
 			void dump();

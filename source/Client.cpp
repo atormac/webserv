@@ -43,7 +43,7 @@ Client::Client(HttpServer *inst, int client_fd, int pid, std::shared_ptr<Client>
 	this->fd = client_fd;
 	this->pid = pid;
 	this->ref = ref_ptr;
-	this->req = std::make_shared<Request>();
+	this->req = std::make_shared<Request>(true);
 
 	this->update_time();
 }

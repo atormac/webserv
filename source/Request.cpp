@@ -12,7 +12,13 @@ Request::Request()
 	this->_state = State::StatusLine;
 	this->_content_len = 0;
 	this->_body_type = BODY_TYPE_NORMAL;
+	this->_cgi = false;
 	this->conf = nullptr;
+}
+
+Request::Request(bool cgi) : Request()
+{
+	this->_cgi = cgi;
 }
 
 Request::~Request() {}
@@ -20,7 +26,7 @@ Request::~Request() {}
 State Request::parse(State s_start, char *data, size_t size)
 {
 	_buffer.append(data, size);
-	_bytes_read += size;
+	_bytes_read = size;
 
 	if (_state < s_start)
 		_state = s_start;
@@ -39,6 +45,10 @@ State Request::parse(State s_start, char *data, size_t size)
 			case State::PartialBody:
 			case State::Body:
 				_state = parse_body();
+				break;
+			case State::PartialCgiBody:
+			case State::CgiBody:
+				_state = parse_body_cgi();
 				break;
 			case State::PartialChunked:
 			case State::Chunked:
@@ -131,12 +141,13 @@ bool Request::parse_header_field(size_t pos)
 		_body_type = BODY_TYPE_CHUNKED;
 	if (key == "content-type" && value.find("multipart/form-data; boundary=") == 0)
 		_body_type = BODY_TYPE_MULTIPART;
-
 	return true;
 }
 
 State	Request::parse_body(void)
 {
+	if (_cgi)
+		return State::CgiBody;
 	if (_method != METHOD_POST)
 		return State::Ok;
 	if (conf && _buffer.size() > conf->getMaxSize())
@@ -146,13 +157,33 @@ State	Request::parse_body(void)
 	}
 	if (_body_type == BODY_TYPE_CHUNKED)
 		return State::Chunked;
-	if (_buffer.size() < _content_len)
+	if (_headers.count("content-length") && _buffer.size() < _content_len)
 		return State::PartialBody;
 	if (_body_type == BODY_TYPE_MULTIPART)
 		return  State::MultiPart;
 	_body = _buffer.substr(0, _content_len);
 	_buffer.clear();
 	//std::cout << "body: " << _body << std::endl;
+	return State::Ok;
+}
+
+State Request::parse_body_cgi(void)
+{
+	std::cerr << __FUNCTION__ << std::endl;
+
+	if (_bytes_read == 0) //eof
+		return State::Ok;
+	if (!_headers.count("content-length"))
+	{
+		_body += _buffer;
+		return State::PartialCgiBody;
+	}
+	else if (_body.size() < _content_len)
+	{
+		_body += _buffer;
+		return State::PartialCgiBody;
+	}
+	_buffer.clear();
 	return State::Ok;
 }
 

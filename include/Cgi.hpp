@@ -11,6 +11,7 @@ class Cgi
 {
 	private:
 			std::string _interpreter;
+			std::string _script_abs;
 			std::string _script_path;
 			std::string _script_dir;
 			std::vector<std::string> _env;

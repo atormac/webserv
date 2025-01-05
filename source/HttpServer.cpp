@@ -92,8 +92,6 @@ void HttpServer::epoll(void)
 	while (!signo)
 	{
 		int timeout = 1 * 1000;
-
-		//std::cout << "[webserv] epoll_wait(), timeout: " << timeout << "\n";
 		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, timeout);
 
 		cull_clients();
@@ -120,11 +118,7 @@ void HttpServer::epoll(void)
 			//mark the event as OK to catch errors directly from read/write
 			//calls
 			if (e.events & EPOLLHUP) 
-			{
 				e.events |= EPOLLIN;
-				std::cerr << "EOF: " << cl->fd << " | " << cl->conn_type << "\n";
-				
-			}
 
 			if (e.events & EPOLLIN)
 				handle_read(cl);
@@ -210,17 +204,13 @@ void HttpServer::handle_read(std::shared_ptr <Client> client)
 	}
 	if (client->conn_type == CONN_CGI)
 	{
-		std::cout << "bytes_read: " << bytes_read << " | " << client->fd << std::endl;
-		if (bytes_read == 0)
+		State s = client->req->parse(State::Header, buffer, bytes_read);
+
+		if (s == State::Ok || s == State::Error)
 		{
-			std::cout << "cgi stdout: " << client->resp->_body.str() << std::endl;
 			finish_cgi_client(client);
 			return;
 		}
-		State s = client->req->parse(State::Header, buffer, bytes_read);
-		std::cout << "cgi parse state: " << (int)s << std::endl;
-
-		client->resp->_body << std::string(buffer, bytes_read);
 		add_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
 		return;
 	}
@@ -250,19 +240,18 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 	client->ref->cgi_from[READ] = -1;
 	client->ref->cgi_to[WRITE] = -1;
 
-	std::cout << __FUNCTION__ << ": FDS: " << read_fd << "|" << write_fd << "\n";
-
 	Cgi::finish(client->pid, client->ref->cgi_from, client->ref->cgi_from);
 
 	_pids.erase(client->pid);
 	
-	client->resp->finish_response();
-	client->ref->response = client->resp->buffer.str();
+
+	//so bad
+	//figure out better way
+	client->ref->resp->_body << client->req->_body;
+	client->ref->resp->finish_response();
+	client->ref->response = client->ref->resp->buffer.str();
 
 	add_fd(client->ref->fd, EPOLL_CTL_MOD, EPOLLOUT, client->ref);
-	//remove_fd(client->fd);
-	//remove_fd(read_fd);
-	//remove_fd(write_fd);
 }
 
 //garbage code
@@ -286,7 +275,7 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 	//}
 
 	std::shared_ptr read_cgi = std::make_shared<Client>(this, current->cgi_from[READ], pid, current);
-	read_cgi->resp = current->resp;
+	//read_cgi->resp = current->resp;
 
 	add_fd(current->cgi_from[READ], EPOLL_CTL_ADD, EPOLLIN, read_cgi);
 	_cgi_to_client.emplace(current->cgi_from[READ], current);
