@@ -163,24 +163,23 @@ State	Request::parse_body(void)
 		return  State::MultiPart;
 	_body = _buffer.substr(0, _content_len);
 	_buffer.clear();
-	//std::cout << "body: " << _body << std::endl;
 	return State::Ok;
 }
 
 State Request::parse_body_cgi(void)
 {
-	std::cerr << __FUNCTION__ << std::endl;
-
 	if (_bytes_read == 0) //eof
 		return State::Ok;
 	if (!_headers.count("content-length"))
 	{
 		_body += _buffer;
+		_buffer.clear();
 		return State::PartialCgiBody;
 	}
 	else if (_body.size() < _content_len)
 	{
 		_body += _buffer;
+		_buffer.clear();
 		return State::PartialCgiBody;
 	}
 	_buffer.clear();

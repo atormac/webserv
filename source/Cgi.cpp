@@ -83,7 +83,6 @@ void Cgi::child_process(std::shared_ptr <Client> client, std::vector <char *> ar
 	c_env.reserve(_env.size() + 1);
 	for (const auto& var : _env) {
 		c_env.push_back(const_cast<char*>(var.c_str()));
-		std::cout << "cgi_env: " << var << std::endl;
 	}
 	c_env.push_back(nullptr);
 

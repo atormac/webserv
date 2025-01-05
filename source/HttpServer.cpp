@@ -185,11 +185,8 @@ void HttpServer::remove_fd(int fd)
 		std::cerr << "epoll_ctl error fd: " << fd << std::endl;
 		perror("remove_fd epoll_ctl");
 	}
-	//close(fd);
 	_clients.erase(fd);
 	_cgi_to_client.erase(fd);
-
-	std::cout << "[webserv] fd: " << fd << " removed "<< std::endl;
 }
 
 void HttpServer::handle_read(std::shared_ptr <Client> client)
@@ -219,8 +216,6 @@ void HttpServer::handle_read(std::shared_ptr <Client> client)
 	set_config(client, client->req);
 
 	int mask = EPOLLIN;
-	std::cout << "adding write epoll: " << client->fd << std::endl;
-
 	if (state == State::Ok || state == State::Error || bytes_read == 0)
 	{
 		mask = EPOLLOUT;
@@ -261,10 +256,6 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 
 	_pids.insert(pid);
 
-	std::cout << __FUNCTION__ << ": cgi read fd: " << current->cgi_from[READ] << std::endl;
-	std::cout << __FUNCTION__ << ": cgi write fd: " << current->cgi_to[WRITE] << std::endl;
-	std::cout << __FUNCTION__ << ": cgi req body size: " << current->req->_body.size() << std::endl;
-
 	//if (current->req->_body.size() > 0)
 	//{
 		std::shared_ptr write_cgi = std::make_shared<Client>(this, current->cgi_to[WRITE], pid, current);
@@ -298,7 +289,7 @@ void HttpServer::handle_write(std::shared_ptr <Client> client)
 	ssize_t resp_size = client->response.size();
 	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
 
-	std::cout << "[webserv] write " << client->fd << " | "<< client->conn_type << " | " << bytes_written << " | " << client->response.size() << std::endl;
+	//std::cout << "[webserv] write " << client->fd << " | "<< client->conn_type << " | " << bytes_written << " | " << client->response.size() << std::endl;
 
 	if (bytes_written <= 0)
 	{
