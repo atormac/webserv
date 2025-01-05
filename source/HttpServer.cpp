@@ -93,7 +93,7 @@ void HttpServer::epoll(void)
 	{
 		int timeout = 1 * 1000;
 
-		std::cout << "[webserv] epoll_wait(), timeout: " << timeout << "\n";
+		//std::cout << "[webserv] epoll_wait(), timeout: " << timeout << "\n";
 		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, timeout);
 
 		cull_clients();
@@ -215,9 +215,13 @@ void HttpServer::handle_read(std::shared_ptr <Client> client)
 		std::cout << "bytes_read: " << bytes_read << " | " << client->fd << std::endl;
 		if (bytes_read == 0)
 		{
+			std::cout << "cgi stdout: " << client->resp->_body.str() << std::endl;
 			finish_cgi_client(client);
 			return;
 		}
+		State s = client->req->parse(State::Header, buffer, bytes_read);
+		std::cout << "cgi parse state: " << (int)s << std::endl;
+
 		client->resp->_body << std::string(buffer, bytes_read);
 		add_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
 		return;
@@ -325,8 +329,12 @@ void HttpServer::handle_write(std::shared_ptr <Client> client)
 
 void HttpServer::set_config(std::shared_ptr <Client> client, std::shared_ptr <Request> req)
 {
+	//Fallback to first on the list
+	req->conf = _socketFdToSockets[client->socket]->getServers().front();
+	if (client->req->_headers.count("host") == 0)
+		return;
+	const std::string host = client->req->_headers["host"];
 
-	/*
 	for(const auto &so : _socketFdToSockets)
 	{
 		for (const auto &server : so.second->getServers())
@@ -343,13 +351,6 @@ void HttpServer::set_config(std::shared_ptr <Client> client, std::shared_ptr <Re
 		}
 
 	}
-	*/
-	//Fallback to first on the list
-	req->conf = _socketFdToSockets[client->socket]->getServers().front();
-	if (client->req->_headers.count("host") == 0)
-		return;
-	const std::string host = client->req->_headers["host"];
-	//std::cout << "client host: " << host << std::endl;
 
 	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
 	{

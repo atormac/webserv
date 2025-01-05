@@ -222,11 +222,11 @@ void	Request::dump(void)
 	std::cout << _bytes_read << " | " << _headers["host"];
 	std::cout << std::endl;
 
+	/*
 	for(const auto &e : this->_headers)
 	{
 		std::cout << "\t" << e.first << ": " << e.second << std::endl;
 	}
-	/*
 	if (_content_len > 0)
 		std::cout << "body: " << _body << std::endl;
 	*/

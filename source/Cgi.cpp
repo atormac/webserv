@@ -39,15 +39,18 @@ void Cgi::env_set(const std::string &key, const std::string &value)
 
 void Cgi::env_set_vars(std::shared_ptr<Request> request)
 {
+	env_set("GATEWAY_INTERFACE", "CGI/1.1");
+	env_set("SERVER_PROTOCOL", "HTTP/1.1");
 	env_set("REQUEST_METHOD", request->_method_str);
 	env_set("QUERY_STRING", request->_query_string);
+	//env_set("SCRIPT_FILENAME", _script_path);
 
-	env_set("SERVER_NAME", SERVER_NAME);
-	env_set("SERVER_PROTOCOL", "HTTP/1.1");
-	env_set("GATEWAY_INTERFACE", "CGI/1.1");
+	env_set("SERVER_NAME", request->_headers["host"]);
 	env_set("PATH_INFO", request->_uri);
 	env_set("HTTP_ACCEPT", request->_headers["accept"]);
 	env_set("HTTP_USER_AGENT", request->_headers["user-agent"]);
+
+	//env_set("REDIRECT_STATUS", "1");
 
 	if (request->_method == METHOD_POST)
 	{
