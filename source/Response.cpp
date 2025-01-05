@@ -164,7 +164,6 @@ std::shared_ptr <Location> Response::find_location(void)
 	{
 		if (_request->_uri == loc->_path) {
 			ret = loc;
-			std::cout << "Loc->_path found: " << loc->_path << std::endl;
 			break;
 		}
 		if (_request->_uri.rfind(loc->_path, 0) == 0 && loc->_path.back() == '/') {
@@ -179,7 +178,7 @@ std::shared_ptr <Location> Response::find_location(void)
 
 void Response::set_error_page(int code)
 {
-	if (!(code >= 400 && code >= 599))
+	if (!(code >= 400 && code <= 599))
 		return;
 	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
 	{
