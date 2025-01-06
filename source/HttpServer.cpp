@@ -113,6 +113,8 @@ void HttpServer::epoll(void)
 				continue;
 
 			std::shared_ptr cl = _clients[e.data.fd];
+
+			cl->update_time();
 			//on pipe close EPOLLHUP means EOF here
 			//mark the event as OK to catch errors directly from read/write
 			//calls
