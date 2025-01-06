@@ -40,13 +40,13 @@ class Response
 
 			bool init_cgi(std::shared_ptr <Client> client);
 	public:
-			int status;
 			std::ostringstream _body;
 			std::ostringstream buffer;
 
 			Response(std::shared_ptr <Client> client, std::shared_ptr<Request> req);
 			void finish_response(void);
 			void finish_cgi(std::shared_ptr <Request> req_cgi);
+			void set_error(int code);
 			~Response();
 };
 #endif

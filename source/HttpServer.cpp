@@ -237,17 +237,15 @@ void HttpServer::handle_write(std::shared_ptr <Client> client)
 
 		client->response = client->resp->buffer.str();
 	}
-	ssize_t resp_size = client->response.size();
-	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
-
-	std::cout << "[webserv] write " << client->fd << " | "<< client->conn_type << " | " << bytes_written << " | " << client->response.size() << std::endl;
+	ssize_t size = client->response.size();
+	ssize_t bytes_written = write(client->fd, client->response.data(), size);
 
 	if (bytes_written <= 0)
 	{
 		remove_fd(client->fd);
 		return;
 	}
-	if (bytes_written < resp_size)
+	if (bytes_written < size)
 	{
 		client->response.erase(0, bytes_written);
 		add_fd(client->fd, EPOLL_CTL_MOD, EPOLLOUT, client);
@@ -259,47 +257,43 @@ void HttpServer::handle_write(std::shared_ptr <Client> client)
 void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 {
 	std::shared_ptr ref = client->ref;
-
 	int read_fd = ref->cgi_from[READ];
 	int write_fd = ref->cgi_to[WRITE];
 
 	remove_fd(read_fd);
 	remove_fd(write_fd);
 
-	Cgi::finish(client->pid, ref->cgi_from, ref->cgi_from);
+	if (!Cgi::finish(client->pid, ref->cgi_from, ref->cgi_from))
+		ref->resp->set_error(500);
 	_pids.erase(client->pid);
 
-
 	ref->resp->finish_cgi(client->req);
-	//ref->resp->_body << client->req->_body;
-	//ref->resp->finish_response();
 	ref->response = ref->resp->buffer.str();
 
 	add_fd(ref->fd, EPOLL_CTL_MOD, EPOLLOUT, ref);
 }
 
 //garbage code
-void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
+void	HttpServer::add_cgi_fds(std::shared_ptr <Client> cl)
 {
-	int pid = current->pid;
-	int rfd = current->cgi_from[READ];
-	int wfd = current->cgi_to[WRITE];
+	int pid = cl->pid;
+	int rfd = cl->cgi_from[READ];
+	int wfd = cl->cgi_to[WRITE];
 
 	_pids.insert(pid);
 
-	std::cerr << "fd_write_cgi: " << wfd << std::endl;
-	std::cerr << "fd_read_cgi: " << rfd << std::endl;
+	std::cerr << "[webserv] CGI initialized: " << rfd << "/" << wfd << std::endl;
 
-	std::shared_ptr write_cgi = std::make_shared<Client>(this, wfd, pid, current);
-	write_cgi->response = current->req->_body;
+	std::shared_ptr write_cgi = std::make_shared<Client>(this, wfd, pid, cl);
+	write_cgi->response = cl->req->_body;
 
 	add_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
-	_cgi_to_client.emplace(wfd, current);
+	_cgi_to_client.emplace(wfd, cl);
 
-	std::shared_ptr read_cgi = std::make_shared<Client>(this, rfd, pid, current);
+	std::shared_ptr read_cgi = std::make_shared<Client>(this, rfd, pid, cl);
 
 	add_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
-	_cgi_to_client.emplace(rfd, current);
+	_cgi_to_client.emplace(rfd, cl);
 }
 
 

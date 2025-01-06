@@ -41,6 +41,10 @@ void Response::finish_response(void)
 {
 	create_response(_status_code);
 }
+void Response::set_error(int code)
+{
+	this->_status_code = code;
+}
 
 void Response::finish_cgi(std::shared_ptr <Request> req)
 {

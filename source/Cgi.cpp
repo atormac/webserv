@@ -175,7 +175,6 @@ bool Cgi::finish(int pid, int *fd_from, int *fd_to)
 		kill(pid, SIGTERM);
 		return false;
 	}
-	std::cout << "CGI::finish success" << std::endl;
 	return true;
 }
 
