@@ -10,6 +10,9 @@ class Response
 	private:
 			std::shared_ptr<Request> _request;
 			std::shared_ptr <Location>_location; 
+
+			std::map <std::string, std::string> _additional_headers;
+
 			int	_status_code;
 			std::string _setCookie;
 
@@ -43,7 +46,7 @@ class Response
 
 			Response(std::shared_ptr <Client> client, std::shared_ptr<Request> req);
 			void finish_response(void);
-			void finish_with_body(std::string body);
+			void finish_cgi(std::shared_ptr <Request> req_cgi);
 			~Response();
 };
 #endif

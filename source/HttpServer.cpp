@@ -224,48 +224,6 @@ void HttpServer::handle_read(std::shared_ptr <Client> client)
 	add_fd(client->fd, EPOLL_CTL_MOD, mask, client);
 }
 
-void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
-{
-	int read_fd = client->ref->cgi_from[READ];
-	int write_fd = client->ref->cgi_to[WRITE];
-
-	remove_fd(read_fd);
-	remove_fd(write_fd);
-
-	Cgi::finish(client->pid, client->ref->cgi_from, client->ref->cgi_from);
-	_pids.erase(client->pid);
-
-	client->ref->resp->_body << client->req->_body;
-	client->ref->resp->finish_response();
-	client->ref->response = client->ref->resp->buffer.str();
-
-	add_fd(client->ref->fd, EPOLL_CTL_MOD, EPOLLOUT, client->ref);
-}
-
-//garbage code
-void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
-{
-	int pid = current->pid;
-	int rfd = current->cgi_from[READ];
-	int wfd = current->cgi_to[WRITE];
-
-	_pids.insert(pid);
-
-	std::cerr << "fd_write_cgi: " << wfd << std::endl;
-	std::cerr << "fd_read_cgi: " << rfd << std::endl;
-
-	std::shared_ptr write_cgi = std::make_shared<Client>(this, wfd, pid, current);
-	write_cgi->response = current->req->_body;
-
-	add_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
-	_cgi_to_client.emplace(wfd, current);
-
-	std::shared_ptr read_cgi = std::make_shared<Client>(this, rfd, pid, current);
-
-	add_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
-	_cgi_to_client.emplace(rfd, current);
-}
-
 void HttpServer::handle_write(std::shared_ptr <Client> client)
 {
 	if (client->conn_type == CONN_REGULAR && client->resp == nullptr)
@@ -297,6 +255,53 @@ void HttpServer::handle_write(std::shared_ptr <Client> client)
 	}
 	remove_fd(client->fd);
 }
+
+void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
+{
+	std::shared_ptr ref = client->ref;
+
+	int read_fd = ref->cgi_from[READ];
+	int write_fd = ref->cgi_to[WRITE];
+
+	remove_fd(read_fd);
+	remove_fd(write_fd);
+
+	Cgi::finish(client->pid, ref->cgi_from, ref->cgi_from);
+	_pids.erase(client->pid);
+
+
+	ref->resp->finish_cgi(client->req);
+	//ref->resp->_body << client->req->_body;
+	//ref->resp->finish_response();
+	ref->response = ref->resp->buffer.str();
+
+	add_fd(ref->fd, EPOLL_CTL_MOD, EPOLLOUT, ref);
+}
+
+//garbage code
+void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
+{
+	int pid = current->pid;
+	int rfd = current->cgi_from[READ];
+	int wfd = current->cgi_to[WRITE];
+
+	_pids.insert(pid);
+
+	std::cerr << "fd_write_cgi: " << wfd << std::endl;
+	std::cerr << "fd_read_cgi: " << rfd << std::endl;
+
+	std::shared_ptr write_cgi = std::make_shared<Client>(this, wfd, pid, current);
+	write_cgi->response = current->req->_body;
+
+	add_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
+	_cgi_to_client.emplace(wfd, current);
+
+	std::shared_ptr read_cgi = std::make_shared<Client>(this, rfd, pid, current);
+
+	add_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
+	_cgi_to_client.emplace(rfd, current);
+}
+
 
 void HttpServer::set_config(std::shared_ptr <Client> client, std::shared_ptr <Request> req)
 {
@@ -330,7 +335,6 @@ void HttpServer::set_config(std::shared_ptr <Client> client, std::shared_ptr <Re
 				req->conf = server;
 				return;
 			}
-			//std::cout << "SERVER:" << name << std::endl;
 		}
 		if (host == server->getIpAddress() + ":" + server->getPort())
 		{

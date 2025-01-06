@@ -39,13 +39,14 @@ Response::Response(std::shared_ptr <Client> client, std::shared_ptr<Request> req
 
 void Response::finish_response(void)
 {
-	//std::cout << "FINISH_RESPONSE BODY: \n" << _body.str() << std::endl;
 	create_response(_status_code);
 }
 
-void Response::finish_with_body(std::string body)
+void Response::finish_cgi(std::shared_ptr <Request> req)
 {
-	_body << body;
+	if (req->_headers.count("content-type"))
+		_additional_headers["Content-Type"] = req->_headers["content-type"];
+	_body << req->_body;
 	create_response(_status_code);
 }
 
@@ -92,6 +93,10 @@ void	Response::create_response(int status)
 
 	buffer << "HTTP/1.1 " << status << " " << code_map[status] << CRLF;
 	buffer << "Content-Length: " << bs.size() << CRLF;
+	
+	for (auto const &hdr : _additional_headers) {
+		buffer << hdr.first << ": " << hdr.second << CRLF;
+	}
 	buffer << "Connection: close" << CRLF;
 	buffer << "Date: " << Str::date_str_now() << CRLF;
 	buffer << "Server: " << SERVER_NAME << CRLF;
@@ -99,7 +104,7 @@ void	Response::create_response(int status)
 		buffer << "Location: " << _location->_redirectPath << CRLF;
 	}
 
-	if (bs.size() > 0)
+	if (!_additional_headers.count("Content-Type") && bs.size() > 0)
 		buffer << "Content-Type: " << get_content_type(_request->_uri) << CRLF;
 	if (!_setCookie.empty())
 		buffer << "Set-Cookie: " << _setCookie << CRLF;

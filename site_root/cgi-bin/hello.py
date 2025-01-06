@@ -1,6 +1,6 @@
 import sys
-sys.stdout.write("Content-Type: text/html\r\n")
-sys.stdout.write("Debug-Header: debug\r\n\r\n")
+sys.stdout.write("Content-Type: text/plain\n\n")
+sys.stdout.write("Debug-Header: debug\n\n\n\n")
 
 print("""
 <!DOCTYPE html>
