@@ -165,8 +165,6 @@ bool Request::parse_header_field(size_t pos)
 
 State	Request::parse_body(void)
 {
-	if (_cgi)
-		return State::CgiBody;
 	if (_method != METHOD_POST)
 		return State::Ok;
 	if (conf && _buffer.size() > conf->getMaxSize())
@@ -189,6 +187,8 @@ State Request::parse_body_cgi(void)
 {
 	if (_bytes_read == 0) //eof
 		return State::Ok;
+	if (_body_type == BODY_TYPE_CHUNKED)
+		return State::Chunked;
 	if (!_headers.count("content-length"))
 	{
 		_body += _buffer;
