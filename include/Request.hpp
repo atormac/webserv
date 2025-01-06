@@ -11,6 +11,7 @@ enum class State
 	StatusLine,
 	Header,
 	Body,
+	CgiHeader,
 	CgiBody,
 	PartialStatus,
 	PartialHeader,
@@ -48,6 +49,10 @@ class Request
 
 			int	    _body_type;
 			bool        _cgi;
+
+			std::string _header_delim;
+
+			State	parse_header_cgi(void);
 		
 			State	parse_status_line(void);
 			State	parse_header(void);

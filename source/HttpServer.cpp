@@ -116,8 +116,7 @@ void HttpServer::epoll(void)
 			//on pipe close EPOLLHUP means EOF here
 			//mark the event as OK to catch errors directly from read/write
 			//calls
-			if (e.events & EPOLLHUP) 
-				e.events |= EPOLLIN;
+			if (e.events & EPOLLHUP) e.events |= EPOLLIN;
 
 			if (e.events & EPOLLIN)
 				handle_read(cl);
@@ -170,7 +169,7 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 		remove_fd(fd);
 		return false;
 	}
-	if (mask == EPOLL_CTL_ADD) {
+	if (ctl == EPOLL_CTL_ADD) {
 		_clients[fd] = cl;
 	}
 	return true;
@@ -200,7 +199,7 @@ void HttpServer::handle_read(std::shared_ptr <Client> client)
 	}
 	if (client->conn_type == CONN_CGI)
 	{
-		State s = client->req->parse(State::Header, buffer, bytes_read);
+		State s = client->req->parse(State::CgiHeader, buffer, bytes_read);
 
 		if (s == State::Ok || s == State::Error)
 		{
@@ -231,16 +230,9 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 	remove_fd(read_fd);
 	remove_fd(write_fd);
 
-	client->ref->cgi_from[READ] = -1;
-	client->ref->cgi_to[WRITE] = -1;
-
 	Cgi::finish(client->pid, client->ref->cgi_from, client->ref->cgi_from);
-
 	_pids.erase(client->pid);
-	
 
-	//so bad
-	//figure out better way
 	client->ref->resp->_body << client->req->_body;
 	client->ref->resp->finish_response();
 	client->ref->response = client->ref->resp->buffer.str();
@@ -252,23 +244,24 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 void	HttpServer::add_cgi_fds(std::shared_ptr <Client> current)
 {
 	int pid = current->pid;
+	int rfd = current->cgi_from[READ];
+	int wfd = current->cgi_to[WRITE];
 
 	_pids.insert(pid);
 
-	//if (current->req->_body.size() > 0)
-	//{
-		std::shared_ptr write_cgi = std::make_shared<Client>(this, current->cgi_to[WRITE], pid, current);
-		write_cgi->response = current->req->_body;
+	std::cerr << "fd_write_cgi: " << wfd << std::endl;
+	std::cerr << "fd_read_cgi: " << rfd << std::endl;
 
-		add_fd(current->cgi_to[WRITE], EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
-		_cgi_to_client.emplace(current->cgi_to[WRITE], current);
-	//}
+	std::shared_ptr write_cgi = std::make_shared<Client>(this, wfd, pid, current);
+	write_cgi->response = current->req->_body;
 
-	std::shared_ptr read_cgi = std::make_shared<Client>(this, current->cgi_from[READ], pid, current);
-	//read_cgi->resp = current->resp;
+	add_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
+	_cgi_to_client.emplace(wfd, current);
 
-	add_fd(current->cgi_from[READ], EPOLL_CTL_ADD, EPOLLIN, read_cgi);
-	_cgi_to_client.emplace(current->cgi_from[READ], current);
+	std::shared_ptr read_cgi = std::make_shared<Client>(this, rfd, pid, current);
+
+	add_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
+	_cgi_to_client.emplace(rfd, current);
 }
 
 void HttpServer::handle_write(std::shared_ptr <Client> client)
@@ -284,11 +277,10 @@ void HttpServer::handle_write(std::shared_ptr <Client> client)
 
 		client->response = client->resp->buffer.str();
 	}
-
 	ssize_t resp_size = client->response.size();
 	ssize_t bytes_written = write(client->fd, client->response.data(), client->response.size());
 
-	//std::cout << "[webserv] write " << client->fd << " | "<< client->conn_type << " | " << bytes_written << " | " << client->response.size() << std::endl;
+	std::cout << "[webserv] write " << client->fd << " | "<< client->conn_type << " | " << bytes_written << " | " << client->response.size() << std::endl;
 
 	if (bytes_written <= 0)
 	{

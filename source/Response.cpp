@@ -7,7 +7,6 @@ Response::Response(std::shared_ptr <Client> client, std::shared_ptr<Request> req
 	int error_code = this->has_errors();
 
 	if (error_code) {
-		set_error_page(error_code);
 		create_response(error_code);
 		return;
 	}
@@ -41,14 +40,12 @@ Response::Response(std::shared_ptr <Client> client, std::shared_ptr<Request> req
 void Response::finish_response(void)
 {
 	//std::cout << "FINISH_RESPONSE BODY: \n" << _body.str() << std::endl;
-	set_error_page(_status_code);
 	create_response(_status_code);
 }
 
 void Response::finish_with_body(std::string body)
 {
 	_body << body;
-	set_error_page(_status_code);
 	create_response(_status_code);
 }
 
@@ -89,6 +86,8 @@ int	Response::has_errors(void)
 
 void	Response::create_response(int status)
 {
+	set_error_page(status);
+
 	const std::string &bs = _body.str();
 
 	buffer << "HTTP/1.1 " << status << " " << code_map[status] << CRLF;
@@ -106,6 +105,36 @@ void	Response::create_response(int status)
 		buffer << "Set-Cookie: " << _setCookie << CRLF;
 	buffer << CRLF;
 	buffer << bs;
+}
+
+void Response::set_error_page(int code)
+{
+	if (!(code >= 400 && code <= 599))
+		return;
+	_body.clear();
+
+	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
+	{
+		generate_error_page(code);
+		return;
+	}
+
+	std::string page_path = _request->conf->_errorPages[code];
+	if (!Io::read_file(page_path, _body))
+	{
+		this->_status_code = 500;
+		generate_error_page(this->_status_code);
+	}
+}
+
+void Response::generate_error_page(int code)
+{
+	std::string msg = std::to_string(code) + " " + code_map[code];
+	_body << "<!DOCTYPE html><html><head><title>";
+	_body << msg;
+	_body << "</title></head><body><h1>";
+	_body << msg;
+	_body << "</h1></body></html>";
 }
 
 void	Response::handle_get(void)
@@ -176,33 +205,6 @@ std::shared_ptr <Location> Response::find_location(void)
 	return ret;
 }
 
-void Response::set_error_page(int code)
-{
-	if (!(code >= 400 && code <= 599))
-		return;
-	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
-	{
-		generate_error_page(code);
-		return;
-	}
-
-	std::string page_path = _request->conf->_errorPages[code];
-	if (!Io::read_file(page_path, _body))
-	{
-		this->_status_code = 500;
-		generate_error_page(this->_status_code);
-	}
-}
-
-void Response::generate_error_page(int code)
-{
-	std::string msg = std::to_string(code) + " " + code_map[code];
-	_body << "<!DOCTYPE html><html><head><title>";
-	_body << msg;
-	_body << "</title></head><body><h1>";
-	_body << msg;
-	_body << "</h1></body></html>";
-}
 
 bool	Response::directory_index(std::string path)
 {

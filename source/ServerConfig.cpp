@@ -4,7 +4,6 @@ ServerConfig::ServerConfig(): _maxSize(0) {}
 
 ServerConfig::~ServerConfig()
 {
-	std::cout << "ServerConfig deconstructor called" << std::endl;
 }
 
 void ServerConfig::parseServerConfig(std::ifstream &configFile)
