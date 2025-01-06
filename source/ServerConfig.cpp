@@ -60,14 +60,18 @@ void ServerConfig::_addName(std::string &line)
 
 void ServerConfig::_addMaxSize(std::string &line)
 {
-	std::regex ptrn("^\\tclient_max_body_size\\s+(\\d+)\\s*;\\s*$");
+	std::regex ptrn("^\\tclient_max_body_size\\s+(\\d+)(m|M|k|K)?\\s*;\\s*$");
 	std::smatch match_res;
 
 	if (_maxSize)
 		throw std::runtime_error("_addMaxSize: Cannot add multiple client_max_body_size elements!");
 	if (!std::regex_match(line, match_res, ptrn))
-		throw std::runtime_error("_addMaxSize: Expected format: \"client_max_body_size [number];\"");
+		throw std::runtime_error("_addMaxSize: Expected format: \"client_max_body_size [number][optional: k/K/m/M];\"");
 	_maxSize = stringToType<size_t>(match_res[1]);
+	if (match_res[2] == "k" || match_res[2] == "K")
+		_maxSize *= 1024;
+	if (match_res[2] == "m" || match_res[2] == "M")
+		_maxSize *= 1048576;
 }
 
 void ServerConfig::_addErrorPage(std::string &line)
