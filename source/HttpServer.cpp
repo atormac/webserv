@@ -263,8 +263,10 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 	remove_fd(read_fd);
 	remove_fd(write_fd);
 
-	if (!Cgi::finish(client->pid, ref->cgi_from, ref->cgi_from))
+	if (!Cgi::finish(client->pid, ref->cgi_from, ref->cgi_from)) {
+		std::cerr << "[webserv] CGI error\n";
 		ref->resp->set_error(500);
+	}
 	_pids.erase(client->pid);
 
 	ref->resp->finish_cgi(client->req);

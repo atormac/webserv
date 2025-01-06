@@ -158,7 +158,7 @@ void Cgi::wait_kill(int pid)
 
 bool Cgi::finish(int pid, int *fd_from, int *fd_to)
 {
-	int	status;
+	int	status = 0;
 
 	close_pipes(fd_from);
 	close_pipes(fd_to);
