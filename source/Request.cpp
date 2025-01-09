@@ -173,7 +173,11 @@ bool Request::parse_header_field(size_t pos)
 
 	_headers[key] = value;
 	if (key == "content-length")
+	{
 		_content_len = std::stoi(value);
+		if (_content_len < 0)
+			return false;
+	}
 	if (key == "transfer-encoding" && value == "chunked")
 		_body_type = BODY_TYPE_CHUNKED;
 	if (key == "content-type" && value.find("multipart/form-data; boundary=") == 0)

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/04 13:36:52 by user             ###   ########.fr       */
+/*   Updated: 2025/01/09 16:18:01 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -48,7 +48,7 @@ class HttpServer {
 	void cull_clients(void);
 	bool insert_map(int const &k, std::shared_ptr<Client> const &v);
 	bool accept_client(int socket_fd);
-	bool add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl);
+	bool epoll_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl);
 
 	void handle_read(std::shared_ptr<Client> client);
 	void handle_write(std::shared_ptr<Client> client);
