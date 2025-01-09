@@ -35,6 +35,4 @@ void HttpServer::parseConfig(const std::string &filePath)
 				"ParseConfig: Unexpected value outside server block: " +
 				line);
 	}
-	std::cout << "Config parsing completed" << std::endl;
-	std::cout << "Number of sockets: " << _portsToSockets.size() << std::endl;
 }
