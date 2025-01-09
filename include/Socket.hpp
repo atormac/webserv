@@ -16,21 +16,21 @@
 
 class ServerConfig;
 
-class Socket
-{
-	private:
-			int _socketFd;
-			std::vector<std::shared_ptr<ServerConfig>> _servers;
-	public:
-			Socket(std::shared_ptr<ServerConfig> server);
-			Socket(ServerConfig *server);
-			~Socket();
-			
-			void close_socket(void);
-			void setSocketDescriptor(int socketFd);
-			void addServer(std::shared_ptr<ServerConfig> server);
-			const std::vector<std::shared_ptr<ServerConfig>> getServers() const;
+class Socket {
+    private:
+	int _socketFd;
+	std::vector<std::shared_ptr<ServerConfig> > _servers;
 
-			int  bind_socket(std::string ip, int port);
+    public:
+	Socket(std::shared_ptr<ServerConfig> server);
+	Socket(ServerConfig *server);
+	~Socket();
+
+	void close_socket(void);
+	void setSocketDescriptor(int socketFd);
+	void addServer(std::shared_ptr<ServerConfig> server);
+	const std::vector<std::shared_ptr<ServerConfig> > getServers() const;
+
+	int bind_socket(std::string ip, int port);
 };
 #endif

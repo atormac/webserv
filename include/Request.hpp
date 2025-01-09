@@ -3,11 +3,11 @@
 
 #include <HttpServer.hpp>
 
-#define URI_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
+#define URI_CHARS \
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="
 #define FIELD_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
-enum class State
-{
+enum class State {
 	StatusLine,
 	Header,
 	Body,
@@ -32,8 +32,7 @@ struct Part
 	std::string data;
 };
 
-enum
-{
+enum {
 	BODY_TYPE_NORMAL,
 	BODY_TYPE_CHUNKED,
 	BODY_TYPE_MULTIPART,
@@ -41,52 +40,50 @@ enum
 
 class ServerConfig;
 
-class Request
-{
-	private:
-			std::string _buffer;
-			size_t	    _bytes_read;
+class Request {
+    private:
+	std::string _buffer;
+	size_t _bytes_read;
 
-			int	    _body_type;
-			bool        _cgi;
+	int _body_type;
+	bool _cgi;
 
-			std::string _header_delim;
+	std::string _header_delim;
 
-			State	parse_header_cgi(void);
-		
-			State	parse_status_line(void);
-			State	parse_header(void);
-			bool	parse_header_field(size_t pos);
-			State	parse_body(void);
-			State	parse_body_cgi(void);
-			State	parse_chunked(void);
-			void	parse_multipart(void);
+	State parse_header_cgi(void);
 
-	public:
-			State _state;
-			int parser_error;
-			int _method;
-			std::string _method_str;
-			std::string _uri;
-			std::string _version;
-			std::string _query_string;
-			std::map<std::string, std::string> params;
-			std::map<std::string, std::string> _headers;
+	State parse_status_line(void);
+	State parse_header(void);
+	bool parse_header_field(size_t pos);
+	State parse_body(void);
+	State parse_body_cgi(void);
+	State parse_chunked(void);
+	void parse_multipart(void);
 
-			std::vector<Part> parts;
-			std::shared_ptr <ServerConfig> conf;
+    public:
+	State _state;
+	int parser_error;
+	int _method;
+	std::string _method_str;
+	std::string _uri;
+	std::string _version;
+	std::string _query_string;
+	std::map<std::string, std::string> params;
+	std::map<std::string, std::string> _headers;
 
+	std::vector<Part> parts;
+	std::shared_ptr<ServerConfig> conf;
 
-			size_t		_content_len;
-			std::string	_body;
+	size_t _content_len;
+	std::string _body;
 
-			Request();
-			Request(bool cgi);
-			~Request();
-			State parse(State s_start, char *data, size_t size);
-			void dump();
-			static bool	is_method_allowed(std::vector <std::string>allowed, std::string method);
+	Request();
+	Request(bool cgi);
+	~Request();
+	State parse(State s_start, char *data, size_t size);
+	void dump();
+	static bool is_method_allowed(std::vector<std::string> allowed,
+				      std::string method);
 };
-
 
 #endif

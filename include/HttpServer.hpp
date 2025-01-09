@@ -31,46 +31,44 @@ class Response;
 #include <Io.hpp>
 #include <set>
 
-class HttpServer
-{
-	private:
-			int	_epoll_fd;
-			int	_client_count;
+class HttpServer {
+    private:
+	int _epoll_fd;
+	int _client_count;
 
-			std::map<std::string, std::shared_ptr<Socket>> _portsToSockets;
-			std::map<int, std::shared_ptr<Socket>> _socketFdToSockets;
+	std::map<std::string, std::shared_ptr<Socket> > _portsToSockets;
+	std::map<int, std::shared_ptr<Socket> > _socketFdToSockets;
 
-			std::unordered_map<int, std::shared_ptr<Client>> _clients;
-			std::unordered_map<int, std::shared_ptr<Client>> _cgi_to_client;
+	std::unordered_map<int, std::shared_ptr<Client> > _clients;
+	std::unordered_map<int, std::shared_ptr<Client> > _cgi_to_client;
 
-			std::set<int> _pids;
-	
-			void	remove_fd(int fd);
-			void	cull_clients(void);
-			bool	insert_map(int const& k, std::shared_ptr <Client> const& v);
-			bool	accept_client(int socket_fd);
-			bool	add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl);
+	std::set<int> _pids;
 
-			void 	handle_read(std::shared_ptr <Client> client);
-			void 	handle_write(std::shared_ptr <Client> client);
+	void remove_fd(int fd);
+	void cull_clients(void);
+	bool insert_map(int const &k, std::shared_ptr<Client> const &v);
+	bool accept_client(int socket_fd);
+	bool add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl);
 
-			void	finish_cgi_client(std::shared_ptr <Client> client);
-			void	add_cgi_fds(std::shared_ptr <Client> current);
+	void handle_read(std::shared_ptr<Client> client);
+	void handle_write(std::shared_ptr<Client> client);
 
+	void finish_cgi_client(std::shared_ptr<Client> client);
+	void add_cgi_fds(std::shared_ptr<Client> current);
 
-			void	find_config(epoll_event &event);
-			void 	set_config(std::shared_ptr <Client> client, std::shared_ptr <Request> req);
+	void find_config(epoll_event &event);
+	void set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req);
 
-	public:
-			HttpServer();			
-			~HttpServer();			
+    public:
+	HttpServer();
+	~HttpServer();
 
-			void parseConfig(const std::string &filePath);
-			void close_server(void);
-			bool init();
-			void epoll(void);
+	void parseConfig(const std::string &filePath);
+	void close_server(void);
+	bool init();
+	void epoll(void);
 
-			static void signal_handler(int code);
+	static void signal_handler(int code);
 };
 
 #endif

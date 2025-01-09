@@ -3,8 +3,7 @@
 
 #include <HttpServer.hpp>
 
-enum
-{
+enum {
 	STATUS_OK = 200,
 	STATUS_CREATED = 201,
 	STATUS_BAD_REQUEST = 400,
@@ -14,12 +13,7 @@ enum
 	STATUS_TOO_LARGE = 413,
 };
 
-enum
-{
-	METHOD_GET,
-	METHOD_POST,
-	METHOD_DELETE
-};
+enum { METHOD_GET, METHOD_POST, METHOD_DELETE };
 
 #define TIMEOUT_SECONDS (1 * 60)
 #define CGI_TIMEOUT (5 * 60)
