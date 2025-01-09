@@ -23,7 +23,6 @@ void HttpServer::close_server(void)
 	if (this->_epoll_fd == -1)
 		return;
 	this->_clients.clear();
-	this->_cgi_to_client.clear();
 	for (const auto &e : this->_socketFdToSockets)
 		e.second->close_socket();
 	for (const auto &pid : this->_pids)
@@ -80,12 +79,18 @@ void HttpServer::cull_clients(void)
 	time_t now;
 	std::time(&now);
 
+	std::vector <int> timedout;
+
 	for (auto const &cl : _clients)
 	{
 		if (cl.second->has_timed_out(now))
 		{
-			remove_fd(cl.first);
+			timedout.push_back(cl.first);
 		}
+	}
+	for (int i : timedout)
+	{
+		remove_fd(i);
 	}
 }
 
@@ -192,7 +197,6 @@ void HttpServer::remove_fd(int fd)
 		perror("epoll_ctl");
 	}
 	_clients.erase(fd);
-	_cgi_to_client.erase(fd);
 }
 
 void HttpServer::handle_read(std::shared_ptr<Client> client)
@@ -297,12 +301,10 @@ void HttpServer::add_cgi_fds(std::shared_ptr<Client> cl)
 	write_cgi->response = cl->req->_body;
 
 	epoll_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
-	_cgi_to_client.emplace(wfd, cl);
 
 	std::shared_ptr read_cgi = std::make_shared<Client>(*this, rfd, pid, cl);
 
 	epoll_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
-	_cgi_to_client.emplace(rfd, cl);
 }
 
 void HttpServer::set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req)

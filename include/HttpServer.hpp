@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/09 16:21:24 by atorma           ###   ########.fr       */
+/*   Updated: 2025/01/09 17:23:45 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -40,7 +40,6 @@ class HttpServer {
 	std::map<int, std::shared_ptr<Socket> > _socketFdToSockets;
 
 	std::unordered_map<int, std::shared_ptr<Client> > _clients;
-	std::unordered_map<int, std::shared_ptr<Client> > _cgi_to_client;
 
 	std::set<int> _pids;
 
