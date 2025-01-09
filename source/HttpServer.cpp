@@ -120,6 +120,8 @@ void HttpServer::epoll(void)
 				continue;
 			}
 			std::shared_ptr cl = _clients[e.data.fd];
+			if (cl == nullptr)
+				continue;
 
 			cl->update_time();
 			//on pipe close EPOLLHUP means EOF here
@@ -170,7 +172,7 @@ bool HttpServer::epoll_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 {
 	struct epoll_event ev;
 
-	ev.events = EPOLLET | mask;
+	ev.events = EPOLLET | EPOLLONESHOT | mask;
 	ev.data.fd = fd;
 
 	if (epoll_ctl(this->_epoll_fd, ctl, fd, &ev) == -1)
