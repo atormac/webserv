@@ -137,6 +137,7 @@ void Response::set_error_page(int code)
 {
 	if (!(code >= 400 && code <= 599))
 		return;
+	_body.str("");
 	_body.clear();
 	_additional_headers["Content-Type"] = "text/html";
 
