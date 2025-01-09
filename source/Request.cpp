@@ -170,8 +170,11 @@ bool Request::parse_header_field(size_t pos)
 
 State Request::parse_body(void)
 {
-	if (_method != METHOD_POST)
-		return State::Ok;
+	if (_headers.count("host") == 0)
+	{
+		this->parser_error = STATUS_BAD_REQUEST;
+		return State::Error;
+	}
 	if (conf && _buffer.size() > conf->getMaxSize())
 	{
 		this->parser_error = STATUS_TOO_LARGE;
