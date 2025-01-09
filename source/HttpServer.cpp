@@ -168,7 +168,6 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 {
 	struct epoll_event ev;
 
-	std::memset(&ev, 0, sizeof(epoll_event));
 	ev.events = EPOLLET | mask;
 	ev.data.fd = fd;
 
