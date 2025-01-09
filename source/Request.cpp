@@ -263,8 +263,10 @@ void Request::parse_multipart(void)
 		if ((end = _buffer.find(boundary, pos += boundary.size())) ==
 		    std::string::npos)
 			break;
-		std::string part_buf =
-			_buffer.substr(pos, end - pos); // - 2); //Extra CRLF ?
+		size_t buf_size = end - pos;
+		if (end - pos >= 2)
+			buf_size -= 2;
+		std::string part_buf = _buffer.substr(pos, buf_size);
 		pos = end;
 		if ((header_end = part_buf.find("\r\n\r\n")) == std::string::npos)
 			continue;
@@ -284,7 +286,6 @@ void Request::parse_multipart(void)
 		std::cout << "part.data.size: " << part.data.size() << std::endl;
 		this->parts.push_back(part);
 	}
-	//std::cout << "MULTIPART REQUEST:\n" << _buffer << std::endl;
 	_state = State::Ok;
 	_body.clear();
 	_buffer.clear();
