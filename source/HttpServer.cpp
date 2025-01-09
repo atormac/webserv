@@ -161,10 +161,10 @@ bool HttpServer::accept_client(int _socket_fd)
 	std::shared_ptr cl = std::make_shared<Client>(*this, client_fd, _socket_fd,
 						      inet_ntoa(peer_addr.sin_addr));
 
-	return add_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
+	return epoll_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
 }
 
-bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
+bool HttpServer::epoll_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 {
 	struct epoll_event ev;
 
@@ -214,7 +214,7 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 			finish_cgi_client(client);
 			return;
 		}
-		add_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
+		epoll_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
 		return;
 	}
 
@@ -227,7 +227,7 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 		mask = EPOLLOUT;
 		client->req->dump();
 	}
-	add_fd(client->fd, EPOLL_CTL_MOD, mask, client);
+	epoll_fd(client->fd, EPOLL_CTL_MOD, mask, client);
 }
 
 void HttpServer::handle_write(std::shared_ptr<Client> client)
@@ -254,7 +254,7 @@ void HttpServer::handle_write(std::shared_ptr<Client> client)
 	if (bytes_written < size)
 	{
 		client->response.erase(0, bytes_written);
-		add_fd(client->fd, EPOLL_CTL_MOD, EPOLLOUT, client);
+		epoll_fd(client->fd, EPOLL_CTL_MOD, EPOLLOUT, client);
 		return;
 	}
 	remove_fd(client->fd);
@@ -279,7 +279,7 @@ void HttpServer::finish_cgi_client(std::shared_ptr<Client> client)
 	ref->resp->finish_cgi(client->req);
 	ref->response = ref->resp->buffer.str();
 
-	add_fd(ref->fd, EPOLL_CTL_MOD, EPOLLOUT, ref);
+	epoll_fd(ref->fd, EPOLL_CTL_MOD, EPOLLOUT, ref);
 }
 
 //garbage code
@@ -296,12 +296,12 @@ void HttpServer::add_cgi_fds(std::shared_ptr<Client> cl)
 	std::shared_ptr write_cgi = std::make_shared<Client>(*this, wfd, pid, cl);
 	write_cgi->response = cl->req->_body;
 
-	add_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
+	epoll_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
 	_cgi_to_client.emplace(wfd, cl);
 
 	std::shared_ptr read_cgi = std::make_shared<Client>(*this, rfd, pid, cl);
 
-	add_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
+	epoll_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
 	_cgi_to_client.emplace(rfd, cl);
 }
 
