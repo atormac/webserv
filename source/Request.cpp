@@ -275,7 +275,7 @@ void Request::parse_multipart(void)
 		part.name = Str::get_key_data(part_buf, "name");
 		part.filename = Str::get_key_data(part_buf, "filename");
 		part.content_type = Str::safe_substr(part_buf, "Content-Type: ", CRLF);
-		if (part.data.empty())
+		if (part.filename.empty() || part.data.empty())
 			continue;
 
 		std::cout << "part.name: " << part.name << std::endl;
