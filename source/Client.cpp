@@ -68,8 +68,6 @@ bool Client::has_timed_out(time_t now)
 
 void Client::cleanup_child(void)
 {
-	if (!this->instance)
-		return;
 	this->instance->close_server();
 	close(this->fd);
 }

@@ -182,12 +182,21 @@ void Response::handle_get(void)
 
 	if (flags & FS_ISFILE)
 	{
-		if (Io::read_file(filename, _body))
-			_status_code = STATUS_OK;
+		if (!Io::read_file(filename, _body))
+		{
+			_status_code = STATUS_INTERNAL_ERROR;
+			return;
+		}
+		_status_code = STATUS_OK;
 	} else if (flags & FS_ISDIR)
 	{
-		if (_request->_uri.back() != '/' || !_location->_autoIndex)
+		if (_request->_uri.back() != '/')
 			return;
+		if (!_location->_autoIndex)
+		{
+			_status_code = STATUS_INTERNAL_ERROR;
+			return;
+		}
 		if (directory_index(filename))
 			_status_code = STATUS_OK;
 	}
@@ -197,10 +206,13 @@ void Response::handle_post(void)
 {
 	for (auto &part : _request->parts)
 	{
-		if (Io::write_file(_location->_uploadPath + "/" + part.filename,
-				   part.data))
-			_status_code = STATUS_OK;
+		if (!Io::write_file(_location->_uploadPath + "/" + part.filename, part.data))
+		{
+			_status_code = STATUS_INTERNAL_ERROR;
+			return;
+		}
 	}
+	_status_code = STATUS_OK;
 }
 
 void Response::handle_delete(void)
@@ -251,7 +263,10 @@ bool Response::directory_index(std::string path)
 
 	dir = opendir(path.c_str());
 	if (!dir)
+	{
+		_status_code = STATUS_INTERNAL_ERROR;
 		return false;
+	}
 	_body << "<html><head><title>Index</title></head><body><h1>Index of "
 	      << _request->_uri << "</h1><ul>";
 
