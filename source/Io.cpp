@@ -42,7 +42,7 @@ bool Io::read_file(const std::string &filename, std::ostringstream &out)
 
 bool Io::write_file(const std::string &filename, const std::string &content)
 {
-	std::ofstream file(filename, std::ios::out | std::ios::binary | std::ios::app);
+	std::ofstream file(filename, std::ios::out | std::ios::binary | std::ios::trunc);
 	if (!file || file.fail())
 		return false;
 	file.write(content.data(), content.size());
