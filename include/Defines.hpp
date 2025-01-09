@@ -17,7 +17,6 @@ enum {
 enum { METHOD_GET, METHOD_POST, METHOD_DELETE };
 
 #define TIMEOUT_SECONDS (1 * 60)
-#define CGI_TIMEOUT (5 * 60)
 
 #define READ 0
 #define WRITE 1

@@ -84,14 +84,10 @@ void HttpServer::cull_clients(void)
 	for (auto const &cl : _clients)
 	{
 		if (cl.second->has_timed_out(now))
-		{
 			timedout.push_back(cl.first);
-		}
 	}
 	for (int i : timedout)
-	{
 		remove_fd(i);
-	}
 }
 
 void HttpServer::epoll(void)
@@ -172,7 +168,7 @@ bool HttpServer::epoll_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 {
 	struct epoll_event ev;
 
-	ev.events = EPOLLET | EPOLLONESHOT | mask;
+	ev.events = EPOLLET | mask;
 	ev.data.fd = fd;
 
 	if (epoll_ctl(this->_epoll_fd, ctl, fd, &ev) == -1)
