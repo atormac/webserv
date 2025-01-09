@@ -119,9 +119,6 @@ void HttpServer::epoll(void)
 				accept_client(e.data.fd);
 				continue;
 			}
-			if (this->_clients.count(e.data.fd) == 0)
-				continue;
-
 			std::shared_ptr cl = _clients[e.data.fd];
 
 			cl->update_time();
