@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dynamic Server</title>
-    <script src="script.js" defer></script>
+    <title>File Upload</title>
 </head>
 <body>
-    <h1>Create Your Profile</h1>
+    <h1>Select files</h1>
     <form action="/submit" method="POST" enctype="multipart/form-data">
-        <label for="nickname">Nickname:</label>
-        <input type="text" id="nickname" name="nickname"><br><br>
+        <label for="file1">File1:</label>
+        <input type="text" id="file1" name="file1"><br><br>
 
         <label for="profilepic">Profile Picture:</label>
         <input type="file" id="profilepic" name="profilepic" accept="image/*"><br><br>

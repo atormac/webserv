@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/09 16:18:01 by atorma           ###   ########.fr       */
+/*   Updated: 2025/01/09 16:21:24 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -56,7 +56,6 @@ class HttpServer {
 	void finish_cgi_client(std::shared_ptr<Client> client);
 	void add_cgi_fds(std::shared_ptr<Client> current);
 
-	void find_config(epoll_event &event);
 	void set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req);
 
     public:

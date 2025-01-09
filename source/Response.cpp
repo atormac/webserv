@@ -205,10 +205,12 @@ void Response::handle_get(void)
 
 void Response::handle_post(void)
 {
-	std::string upload_dir = _location->_rootPath + _location->_uploadPath;
 	for (auto &part : _request->parts)
 	{
-		if (!Io::write_file(upload_dir + "/" + part.filename, part.data))
+		std::string path = _location->_uploadPath + "/" + part.filename;
+		std::cerr << "path: " << path << "\n";
+
+		if (!Io::write_file(path, part.data))
 		{
 			_status_code = STATUS_INTERNAL_ERROR;
 			return;
