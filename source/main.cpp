@@ -19,7 +19,13 @@ int main(int argc, char **argv)
 	}
 
 	server.init();
-	server.epoll();
+
+	try  {
+		server.epoll();
+	} catch (const std::exception &e)
+	{
+		std::cerr << "Error thrown " << e.what() << std::endl;
+	}
 	server.close_server();
 
 	return 0;

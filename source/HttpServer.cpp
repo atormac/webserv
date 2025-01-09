@@ -173,7 +173,6 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 
 	if (epoll_ctl(this->_epoll_fd, ctl, fd, &ev) == -1)
 	{
-		perror("epoll_ctl");
 		remove_fd(fd);
 		return false;
 	}

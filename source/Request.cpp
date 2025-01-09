@@ -14,6 +14,7 @@ Request::Request()
 	this->_cgi = false;
 	this->conf = nullptr;
 	this->_header_delim = CRLF;
+	this->_total_read = 0;
 }
 
 Request::Request(bool cgi)
@@ -31,6 +32,7 @@ State Request::parse(State s_start, char *data, size_t size)
 {
 	_buffer.append(data, size);
 	_bytes_read = size;
+	_total_read += size;
 
 	if (_state < s_start)
 		_state = s_start;
@@ -78,6 +80,11 @@ State Request::parse(State s_start, char *data, size_t size)
 
 State Request::parse_status_line(void)
 {
+	if (_total_read >= (8 * 1024))
+	{
+		this->parser_error = STATUS_BAD_REQUEST;
+		return State::Error;
+	}
 	size_t pos = _buffer.find(CRLF);
 
 	if (pos == std::string::npos)
@@ -117,6 +124,12 @@ State Request::parse_status_line(void)
 
 State Request::parse_header(void)
 {
+	if (_total_read >= (8 * 1024))
+	{
+		this->parser_error = STATUS_BAD_REQUEST;
+		return State::Error;
+	}
+
 	size_t pos = _buffer.find(_header_delim);
 
 	if (pos == std::string::npos)
@@ -170,8 +183,11 @@ bool Request::parse_header_field(size_t pos)
 
 State Request::parse_body(void)
 {
-	if (_method != METHOD_POST)
-		return State::Ok;
+	if (_headers.count("host") == 0)
+	{
+		this->parser_error = STATUS_BAD_REQUEST;
+		return State::Error;
+	}
 	if (conf && _buffer.size() > conf->getMaxSize())
 	{
 		this->parser_error = STATUS_TOO_LARGE;
