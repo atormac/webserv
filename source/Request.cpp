@@ -253,9 +253,9 @@ void Request::parse_multipart(void)
 
 	if (!std::regex_match(_headers["content-type"], match_res, ptrn))
 		std::cout << "HANDLE ERROR HERE" << std::endl;
-	std::string boundary = ""; //= "--";
+	std::string boundary = "--";
 	boundary += match_res[1];
-	//boundary += "\r\n";
+	boundary += "\r\n";
 
 	size_t pos = 0, end = 0, header_end = 0;
 	while ((pos = _buffer.find(boundary, pos)) != std::string::npos)
