@@ -40,8 +40,8 @@ class Client {
 
 	Client();
 	~Client();
-	Client(HttpServer *inst, int client_fd, int socket_fd, std::string ip);
-	Client(HttpServer *inst, int client_fd, int pid, std::shared_ptr<Client> ref_ptr);
+	Client(HttpServer &inst, int client_fd, int socket_fd, std::string ip);
+	Client(HttpServer &inst, int client_fd, int pid, std::shared_ptr<Client> ref_ptr);
 
 	void update_time(void);
 	bool has_timed_out(time_t now);

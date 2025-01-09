@@ -100,9 +100,7 @@ int Response::has_errors(void)
 	}
 
 	if (!Request::is_method_allowed(_location->_methods, _request->_method_str))
-	{
 		return STATUS_METHOD_NOT_ALLOWED;
-	}
 	return 0;
 }
 
@@ -140,6 +138,7 @@ void Response::set_error_page(int code)
 	if (!(code >= 400 && code <= 599))
 		return;
 	_body.clear();
+	_additional_headers["Content-Type"] = "text/html";
 
 	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
 	{
@@ -170,9 +169,14 @@ void Response::handle_get(void)
 	std::string filename = _location->_rootPath + _request->_uri;
 	int flags = Io::file_stat(filename);
 
-	if (!flags || !(flags & FS_READ))
+	if (!flags)
 	{
 		_status_code = STATUS_NOT_FOUND;
+		return;
+	}
+	if (!(flags & FS_READ))
+	{
+		_status_code = STATUS_FORBIDDEN;
 		return;
 	}
 

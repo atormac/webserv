@@ -158,7 +158,7 @@ bool HttpServer::accept_client(int _socket_fd)
 		close(client_fd);
 		return false;
 	}
-	std::shared_ptr cl = std::make_shared<Client>(this, client_fd, _socket_fd,
+	std::shared_ptr cl = std::make_shared<Client>(*this, client_fd, _socket_fd,
 						      inet_ntoa(peer_addr.sin_addr));
 
 	return add_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
@@ -173,7 +173,7 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 
 	if (epoll_ctl(this->_epoll_fd, ctl, fd, &ev) == -1)
 	{
-		std::cerr << "epoll_ctl accept failed" << std::endl;
+		perror("epoll_ctl");
 		remove_fd(fd);
 		return false;
 	}
@@ -190,8 +190,7 @@ void HttpServer::remove_fd(int fd)
 		return;
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
 	{
-		std::cerr << "epoll_ctl error fd: " << fd << std::endl;
-		perror("remove_fd epoll_ctl");
+		perror("epoll_ctl");
 	}
 	_clients.erase(fd);
 	_cgi_to_client.erase(fd);
@@ -295,13 +294,13 @@ void HttpServer::add_cgi_fds(std::shared_ptr<Client> cl)
 
 	std::cerr << "[webserv] CGI initialized: " << rfd << "/" << wfd << std::endl;
 
-	std::shared_ptr write_cgi = std::make_shared<Client>(this, wfd, pid, cl);
+	std::shared_ptr write_cgi = std::make_shared<Client>(*this, wfd, pid, cl);
 	write_cgi->response = cl->req->_body;
 
 	add_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
 	_cgi_to_client.emplace(wfd, cl);
 
-	std::shared_ptr read_cgi = std::make_shared<Client>(this, rfd, pid, cl);
+	std::shared_ptr read_cgi = std::make_shared<Client>(*this, rfd, pid, cl);
 
 	add_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
 	_cgi_to_client.emplace(rfd, cl);
