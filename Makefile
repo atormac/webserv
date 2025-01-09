@@ -23,6 +23,8 @@ target debug_flags: CXXFLAGS += -gdwarf-4 -fstandalone-debug
 
 all: $(NAME)
 
+bonus: all
+
 $(NAME): $(OBJECTS)
 	$(CXX) $(LDFLAGS) $(CXXFLAGS) -o $@ $^
 
@@ -53,4 +55,4 @@ asan:
 run: asan
 	./webserv
 
-.PHONY: all re clean fclean asan asan_flags debug debug_flags run
+.PHONY: all bonus re clean fclean asan asan_flags debug debug_flags run
