@@ -12,12 +12,12 @@ bool Io::set_nonblocking(int fd)
 	return true;
 }
 
-int	Io::file_stat(const std::string &filename)
+int Io::file_stat(const std::string &filename)
 {
 	int flags = 0;
 	struct stat sb;
 
-	if(stat(filename.c_str(), &sb) != 0)
+	if (stat(filename.c_str(), &sb) != 0)
 		return flags;
 	if (S_ISREG(sb.st_mode))
 		flags |= FS_ISFILE;
@@ -30,7 +30,7 @@ int	Io::file_stat(const std::string &filename)
 	return flags;
 }
 
-bool	Io::read_file(const std::string &filename, std::ostringstream &out)
+bool Io::read_file(const std::string &filename, std::ostringstream &out)
 {
 	std::ifstream file(filename, std::ios::binary);
 	if (!file || file.fail())
@@ -40,7 +40,7 @@ bool	Io::read_file(const std::string &filename, std::ostringstream &out)
 	return true;
 }
 
-bool	Io::write_file(const std::string &filename, const std::string &content)
+bool Io::write_file(const std::string &filename, const std::string &content)
 {
 	std::ofstream file(filename, std::ios::out | std::ios::binary | std::ios::app);
 	if (!file || file.fail())

@@ -1,9 +1,8 @@
 #include <HttpServer.hpp>
 
-std::unordered_map<std::string, int> method_map =
-			        {{ "GET", METHOD_GET },
-			        { "POST", METHOD_POST },
-			        { "DELETE", METHOD_DELETE }};
+std::unordered_map<std::string, int> method_map = { { "GET", METHOD_GET },
+						    { "POST", METHOD_POST },
+						    { "DELETE", METHOD_DELETE } };
 
 Request::Request()
 {
@@ -17,13 +16,16 @@ Request::Request()
 	this->_header_delim = CRLF;
 }
 
-Request::Request(bool cgi) : Request()
+Request::Request(bool cgi)
+	: Request()
 {
 	this->_cgi = cgi;
 	this->_header_delim = "\n\n";
 }
 
-Request::~Request() {}
+Request::~Request()
+{
+}
 
 State Request::parse(State s_start, char *data, size_t size)
 {
@@ -36,35 +38,35 @@ State Request::parse(State s_start, char *data, size_t size)
 	{
 		switch (_state)
 		{
-			case State::PartialStatus:
-			case State::StatusLine:
-				_state = parse_status_line();
-				break;
-			case State::PartialHeader:
-			case State::Header:
-				_state = parse_header();
-				break;
-			case State::PartialBody:
-			case State::Body:
-				_state = parse_body();
-				break;
-			case State::CgiHeader:
-				_state = parse_header_cgi();
-				break;
-			case State::PartialCgiBody:
-			case State::CgiBody:
-				_state = parse_body_cgi();
-				break;
-			case State::PartialChunked:
-			case State::Chunked:
-				_state = parse_chunked();
-				break;
-			case State::MultiPart:
-				parse_multipart();
-				break;
-			default:
-				_state = State::Error;
-				break;
+		case State::PartialStatus:
+		case State::StatusLine:
+			_state = parse_status_line();
+			break;
+		case State::PartialHeader:
+		case State::Header:
+			_state = parse_header();
+			break;
+		case State::PartialBody:
+		case State::Body:
+			_state = parse_body();
+			break;
+		case State::CgiHeader:
+			_state = parse_header_cgi();
+			break;
+		case State::PartialCgiBody:
+		case State::CgiBody:
+			_state = parse_body_cgi();
+			break;
+		case State::PartialChunked:
+		case State::Chunked:
+			_state = parse_chunked();
+			break;
+		case State::MultiPart:
+			parse_multipart();
+			break;
+		default:
+			_state = State::Error;
+			break;
 		}
 		if (_state >= State::PartialStatus && _state <= State::PartialBody)
 			break;
@@ -74,14 +76,14 @@ State Request::parse(State s_start, char *data, size_t size)
 	return _state;
 }
 
-
 State Request::parse_status_line(void)
 {
 	size_t pos = _buffer.find(CRLF);
 
 	if (pos == std::string::npos)
 	{
-		if (_buffer.rfind("GET ") != 0 && _buffer.rfind("POST ") != 0 && _buffer.rfind("DELETE") != 0)
+		if (_buffer.rfind("GET ") != 0 && _buffer.rfind("POST ") != 0 &&
+		    _buffer.rfind("DELETE") != 0)
 			return State::Error;
 		return State::PartialStatus;
 	}
@@ -94,15 +96,16 @@ State Request::parse_status_line(void)
 	_uri = Str::url_decode(m[2]);
 	_version = m[3];
 
-	if (method_map.count(_method_str) == 0) {
+	if (method_map.count(_method_str) == 0)
+	{
 		this->parser_error = STATUS_METHOD_NOT_ALLOWED;
 		return State::Error;
 	}
 	if (_uri.at(0) != '/' || _version != "HTTP/1.1")
 		return State::Error;
 	size_t pos_q = _uri.find("?");
-	if (pos_q != std::string::npos) {
-
+	if (pos_q != std::string::npos)
+	{
 		_query_string = _uri.substr(pos_q + 1, _uri.size());
 		_uri.erase(pos_q, _uri.size());
 	}
@@ -114,7 +117,7 @@ State Request::parse_status_line(void)
 
 State Request::parse_header(void)
 {
-        size_t pos = _buffer.find(_header_delim);
+	size_t pos = _buffer.find(_header_delim);
 
 	if (pos == std::string::npos)
 		return State::PartialHeader;
@@ -128,7 +131,7 @@ State Request::parse_header(void)
 
 State Request::parse_header_cgi(void)
 {
-        size_t pos = _buffer.find(_header_delim);
+	size_t pos = _buffer.find(_header_delim);
 
 	if (pos == std::string::npos)
 		return State::CgiBody;
@@ -152,10 +155,12 @@ bool Request::parse_header_field(size_t pos)
 		return false;
 	std::string key = m[1];
 	std::string value = m[2];
-	std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c){ return std::tolower(c); });
+	std::transform(key.begin(), key.end(), key.begin(),
+		       [](unsigned char c) { return std::tolower(c); });
 
 	_headers[key] = value;
-	if (key == "content-length") _content_len = std::stoi(value);
+	if (key == "content-length")
+		_content_len = std::stoi(value);
 	if (key == "transfer-encoding" && value == "chunked")
 		_body_type = BODY_TYPE_CHUNKED;
 	if (key == "content-type" && value.find("multipart/form-data; boundary=") == 0)
@@ -163,7 +168,7 @@ bool Request::parse_header_field(size_t pos)
 	return true;
 }
 
-State	Request::parse_body(void)
+State Request::parse_body(void)
 {
 	if (_method != METHOD_POST)
 		return State::Ok;
@@ -177,7 +182,7 @@ State	Request::parse_body(void)
 	if (_headers.count("content-length") && _buffer.size() < _content_len)
 		return State::PartialBody;
 	if (_body_type == BODY_TYPE_MULTIPART)
-		return  State::MultiPart;
+		return State::MultiPart;
 	_body = _buffer.substr(0, _content_len);
 	_buffer.clear();
 	return State::Ok;
@@ -194,8 +199,7 @@ State Request::parse_body_cgi(void)
 		_body += _buffer;
 		_buffer.clear();
 		return State::PartialCgiBody;
-	}
-	else if (_body.size() < _content_len)
+	} else if (_body.size() < _content_len)
 	{
 		_body += _buffer;
 		_buffer.clear();
@@ -205,7 +209,7 @@ State Request::parse_body_cgi(void)
 	return State::Ok;
 }
 
-State	Request::parse_chunked(void)
+State Request::parse_chunked(void)
 {
 	if (_bytes_read == 0)
 		return State::Ok;
@@ -222,7 +226,7 @@ State	Request::parse_chunked(void)
 	return chunk_len ? State::Chunked : State::Ok;
 }
 
-void	Request::parse_multipart(void)
+void Request::parse_multipart(void)
 {
 	std::regex ptrn(".*boundary=(.*)");
 	std::smatch match_res;
@@ -236,15 +240,17 @@ void	Request::parse_multipart(void)
 	size_t pos = 0, end = 0, header_end = 0;
 	while ((pos = _buffer.find(boundary, pos)) != std::string::npos)
 	{
-		if ((end = _buffer.find(boundary, pos += boundary.size())) == std::string::npos)
+		if ((end = _buffer.find(boundary, pos += boundary.size())) ==
+		    std::string::npos)
 			break;
-		std::string part_buf = _buffer.substr(pos, end - pos); // - 2); //Extra CRLF ?
+		std::string part_buf =
+			_buffer.substr(pos, end - pos); // - 2); //Extra CRLF ?
 		pos = end;
 		if ((header_end = part_buf.find("\r\n\r\n")) == std::string::npos)
 			continue;
 
 		struct Part part;
-		part.data = part_buf.substr(header_end + 4);	
+		part.data = part_buf.substr(header_end + 4);
 		part_buf.erase(header_end);
 		part.name = Str::get_key_data(part_buf, "name");
 		part.filename = Str::get_key_data(part_buf, "filename");
@@ -265,7 +271,7 @@ void	Request::parse_multipart(void)
 	std::cout << "multipart parsed.\n";
 }
 
-void	Request::dump(void)
+void Request::dump(void)
 {
 	std::cout << "[webserv] " << _method_str << " | ";
 	std::cout << _uri << " | " << _query_string << " | ";
@@ -282,10 +288,11 @@ void	Request::dump(void)
 	*/
 }
 
-bool	Request::is_method_allowed(std::vector <std::string>allowed, std::string method)
+bool Request::is_method_allowed(std::vector<std::string> allowed, std::string method)
 {
-	if (std::find(allowed.begin(), allowed.end(), method) == allowed.end()) {
-			return false;
+	if (std::find(allowed.begin(), allowed.end(), method) == allowed.end())
+	{
+		return false;
 	}
 	return true;
 }

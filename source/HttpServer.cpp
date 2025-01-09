@@ -6,7 +6,9 @@ HttpServer::HttpServer()
 	this->_client_count = 0;
 }
 
-HttpServer::~HttpServer() {}
+HttpServer::~HttpServer()
+{
+}
 
 int signo = 0;
 
@@ -22,7 +24,7 @@ void HttpServer::close_server(void)
 		return;
 	this->_clients.clear();
 	this->_cgi_to_client.clear();
-	for(const auto& e : this->_socketFdToSockets)
+	for (const auto &e : this->_socketFdToSockets)
 		e.second->close_socket();
 	for (const auto &pid : this->_pids)
 		Cgi::wait_kill(pid);
@@ -35,19 +37,21 @@ bool HttpServer::init()
 	if (signal(SIGINT, HttpServer::signal_handler) == SIG_ERR)
 		return false;
 
-	for (std::map<std::string, std::shared_ptr<Socket>>::iterator itr = _portsToSockets.begin(); itr != _portsToSockets.end(); itr++)
-	{	
+	for (std::map<std::string, std::shared_ptr<Socket> >::iterator itr =
+		     _portsToSockets.begin();
+	     itr != _portsToSockets.end(); itr++)
+	{
 		std::regex ptrn("(.*):(.*)");
 		std::smatch match_res;
 		std::regex_match(itr->first, match_res, ptrn);
 		std::string ip = match_res[1];
 		int port = stringToType<int>(match_res[2]);
-		
+
 		int socketFd = itr->second->bind_socket(ip, port);
 		if (socketFd < 0)
 			return false;
 		itr->second->setSocketDescriptor(socketFd);
-		_socketFdToSockets.insert({socketFd, itr->second});
+		_socketFdToSockets.insert({ socketFd, itr->second });
 	}
 
 	_epoll_fd = epoll_create(512);
@@ -56,7 +60,7 @@ bool HttpServer::init()
 		perror("epoll_create");
 		return false;
 	}
-	for(const auto &so : _socketFdToSockets)
+	for (const auto &so : _socketFdToSockets)
 	{
 		struct epoll_event ev;
 		ev.events = EPOLLIN;
@@ -76,9 +80,10 @@ void HttpServer::cull_clients(void)
 	time_t now;
 	std::time(&now);
 
-	for (auto const &cl : _clients) {
-
-		if (cl.second->has_timed_out(now)) {
+	for (auto const &cl : _clients)
+	{
+		if (cl.second->has_timed_out(now))
+		{
 			remove_fd(cl.first);
 		}
 	}
@@ -118,7 +123,8 @@ void HttpServer::epoll(void)
 			//on pipe close EPOLLHUP means EOF here
 			//mark the event as OK to catch errors directly from read/write
 			//calls
-			if (e.events & EPOLLHUP) e.events |= EPOLLIN;
+			if (e.events & EPOLLHUP)
+				e.events |= EPOLLIN;
 
 			if (e.events & EPOLLIN)
 				handle_read(cl);
@@ -152,7 +158,8 @@ bool HttpServer::accept_client(int _socket_fd)
 		close(client_fd);
 		return false;
 	}
-	std::shared_ptr cl = std::make_shared<Client>(this, client_fd, _socket_fd, inet_ntoa(peer_addr.sin_addr));
+	std::shared_ptr cl = std::make_shared<Client>(this, client_fd, _socket_fd,
+						      inet_ntoa(peer_addr.sin_addr));
 
 	return add_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
 }
@@ -171,7 +178,8 @@ bool HttpServer::add_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 		remove_fd(fd);
 		return false;
 	}
-	if (ctl == EPOLL_CTL_ADD) {
+	if (ctl == EPOLL_CTL_ADD)
+	{
 		_clients[fd] = cl;
 	}
 	return true;
@@ -181,7 +189,8 @@ void HttpServer::remove_fd(int fd)
 {
 	if (fd < 0 || _clients.count(fd) == 0)
 		return;
-	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1) {
+	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
+	{
 		std::cerr << "epoll_ctl error fd: " << fd << std::endl;
 		perror("remove_fd epoll_ctl");
 	}
@@ -189,7 +198,7 @@ void HttpServer::remove_fd(int fd)
 	_cgi_to_client.erase(fd);
 }
 
-void HttpServer::handle_read(std::shared_ptr <Client> client)
+void HttpServer::handle_read(std::shared_ptr<Client> client)
 {
 	char buffer[READ_BUFFER_SIZE];
 
@@ -224,7 +233,7 @@ void HttpServer::handle_read(std::shared_ptr <Client> client)
 	add_fd(client->fd, EPOLL_CTL_MOD, mask, client);
 }
 
-void HttpServer::handle_write(std::shared_ptr <Client> client)
+void HttpServer::handle_write(std::shared_ptr<Client> client)
 {
 	if (client->conn_type == CONN_REGULAR && client->resp == nullptr)
 	{
@@ -254,7 +263,7 @@ void HttpServer::handle_write(std::shared_ptr <Client> client)
 	remove_fd(client->fd);
 }
 
-void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
+void HttpServer::finish_cgi_client(std::shared_ptr<Client> client)
 {
 	std::shared_ptr ref = client->ref;
 	int read_fd = ref->cgi_from[READ];
@@ -263,7 +272,8 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 	remove_fd(read_fd);
 	remove_fd(write_fd);
 
-	if (!Cgi::finish(client->pid, ref->cgi_from, ref->cgi_from)) {
+	if (!Cgi::finish(client->pid, ref->cgi_from, ref->cgi_from))
+	{
 		std::cerr << "[webserv] CGI error\n";
 		ref->resp->set_error(500);
 	}
@@ -276,7 +286,7 @@ void HttpServer::finish_cgi_client(std::shared_ptr <Client> client)
 }
 
 //garbage code
-void	HttpServer::add_cgi_fds(std::shared_ptr <Client> cl)
+void HttpServer::add_cgi_fds(std::shared_ptr<Client> cl)
 {
 	int pid = cl->pid;
 	int rfd = cl->cgi_from[READ];
@@ -298,8 +308,7 @@ void	HttpServer::add_cgi_fds(std::shared_ptr <Client> cl)
 	_cgi_to_client.emplace(rfd, cl);
 }
 
-
-void HttpServer::set_config(std::shared_ptr <Client> client, std::shared_ptr <Request> req)
+void HttpServer::set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 {
 	//Fallback to first on the list
 	req->conf = _socketFdToSockets[client->socket]->getServers().front();
@@ -307,27 +316,27 @@ void HttpServer::set_config(std::shared_ptr <Client> client, std::shared_ptr <Re
 		return;
 	const std::string host = client->req->_headers["host"];
 
-	for(const auto &so : _socketFdToSockets)
+	for (const auto &so : _socketFdToSockets)
 	{
 		for (const auto &server : so.second->getServers())
 		{
-			for (const auto &name : server->getNames()) {
-
+			for (const auto &name : server->getNames())
+			{
 				if (name == host)
 				{
 					req->conf = server;
 					return;
 				}
 			}
-
 		}
-
 	}
 
-	for(const auto &server : _socketFdToSockets[client->socket]->getServers())
+	for (const auto &server : _socketFdToSockets[client->socket]->getServers())
 	{
-		for (const auto &name : server->getNames()) {
-			if (name == host) {
+		for (const auto &name : server->getNames())
+		{
+			if (name == host)
+			{
 				req->conf = server;
 				return;
 			}

@@ -2,10 +2,10 @@
 
 int Str::decode_hex(const char *s)
 {
-	int	ret = 0;
-	int	val = 0;
-	char	c;
-	const char* charset = "0123456789abcdefABCDEF";
+	int ret = 0;
+	int val = 0;
+	char c;
+	const char *charset = "0123456789abcdefABCDEF";
 
 	if (std::strchr(charset, *s) == NULL)
 		return -1;
@@ -30,9 +30,10 @@ std::string Str::url_decode(const std::string &s)
 
 	for (size_t i = 0; i < s.length(); i++)
 	{
-		if (s[i] == '%' && (s.length() - i) >= 2) {
+		if (s[i] == '%' && (s.length() - i) >= 2)
+		{
 			int out;
-			sscanf(s.substr(i+1,2).c_str(), "%x", &out);
+			sscanf(s.substr(i + 1, 2).c_str(), "%x", &out);
 			char ch = static_cast<char>(out);
 			res += ch;
 			i += 2;
@@ -44,7 +45,7 @@ std::string Str::url_decode(const std::string &s)
 }
 
 std::string Str::date_str_now(void)
-{  
+{
 	time_t t;
 	struct tm *time_struct;
 	char buf[128];
@@ -56,7 +57,7 @@ std::string Str::date_str_now(void)
 }
 
 std::string Str::date_str_hour_from_now(void)
-{  
+{
 	time_t t;
 	struct tm *time_struct;
 	char buf[128];
@@ -68,7 +69,7 @@ std::string Str::date_str_hour_from_now(void)
 	return std::string(buf);
 }
 
-std::string	Str::get_key_data(std::string &buf, std::string key)
+std::string Str::get_key_data(std::string &buf, std::string key)
 {
 	size_t pos = buf.find(key + "=\"");
 	if (pos == std::string::npos)
@@ -78,7 +79,6 @@ std::string	Str::get_key_data(std::string &buf, std::string key)
 	if (end == std::string::npos)
 		return "";
 	return buf.substr(pos, end - pos);
-
 }
 
 std::string Str::safe_substr(std::string &buf, std::string before, std::string after)

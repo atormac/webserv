@@ -18,7 +18,9 @@ void removeComments(std::string &line)
 
 void skipEmptyLines(std::ifstream &configFile, std::string &line)
 {
-	while ((std::getline(configFile, line)) && (removeComments(line), WspcTrim(line).empty()));
+	while ((std::getline(configFile, line)) &&
+	       (removeComments(line), WspcTrim(line).empty()))
+		;
 }
 
 std::string leftWspcTrim(std::string string)
@@ -42,6 +44,6 @@ std::string WspcTrim(std::string string)
 
 bool fileExists(const std::string &name)
 {
-    std::ifstream file(name.c_str());
-    return file.good();
+	std::ifstream file(name.c_str());
+	return file.good();
 }

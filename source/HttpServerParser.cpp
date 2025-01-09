@@ -3,7 +3,7 @@
 void HttpServer::parseConfig(const std::string &filePath)
 {
 	std::ifstream configFile;
-	std::string	line;
+	std::string line;
 
 	configFile.open(filePath.c_str());
 	if (!configFile.is_open())
@@ -19,18 +19,21 @@ void HttpServer::parseConfig(const std::string &filePath)
 		{
 			std::shared_ptr<ServerConfig> server(new ServerConfig());
 			server->parseServerConfig(configFile);
-			std::string ip_and_port = server->getIpAddress() + ":" + server->getPort();
-	
+			std::string ip_and_port =
+				server->getIpAddress() + ":" + server->getPort();
+
 			if (_portsToSockets.count(ip_and_port))
 				_portsToSockets[ip_and_port]->addServer(server);
 			else
 			{
 				std::shared_ptr<Socket> socket(new Socket(server));
-				_portsToSockets.insert(std::make_pair(ip_and_port, socket));
+				_portsToSockets.insert(
+					std::make_pair(ip_and_port, socket));
 			}
-		}
-		else
-			throw std::runtime_error("ParseConfig: Unexpected value outside server block: " + line);
+		} else
+			throw std::runtime_error(
+				"ParseConfig: Unexpected value outside server block: " +
+				line);
 	}
 	std::cout << "Config parsing completed" << std::endl;
 	std::cout << "Number of sockets: " << _portsToSockets.size() << std::endl;

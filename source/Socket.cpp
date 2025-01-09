@@ -11,7 +11,11 @@
 /* ************************************************************************** */
 #include <HttpServer.hpp>
 
-Socket::Socket(std::shared_ptr<ServerConfig> server): _socketFd(-1), _servers{server} {}
+Socket::Socket(std::shared_ptr<ServerConfig> server)
+	: _socketFd(-1)
+	, _servers{ server }
+{
+}
 
 Socket::~Socket()
 {
@@ -32,11 +36,10 @@ void Socket::addServer(std::shared_ptr<ServerConfig> server)
 	_servers.push_back(server);
 }
 
-const std::vector<std::shared_ptr<ServerConfig>> Socket::getServers() const
+const std::vector<std::shared_ptr<ServerConfig> > Socket::getServers() const
 {
 	return _servers;
 }
-
 
 void Socket::setSocketDescriptor(int socketFd)
 {
@@ -54,7 +57,7 @@ int Socket::bind_socket(std::string ip, int port)
 		perror("socket");
 		return -1;
 	}
-	
+
 	if (!Io::set_nonblocking(socket_fd))
 	{
 		perror("fcntl");

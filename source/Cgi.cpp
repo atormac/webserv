@@ -1,13 +1,13 @@
 #include <HttpServer.hpp>
 
-std::unordered_map<std::string, std::string> cgi_map =
-			     {{".php",  "/usr/bin/php"},
-			     {".py",  "/usr/bin/python3"}};
+std::unordered_map<std::string, std::string> cgi_map = { { ".php", "/usr/bin/php" },
+							 { ".py", "/usr/bin/python3" } };
 
+Cgi::Cgi()
+{
+}
 
-Cgi::Cgi() {}
-
-Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
+Cgi::Cgi(std::shared_ptr<Location> location, std::shared_ptr<Request> request)
 {
 	std::string ext = Io::get_file_ext(request->_uri);
 	_interpreter = location->_cgi[ext];
@@ -26,9 +26,9 @@ Cgi::Cgi(std::shared_ptr <Location> location, std::shared_ptr<Request> request)
 	env_set_vars(request);
 }
 
-Cgi::~Cgi() {}
-
-
+Cgi::~Cgi()
+{
+}
 
 void Cgi::env_set(const std::string &key, const std::string &value)
 {
@@ -74,25 +74,28 @@ bool Cgi::parent_init(int pid, int *fd_from, int *fd_to)
 	return true;
 }
 
-void Cgi::child_process(std::shared_ptr <Client> client, std::vector <char *> args, int *fd_from, int *fd_to)
+void Cgi::child_process(std::shared_ptr<Client> client, std::vector<char *> args,
+			int *fd_from, int *fd_to)
 {
-	std::vector<char*> c_env;
+	std::vector<char *> c_env;
 
 	c_env.reserve(_env.size() + 1);
-	for (const auto& var : _env) {
-		c_env.push_back(const_cast<char*>(var.c_str()));
+	for (const auto &var : _env)
+	{
+		c_env.push_back(const_cast<char *>(var.c_str()));
 	}
 	c_env.push_back(nullptr);
 
-	if (::chdir(_script_dir.c_str()) == -1) {
+	if (::chdir(_script_dir.c_str()) == -1)
+	{
 		return;
 	}
-
 
 	close(fd_to[1]);
 	close(fd_from[0]);
 
-	if (dup2(fd_to[0], STDIN_FILENO) < 0 || dup2(fd_from[1], STDOUT_FILENO) < 0) {
+	if (dup2(fd_to[0], STDIN_FILENO) < 0 || dup2(fd_from[1], STDOUT_FILENO) < 0)
+	{
 		return;
 	}
 	close(fd_to[0]);
@@ -101,15 +104,14 @@ void Cgi::child_process(std::shared_ptr <Client> client, std::vector <char *> ar
 	execve(args.data()[0], args.data(), c_env.data());
 }
 
-bool Cgi::start(std::shared_ptr <Client> client)
+bool Cgi::start(std::shared_ptr<Client> client)
 {
-	bool	ret = false;
-	int	fd_from[2] = { -1, -1 }; //read cgi output
-	int	fd_to[2] = { -1, -1 }; //write cgi input
-	int	pid;
+	bool ret = false;
+	int fd_from[2] = { -1, -1 }; //read cgi output
+	int fd_to[2] = { -1, -1 }; //write cgi input
+	int pid;
 
-
-	std::vector <char *> args;
+	std::vector<char *> args;
 	args.push_back(const_cast<char *>(_interpreter.c_str()));
 	args.push_back(const_cast<char *>(_script_path.c_str()));
 	args.push_back(nullptr);
@@ -158,7 +160,7 @@ void Cgi::wait_kill(int pid)
 
 bool Cgi::finish(int pid, int *fd_from, int *fd_to)
 {
-	int	status = 0;
+	int status = 0;
 
 	close_pipes(fd_from);
 	close_pipes(fd_to);
@@ -190,7 +192,7 @@ void Cgi::close_pipes(int *fd)
 	}
 }
 
-bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)
+bool Cgi::is_cgi(std::shared_ptr<Location> location, std::string uri)
 {
 	if (!location)
 		return false;
@@ -204,5 +206,3 @@ bool Cgi::is_cgi(std::shared_ptr <Location> location, std::string uri)
 		return false;
 	return true;
 }
-
-
