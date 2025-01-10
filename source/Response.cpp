@@ -56,15 +56,11 @@ void Response::set_error(int code)
 int Response::has_errors(void)
 {
 	if (_request->parser_error)
-	{
 		return _request->parser_error;
-	}
 
 	_location = find_location();
 	if (_location == nullptr)
-	{
 		return STATUS_NOT_FOUND;
-	}
 
 	if (!Request::is_method_allowed(_location->_methods, _request->_method_str))
 		return STATUS_METHOD_NOT_ALLOWED;
@@ -163,15 +159,29 @@ int Response::handle_get(void)
 
 int Response::handle_post(void)
 {
+	bool wrote = false;
+
+	std::string filename = _location->_rootPath + _request->_uri;
+	int flags = Io::file_stat(filename);
+
 	for (auto &part : _request->parts)
 	{
+		if (_location->_uploadPath.empty())
+			return STATUS_FORBIDDEN;
 		std::string path = _location->_uploadPath + "/" + part.filename;
 		std::cerr << "path: " << path << "\n";
 
 		if (!Io::write_file(path, part.data))
 			return STATUS_INTERNAL_ERROR;
+		wrote = true;
 	}
-	return STATUS_CREATED;
+	if (wrote)
+		return STATUS_CREATED;
+	if (!flags)
+		return STATUS_NOT_FOUND;
+	if (!(flags & FS_READ))
+		return STATUS_FORBIDDEN;
+	return STATUS_OK;
 }
 
 int Response::handle_delete(void)

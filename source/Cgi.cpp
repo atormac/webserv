@@ -158,14 +158,9 @@ bool Cgi::finish(int pid)
 		return false;
 	}
 	if (WIFSIGNALED(status))
-	{
-		kill(pid, SIGTERM);
 		return false;
-	}
 	if (WIFEXITED(status))
-	{
 		return true;
-	}
 	kill(pid, SIGTERM);
 	return false;
 }
