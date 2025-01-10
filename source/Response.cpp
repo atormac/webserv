@@ -36,15 +36,9 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 	{
 		switch (_request->_method)
 		{
-		case METHOD_GET:
-			handle_get();
-			break;
-		case METHOD_POST:
-			handle_post();
-			break;
-		case METHOD_DELETE:
-			handle_delete();
-			break;
+			case METHOD_GET: handle_get(); break;
+			case METHOD_POST: handle_post(); break;
+			case METHOD_DELETE: handle_delete(); break;
 		}
 	}
 	finish_response();

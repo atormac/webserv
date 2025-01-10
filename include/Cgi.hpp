@@ -28,8 +28,9 @@ class Cgi {
 	~Cgi();
 
 	bool start(std::shared_ptr<Client> client);
-	static void wait_kill(int pid);
-	static bool finish(int pid, int *fd_from, int *fd_to);
+	//static bool finish(std::shared_ptr <Client> cl);
+	//static bool finish(int pid, int *fd_from, int *fd_to);
+	static bool finish(int pid);
 	static void close_pipes(int *fd);
 	static bool is_cgi(std::shared_ptr<Location> location, std::string uri);
 };

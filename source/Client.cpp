@@ -5,12 +5,10 @@ Client::Client()
 	this->instance = nullptr;
 	this->req = nullptr;
 	this->resp = nullptr;
-	this->ref = nullptr;
+
 	this->pid = -1;
-	this->cgi_to[0] = -1;
-	this->cgi_to[1] = -1;
-	this->cgi_from[0] = -1;
-	this->cgi_from[1] = -1;
+	this->cgi_read_fd = -1;
+	this->cgi_write_fd = -1;
 }
 Client::~Client()
 {
@@ -18,6 +16,15 @@ Client::~Client()
 	{
 		close(this->fd);
 		this->fd = -1;
+	}
+	if (this->pid >= 0)
+	{
+		if (Cgi::finish(this->pid))
+		{
+			kill(this->pid, SIGTERM);
+		}
+		std::cerr << "~Client pid\n";
+		this->pid = -1;
 	}
 }
 
@@ -36,14 +43,12 @@ Client::Client(HttpServer &inst, int client_fd, int socket_fd, std::string ip)
 }
 
 //cgi
-Client::Client(HttpServer &inst, int client_fd, int pid, std::shared_ptr<Client> ref_ptr)
+Client::Client(HttpServer &inst, int cgi_fd)
 	: Client()
 {
 	this->instance = &inst;
 	this->conn_type = CONN_CGI;
-	this->fd = client_fd;
-	this->pid = pid;
-	this->ref = ref_ptr;
+	this->fd = cgi_fd;
 	this->req = std::make_shared<Request>(true);
 
 	this->update_time();

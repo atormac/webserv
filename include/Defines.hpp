@@ -16,7 +16,7 @@ enum {
 
 enum { METHOD_GET, METHOD_POST, METHOD_DELETE };
 
-#define TIMEOUT_SECONDS (1 * 60)
+#define TIMEOUT_SECONDS (2)
 
 #define READ 0
 #define WRITE 1

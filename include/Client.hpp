@@ -21,15 +21,20 @@ class Client {
 
     public:
 	int conn_type;
-	int fd;
 	int socket;
 
-	std::shared_ptr<Client> ref;
 
+	int fd;
+	int cgi_read_fd;
+	int cgi_write_fd;
+	int pid;
+
+	/*
+	//std::shared_ptr<Client> ref;
 	int cgi_to[2];
 	int cgi_from[2];
+	*/
 
-	int pid;
 
 	std::string ip_addr;
 
@@ -41,7 +46,7 @@ class Client {
 	Client();
 	~Client();
 	Client(HttpServer &inst, int client_fd, int socket_fd, std::string ip);
-	Client(HttpServer &inst, int client_fd, int pid, std::shared_ptr<Client> ref_ptr);
+	Client(HttpServer &inst, int cgi_fd);
 
 	void update_time(void);
 	bool has_timed_out(time_t now);

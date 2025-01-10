@@ -4,6 +4,7 @@ HttpServer::HttpServer()
 {
 	this->_epoll_fd = -1;
 	this->_client_count = 0;
+	this->_clients.reserve(512);
 }
 
 HttpServer::~HttpServer()
@@ -25,14 +26,13 @@ void HttpServer::close_server(void)
 	this->_clients.clear();
 	for (const auto &e : this->_socketFdToSockets)
 		e.second->close_socket();
-	for (const auto &pid : this->_pids)
-		Cgi::wait_kill(pid);
 	close(this->_epoll_fd);
 	this->_epoll_fd = -1;
 }
 
 bool HttpServer::init()
 {
+	signal(SIGPIPE, SIG_IGN);
 	if (signal(SIGINT, HttpServer::signal_handler) == SIG_ERR)
 		return false;
 
@@ -62,7 +62,7 @@ bool HttpServer::init()
 	for (const auto &so : _socketFdToSockets)
 	{
 		struct epoll_event ev;
-		ev.events = EPOLLIN;
+		ev.events = EPOLLET | EPOLLIN;
 		ev.data.fd = so.first;
 
 		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -1)
@@ -84,10 +84,14 @@ void HttpServer::cull_clients(void)
 	for (auto const &cl : _clients)
 	{
 		if (cl.second->has_timed_out(now))
+		{
 			timedout.push_back(cl.first);
+		}
 	}
 	for (int i : timedout)
+	{
 		remove_fd(i);
+	}
 }
 
 void HttpServer::epoll(void)
@@ -98,21 +102,22 @@ void HttpServer::epoll(void)
 	{
 		int timeout = 1 * 1000;
 		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, timeout);
-
+	
 		cull_clients();
 
 		for (int i = 0; i < nfds; i++)
 		{
 			epoll_event &e = events[i];
 
-			if ((e.events & EPOLLERR) || (e.events & EPOLLRDHUP))
-			{
-				remove_fd(e.data.fd);
-				continue;
-			}
 			if (this->_socketFdToSockets.count(e.data.fd))
 			{
 				accept_client(e.data.fd);
+				continue;
+			}
+			if ((e.events & EPOLLERR) || (e.events & EPOLLRDHUP))
+			{
+				perror("epoll_wait");
+				remove_fd(e.data.fd);
 				continue;
 			}
 			std::shared_ptr cl = _clients[e.data.fd];
@@ -161,10 +166,11 @@ bool HttpServer::accept_client(int _socket_fd)
 	std::shared_ptr cl = std::make_shared<Client>(*this, client_fd, _socket_fd,
 						      inet_ntoa(peer_addr.sin_addr));
 
-	return epoll_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
+	printf("Accepted FD: %d\n", client_fd);
+	return mod_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
 }
 
-bool HttpServer::epoll_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
+bool HttpServer::mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 {
 	struct epoll_event ev;
 
@@ -173,12 +179,13 @@ bool HttpServer::epoll_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 
 	if (epoll_ctl(this->_epoll_fd, ctl, fd, &ev) == -1)
 	{
+		perror("epoll_ctl");
 		remove_fd(fd);
 		return false;
 	}
 	if (ctl == EPOLL_CTL_ADD)
 	{
-		_clients[fd] = cl;
+		_clients.emplace(fd, cl);
 	}
 	return true;
 }
@@ -187,11 +194,13 @@ void HttpServer::remove_fd(int fd)
 {
 	if (fd < 0 || _clients.count(fd) == 0)
 		return;
+	printf("Removing FD: %d\n", fd);
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
 	{
 		perror("epoll_ctl");
 	}
 	_clients.erase(fd);
+	_cgi_to_client.erase(fd);
 }
 
 void HttpServer::handle_read(std::shared_ptr<Client> client)
@@ -213,7 +222,7 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 			finish_cgi_client(client);
 			return;
 		}
-		epoll_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
+		mod_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
 		return;
 	}
 
@@ -223,10 +232,12 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 	int mask = EPOLLIN;
 	if (state == State::Ok || state == State::Error || bytes_read == 0)
 	{
-		mask = EPOLLOUT;
 		client->req->dump();
+		mask = EPOLLOUT;
+		mod_fd(client->fd, EPOLL_CTL_MOD, mask, client);
+		return;
 	}
-	epoll_fd(client->fd, EPOLL_CTL_MOD, mask, client);
+	mod_fd(client->fd, EPOLL_CTL_MOD, mask, client);
 }
 
 void HttpServer::handle_write(std::shared_ptr<Client> client)
@@ -236,6 +247,7 @@ void HttpServer::handle_write(std::shared_ptr<Client> client)
 		client->resp = std::make_shared<Response>(client, client->req);
 		if (client->conn_type == CONN_WAIT_CGI)
 		{
+			std::cerr << "CONN_WAIT_CGI\n";
 			add_cgi_fds(client);
 			return;
 		}
@@ -253,53 +265,44 @@ void HttpServer::handle_write(std::shared_ptr<Client> client)
 	if (bytes_written < size)
 	{
 		client->response.erase(0, bytes_written);
-		epoll_fd(client->fd, EPOLL_CTL_MOD, EPOLLOUT, client);
+		mod_fd(client->fd, EPOLL_CTL_MOD, EPOLLOUT, client);
 		return;
 	}
 	remove_fd(client->fd);
 }
 
-void HttpServer::finish_cgi_client(std::shared_ptr<Client> client)
+void HttpServer::finish_cgi_client(std::shared_ptr<Client> cgi_client)
 {
-	std::shared_ptr ref = client->ref;
-	int read_fd = ref->cgi_from[READ];
-	int write_fd = ref->cgi_to[WRITE];
+	int conn_fd = _cgi_to_client[cgi_client->fd];
+	std::shared_ptr conn = _clients[conn_fd];
 
-	remove_fd(read_fd);
-	remove_fd(write_fd);
+	remove_fd(conn->cgi_write_fd);
+	remove_fd(conn->cgi_read_fd);
 
-	if (!Cgi::finish(client->pid, ref->cgi_from, ref->cgi_from))
+	if (!Cgi::finish(conn->pid))
 	{
 		std::cerr << "[webserv] CGI error\n";
-		ref->resp->set_error(500);
+		conn->resp->set_error(500);
 	}
-	_pids.erase(client->pid);
+	conn->pid = -1;
+	conn->resp->finish_cgi(cgi_client->req);
+	conn->response = conn->resp->buffer.str();
 
-	ref->resp->finish_cgi(client->req);
-	ref->response = ref->resp->buffer.str();
-
-	epoll_fd(ref->fd, EPOLL_CTL_MOD, EPOLLOUT, ref);
+	mod_fd(conn->fd, EPOLL_CTL_MOD, EPOLLOUT, conn);
 }
 
-//garbage code
-void HttpServer::add_cgi_fds(std::shared_ptr<Client> cl)
+void HttpServer::add_cgi_fds(std::shared_ptr<Client> conn)
 {
-	int pid = cl->pid;
-	int rfd = cl->cgi_from[READ];
-	int wfd = cl->cgi_to[WRITE];
+	_cgi_to_client[conn->cgi_write_fd] = conn->fd;
+	_cgi_to_client[conn->cgi_read_fd] = conn->fd;
 
-	_pids.insert(pid);
+	std::shared_ptr read_cgi = std::make_shared<Client>(*this, conn->cgi_read_fd);
+	std::shared_ptr write_cgi = std::make_shared<Client>(*this, conn->cgi_write_fd);
+	write_cgi->response = conn->req->_body;
 
-	std::cerr << "[webserv] CGI initialized: " << rfd << "/" << wfd << std::endl;
-
-	std::shared_ptr write_cgi = std::make_shared<Client>(*this, wfd, pid, cl);
-	write_cgi->response = cl->req->_body;
-
-	epoll_fd(wfd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
-
-	std::shared_ptr read_cgi = std::make_shared<Client>(*this, rfd, pid, cl);
-
-	epoll_fd(rfd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
+	mod_fd(conn->cgi_write_fd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
+	mod_fd(conn->cgi_read_fd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
+	std::cerr << "[webserv] CGI initialized: " << conn->cgi_read_fd << "/" << conn->cgi_write_fd << std::endl;
 }
 
 void HttpServer::set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req)

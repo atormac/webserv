@@ -4,7 +4,8 @@ bool Io::set_nonblocking(int fd)
 {
 	int flags = 0;
 
-	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+	flags |= O_NONBLOCK;
+	if (fcntl(fd, F_SETFL, flags) == -1)
 	{
 		perror("fcntl");
 		return false;

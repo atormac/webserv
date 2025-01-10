@@ -77,6 +77,8 @@ bool Cgi::parent_init(int pid, int *fd_from, int *fd_to)
 void Cgi::child_process(std::shared_ptr<Client> client, std::vector<char *> args,
 			int *fd_from, int *fd_to)
 {
+	signal(SIGPIPE, SIG_IGN);
+	signal(SIGINT, SIG_IGN);
 	std::vector<char *> c_env;
 
 	c_env.reserve(_env.size() + 1);
@@ -139,25 +141,30 @@ bool Cgi::start(std::shared_ptr<Client> client)
 	ret = parent_init(pid, fd_from, fd_to);
 	if (ret)
 	{
-		client->cgi_from[READ] = fd_from[READ];
-		client->cgi_from[WRITE] = fd_from[WRITE];
-		client->cgi_to[READ] = fd_to[READ];
-		client->cgi_to[WRITE] = fd_to[WRITE];
+		client->cgi_read_fd = fd_from[READ];
+		client->cgi_write_fd = fd_to[WRITE];
 		client->pid = pid;
 	}
-	//close_pipes(fd);
-
 	return ret;
 }
 
-void Cgi::wait_kill(int pid)
+bool Cgi::finish(int pid)
 {
-	int status;
+	int status = 0;
 
 	if (waitpid(pid, &status, WNOHANG) == -1)
+	{
 		kill(pid, SIGTERM);
+		return false;
+	}
+	if (status != 0)
+	{
+		kill(pid, SIGTERM);
+		return false;
+	}
+	return true;
 }
-
+/*
 bool Cgi::finish(int pid, int *fd_from, int *fd_to)
 {
 	int status = 0;
@@ -177,6 +184,7 @@ bool Cgi::finish(int pid, int *fd_from, int *fd_to)
 	}
 	return true;
 }
+*/
 
 void Cgi::close_pipes(int *fd)
 {
