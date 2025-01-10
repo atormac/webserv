@@ -15,6 +15,7 @@ Request::Request()
 	this->conf = nullptr;
 	this->_header_delim = CRLF;
 	this->_total_read = 0;
+	this->host_matched = false;
 }
 
 Request::Request(bool cgi)
@@ -171,9 +172,10 @@ bool Request::parse_header_field(size_t pos)
 	_headers[key] = value;
 	if (key == "content-length")
 	{
-		_content_len = std::stoi(value);
-		//if (_content_len < 0)
-		//	return false;
+		int tmp = Str::content_len_int(value);
+		if (tmp < 0)
+			return false;
+		_content_len = tmp;
 	}
 	if (key == "transfer-encoding" && value == "chunked")
 		_body_type = BODY_TYPE_CHUNKED;

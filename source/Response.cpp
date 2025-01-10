@@ -62,6 +62,8 @@ int Response::has_errors(void)
 	if (!Request::is_method_allowed(_location->_methods, _request->_method_str))
 		return STATUS_METHOD_NOT_ALLOWED;
 
+	if (!_location->_redirectPath.empty())
+		return 0;
 	try {
 		std::filesystem::path root = std::filesystem::canonical(_location->_rootPath);
 		std::string filename = _location->_rootPath + _request->_uri;

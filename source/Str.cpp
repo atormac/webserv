@@ -102,3 +102,16 @@ std::string Str::trim_start(std::string &str, const std::string &needle)
 	result.erase(0, pos + needle.size());
 	return result;
 }
+
+
+int Str::content_len_int(const std::string& input) {
+	int result = -1;
+	try {
+		result = std::stoul(input);
+	} catch (const std::invalid_argument& e) {
+		return -1;
+	} catch (const std::out_of_range& e) {
+		return -1;
+	}
+	return result;
+}

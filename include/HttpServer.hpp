@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/10 17:58:49 by atorma           ###   ########.fr       */
+/*   Updated: 2025/01/10 23:04:36 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -38,6 +38,7 @@ class HttpServer {
 
 	std::map<std::string, std::shared_ptr<Socket> > _portsToSockets;
 	std::map<int, std::shared_ptr<Socket> > _socketFdToSockets;
+	std::map<int, int> _socketToPort;
 
 	std::unordered_map<int, std::shared_ptr<Client> > _clients;
 	std::unordered_map<int, int> _cgi_to_client; //cgi fd -> client/conn fd
@@ -60,7 +61,7 @@ class HttpServer {
 	~HttpServer();
 
 	void parseConfig(const std::string &filePath);
-	std::vector<std::shared_ptr<ServerConfig> > GETPORTS(int port);
+	std::vector<std::shared_ptr<ServerConfig> > matching_configs(int port);
 	void close_server(void);
 	bool init();
 	void epoll(void);

@@ -13,6 +13,7 @@ class Str {
 	static std::string safe_substr(std::string &buf, std::string before,
 				       std::string after);
 	static std::string trim_start(std::string &str, const std::string &needle);
+	static int content_len_int(const std::string& input);
 };
 
 #endif

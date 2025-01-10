@@ -49,6 +49,7 @@ bool HttpServer::init()
 		int socketFd = itr->second->bind_socket(ip, port);
 		if (socketFd < 0)
 			return false;
+		_socketToPort.emplace(socketFd, port);
 		itr->second->setSocketDescriptor(socketFd);
 		_socketFdToSockets.insert({ socketFd, itr->second });
 	}
@@ -316,46 +317,34 @@ bool HttpServer::init_cgi_fds(std::shared_ptr<Client> conn)
 
 void HttpServer::set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 {
-	//Fallback to first on the list
+	if (req->host_matched || client->conn_type != CONN_REGULAR) return;
+
 	req->conf = _socketFdToSockets[client->socket]->getServers().front();
-	if (client->req->_headers.count("host") == 0)
+	if (req->_headers.count("host") == 0)
 		return;
-	const std::string host = client->req->_headers["host"];
+	const std::string host = req->_headers["host"];
 
-	for (const auto &so : _socketFdToSockets)
-	{
-		for (const auto &server : so.second->getServers())
-		{
-			for (const auto &name : server->getNames())
-			{
-				if (name == host)
-				{
-					req->conf = server;
-					return;
-				}
-			}
-		}
-	}
 
-	for (const auto &server : _socketFdToSockets[client->socket]->getServers())
+	int port = _socketToPort[client->socket];
+	std::vector <std::shared_ptr<ServerConfig>> configs = matching_configs(port);
+
+	std::cerr << "matched port: " << port << "\n";
+	for (const auto &c : configs)
 	{
-		for (const auto &name : server->getNames())
+		for (const auto &name : c->getNames())
 		{
-			if (name == host)
+			if (host == name)
 			{
-				req->conf = server;
+				std::cerr << "matched host header: " << name << std::endl;
+				req->host_matched = true;
+				req->conf = c;
 				return;
 			}
-		}
-		if (host == server->getIpAddress() + ":" + server->getPort())
-		{
-			req->conf = server;
-			return;
 		}
 	}
 }
 
-std::vector<std::shared_ptr<ServerConfig> > HttpServer::GETPORTS(int port)
+std::vector<std::shared_ptr<ServerConfig> > HttpServer::matching_configs(int port)
 {
 	std::vector<std::shared_ptr<ServerConfig> > CONFIGS;
 

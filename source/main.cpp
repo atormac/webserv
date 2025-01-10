@@ -16,9 +16,6 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	std::vector<std::shared_ptr<ServerConfig> > CONFIGS;
-	CONFIGS = server.GETPORTS(7051);
-
 	server.init();
 	try  {
 		server.epoll();

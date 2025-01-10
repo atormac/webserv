@@ -72,6 +72,7 @@ class Request {
 	std::map<std::string, std::string> params;
 	std::map<std::string, std::string> _headers;
 
+	bool host_matched;
 	std::vector<Part> parts;
 	std::shared_ptr<ServerConfig> conf;
 
