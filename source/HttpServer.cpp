@@ -120,9 +120,9 @@ void HttpServer::epoll(void)
 				remove_fd(e.data.fd);
 				continue;
 			}
-			std::shared_ptr cl = _clients[e.data.fd];
-			if (cl == nullptr)
+			if (!_clients.count(e.data.fd))
 				continue;
+			std::shared_ptr cl = _clients[e.data.fd];
 
 			cl->update_time();
 			//on pipe close EPOLLHUP means EOF here
@@ -245,9 +245,9 @@ void HttpServer::handle_write(std::shared_ptr<Client> client)
 	if (client->conn_type == CONN_REGULAR && client->resp == nullptr)
 	{
 		client->resp = std::make_shared<Response>(client, client->req);
-		if (client->conn_type == CONN_WAIT_CGI)
+		if (client->conn_type == CONN_WAIT_CGI && client->resp->_body.str().size() == 0)
 		{
-			add_cgi_fds(client);
+			init_cgi_fds(client);
 			return;
 		}
 
@@ -290,7 +290,7 @@ void HttpServer::finish_cgi_client(std::shared_ptr<Client> cgi_client)
 	mod_fd(conn->fd, EPOLL_CTL_MOD, EPOLLOUT, conn);
 }
 
-void HttpServer::add_cgi_fds(std::shared_ptr<Client> conn)
+void HttpServer::init_cgi_fds(std::shared_ptr<Client> conn)
 {
 	_cgi_to_client[conn->cgi_write_fd] = conn->fd;
 	_cgi_to_client[conn->cgi_read_fd] = conn->fd;

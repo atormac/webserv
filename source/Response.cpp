@@ -27,12 +27,13 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 
 	if (Cgi::is_cgi(_location, _request->_uri))
 	{
-		if (init_cgi(client))
+		if (!init_cgi(client))
 		{
-			this->_status_code = 200;
+			_status_code = STATUS_INTERNAL_ERROR;
+			finish_response();
 			return;
 		}
-		finish_response();
+		_status_code = STATUS_OK;
 		return;
 	}
 	if (_request->_method == METHOD_GET)
