@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/10 15:56:50 by atorma           ###   ########.fr       */
+/*   Updated: 2025/01/10 17:58:49 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -51,7 +51,7 @@ class HttpServer {
 	void handle_write(std::shared_ptr<Client> client);
 
 	void finish_cgi_client(std::shared_ptr<Client> client);
-	void init_cgi_fds(std::shared_ptr<Client> current);
+	bool init_cgi_fds(std::shared_ptr<Client> current);
 
 	void set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req);
 

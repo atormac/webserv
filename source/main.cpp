@@ -9,21 +9,17 @@ int main(int argc, char **argv)
 	}
 	HttpServer server;
 
-	try
-	{
+	try {
 		server.parseConfig(argv[1]);
-	} catch (const std::exception &e)
-	{
+	} catch (const std::exception &e) {
 		std::cerr << "Config parsing failed: " << e.what() << std::endl;
 		return 1;
 	}
 
 	server.init();
-
 	try  {
 		server.epoll();
-	} catch (const std::exception &e)
-	{
+	} catch (const std::exception &e) {
 		std::cerr << "Error thrown " << e.what() << std::endl;
 	}
 	server.close_server();

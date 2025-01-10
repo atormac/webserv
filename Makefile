@@ -10,7 +10,6 @@ SOURCES := main.cpp Defines.cpp HttpServer.cpp HttpServerParser.cpp ServerConfig
 	   Str.cpp Io.cpp Cgi.cpp Cookies.cpp
 
 OBJ_DIR := obj
-#OBJECTS := $(addprefix $(SOURCE_DIR)/,$(SOURCES:.cpp=.o))
 OBJECTS := $(addprefix $(OBJ_DIR)/, $(notdir $(SOURCES:.cpp=.o)))
 
 $(shell mkdir -p $(OBJ_DIR))

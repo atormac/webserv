@@ -246,8 +246,8 @@ void HttpServer::handle_write(std::shared_ptr<Client> client)
 		client->resp = std::make_shared<Response>(client, client->req);
 		if (client->conn_type == CONN_WAIT_CGI)
 		{
-			init_cgi_fds(client);
-			return;
+			if (init_cgi_fds(client))
+				return;
 		}
 
 		client->response = client->resp->buffer.str();
@@ -289,7 +289,7 @@ void HttpServer::finish_cgi_client(std::shared_ptr<Client> cgi_client)
 	mod_fd(conn->fd, EPOLL_CTL_MOD, EPOLLOUT, conn);
 }
 
-void HttpServer::init_cgi_fds(std::shared_ptr<Client> conn)
+bool HttpServer::init_cgi_fds(std::shared_ptr<Client> conn)
 {
 	_cgi_to_client[conn->cgi_write_fd] = conn->fd;
 	_cgi_to_client[conn->cgi_read_fd] = conn->fd;
@@ -298,10 +298,21 @@ void HttpServer::init_cgi_fds(std::shared_ptr<Client> conn)
 	std::shared_ptr write_cgi = std::make_shared<Client>(*this, conn->cgi_write_fd);
 	write_cgi->response = conn->req->_body;
 
-	mod_fd(conn->cgi_write_fd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
-	mod_fd(conn->cgi_read_fd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
+	int count = mod_fd(conn->cgi_write_fd, EPOLL_CTL_ADD, EPOLLOUT, write_cgi);
+	count += mod_fd(conn->cgi_read_fd, EPOLL_CTL_ADD, EPOLLIN, read_cgi);
+	if (count != 2)
+	{
+		remove_fd(conn->cgi_write_fd);
+		remove_fd(conn->cgi_read_fd);
+		conn->resp->set_error(500);
+		return false;
+	}
 	std::cerr << "[webserv] CGI initialized: " << conn->cgi_read_fd << "/" << conn->cgi_write_fd << std::endl;
+	return true;
 }
+
+
+
 
 void HttpServer::set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 {
