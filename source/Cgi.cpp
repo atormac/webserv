@@ -157,12 +157,17 @@ bool Cgi::finish(int pid)
 		kill(pid, SIGTERM);
 		return false;
 	}
-	if (status != 0)
+	if (WIFSIGNALED(status))
 	{
 		kill(pid, SIGTERM);
 		return false;
 	}
-	return true;
+	if (WIFEXITED(status))
+	{
+		return true;
+	}
+	kill(pid, SIGTERM);
+	return false;
 }
 
 void Cgi::close_pipes(int *fd)
