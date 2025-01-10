@@ -61,6 +61,16 @@ int Response::has_errors(void)
 
 	if (!Request::is_method_allowed(_location->_methods, _request->_method_str))
 		return STATUS_METHOD_NOT_ALLOWED;
+
+	std::filesystem::path root = std::filesystem::canonical(_location->_rootPath);
+	std::string filename = _location->_rootPath + _request->_uri;
+	std::filesystem::path resolved = std::filesystem::canonical(filename);
+
+	std::string uri_normalized = resolved.generic_string();
+	std::string root_normalized = root.generic_string();
+
+	if (uri_normalized.rfind(root_normalized, 0) != 0) //path traversal
+		return STATUS_NOT_FOUND;
 	return 0;
 }
 
