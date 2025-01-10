@@ -354,3 +354,30 @@ void HttpServer::set_config(std::shared_ptr<Client> client, std::shared_ptr<Requ
 		}
 	}
 }
+
+std::vector<std::shared_ptr<ServerConfig> > HttpServer::GETPORTS(int port)
+{
+	std::vector<std::shared_ptr<ServerConfig> > CONFIGS;
+
+	for (auto const &x : _portsToSockets)
+	{
+		std::regex ptrn("(.*):(.*)");
+		std::smatch match_res;
+		std::regex_match(x.first, match_res, ptrn);
+	
+		if (_portsToSockets.count(x.first) && port == std::stoi(match_res[2]))
+		{
+			std::cout << "Found socket with port: " <<  match_res[2] << std::endl;
+			for (auto con : _portsToSockets[x.first]->getServers())
+				CONFIGS.push_back(con);
+		}
+	}
+
+	for (std::shared_ptr<ServerConfig> y : CONFIGS)
+	{
+		if (y)
+			std::cout << "CHECK for configs port: " << y->getPort() << std::endl;
+	}
+
+	return CONFIGS;
+}

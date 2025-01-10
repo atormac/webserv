@@ -60,6 +60,7 @@ class HttpServer {
 	~HttpServer();
 
 	void parseConfig(const std::string &filePath);
+	std::vector<std::shared_ptr<ServerConfig> > GETPORTS(int port);
 	void close_server(void);
 	bool init();
 	void epoll(void);

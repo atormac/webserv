@@ -172,8 +172,8 @@ bool Request::parse_header_field(size_t pos)
 	if (key == "content-length")
 	{
 		_content_len = std::stoi(value);
-		if (_content_len < 0)
-			return false;
+		//if (_content_len < 0)
+		//	return false;
 	}
 	if (key == "transfer-encoding" && value == "chunked")
 		_body_type = BODY_TYPE_CHUNKED;
