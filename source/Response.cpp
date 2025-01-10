@@ -48,10 +48,6 @@ void Response::finish_response(void)
 {
 	create_response(_status_code);
 }
-void Response::set_error(int code)
-{
-	this->_status_code = code;
-}
 
 int Response::has_errors(void)
 {
@@ -96,37 +92,6 @@ void Response::create_response(int status)
 	buffer << bs;
 }
 
-void Response::set_error_page(int code)
-{
-	if (!(code >= 400 && code <= 599))
-		return;
-	_body.str("");
-	_body.clear();
-	_additional_headers["Content-Type"] = "text/html";
-
-	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
-	{
-		generate_error_page(code);
-		return;
-	}
-
-	std::string page_path = _request->conf->_errorPages[code];
-	if (!Io::read_file(page_path, _body))
-	{
-		this->_status_code = 500;
-		generate_error_page(this->_status_code);
-	}
-}
-
-void Response::generate_error_page(int code)
-{
-	std::string msg = std::to_string(code) + " " + code_map[code];
-	_body << "<!DOCTYPE html><html><head><title>";
-	_body << msg;
-	_body << "</title></head><body><h1>";
-	_body << msg;
-	_body << "</h1></body></html>";
-}
 
 int Response::handle_get(void)
 {
@@ -169,7 +134,6 @@ int Response::handle_post(void)
 		if (_location->_uploadPath.empty())
 			return STATUS_FORBIDDEN;
 		std::string path = _location->_uploadPath + "/" + part.filename;
-		std::cerr << "path: " << path << "\n";
 
 		if (!Io::write_file(path, part.data))
 			return STATUS_INTERNAL_ERROR;
@@ -222,6 +186,43 @@ bool Response::init_cgi(std::shared_ptr<Client> client)
 	}
 	client->conn_type = CONN_WAIT_CGI;
 	return true;
+}
+
+void Response::set_error(int code)
+{
+	this->_status_code = code;
+}
+
+void Response::set_error_page(int code)
+{
+	if (!(code >= 400 && code <= 599))
+		return;
+	_body.str("");
+	_body.clear();
+	_additional_headers["Content-Type"] = "text/html";
+
+	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)
+	{
+		generate_error_page(code);
+		return;
+	}
+
+	std::string page_path = _request->conf->_errorPages[code];
+	if (!Io::read_file(page_path, _body))
+	{
+		this->_status_code = 500;
+		generate_error_page(this->_status_code);
+	}
+}
+
+void Response::generate_error_page(int code)
+{
+	std::string msg = std::to_string(code) + " " + code_map[code];
+	_body << "<!DOCTYPE html><html><head><title>";
+	_body << msg;
+	_body << "</title></head><body><h1>";
+	_body << msg;
+	_body << "</h1></body></html>";
 }
 
 std::shared_ptr<Location> Response::find_location(void)
