@@ -5,10 +5,11 @@ Client::Client()
 	this->instance = nullptr;
 	this->req = nullptr;
 	this->resp = nullptr;
-
 	this->pid = -1;
 	this->cgi_read_fd = -1;
 	this->cgi_write_fd = -1;
+
+	this->update_time();
 }
 Client::~Client()
 {
@@ -39,7 +40,6 @@ Client::Client(HttpServer &inst, int client_fd, int socket_fd, std::string ip)
 	this->ip_addr = ip;
 	this->req = std::make_shared<Request>();
 
-	this->update_time();
 }
 
 //cgi
@@ -50,8 +50,6 @@ Client::Client(HttpServer &inst, int cgi_fd)
 	this->conn_type = CONN_CGI;
 	this->fd = cgi_fd;
 	this->req = std::make_shared<Request>(true);
-
-	this->update_time();
 }
 
 void Client::update_time(void)

@@ -164,27 +164,6 @@ bool Cgi::finish(int pid)
 	}
 	return true;
 }
-/*
-bool Cgi::finish(int pid, int *fd_from, int *fd_to)
-{
-	int status = 0;
-
-	close_pipes(fd_from);
-	close_pipes(fd_to);
-
-	if (waitpid(pid, &status, WNOHANG) == -1)
-	{
-		kill(pid, SIGTERM);
-		return false;
-	}
-	if (status != 0)
-	{
-		kill(pid, SIGTERM);
-		return false;
-	}
-	return true;
-}
-*/
 
 void Cgi::close_pipes(int *fd)
 {

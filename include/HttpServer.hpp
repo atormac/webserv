@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/10 02:36:55 by user             ###   ########.fr       */
+/*   Updated: 2025/01/10 03:15:25 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -34,7 +34,6 @@ class Response;
 class HttpServer {
     private:
 	int _epoll_fd;
-	int _client_count;
 
 	std::map<std::string, std::shared_ptr<Socket> > _portsToSockets;
 	std::map<int, std::shared_ptr<Socket> > _socketFdToSockets;

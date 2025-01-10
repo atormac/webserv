@@ -29,13 +29,6 @@ class Client {
 	int cgi_write_fd;
 	int pid;
 
-	/*
-	//std::shared_ptr<Client> ref;
-	int cgi_to[2];
-	int cgi_from[2];
-	*/
-
-
 	std::string ip_addr;
 
 	std::shared_ptr<Request> req;

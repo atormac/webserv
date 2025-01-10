@@ -3,8 +3,8 @@
 HttpServer::HttpServer()
 {
 	this->_epoll_fd = -1;
-	this->_client_count = 0;
 	this->_clients.reserve(512);
+	this->_cgi_to_client.reserve(512);
 }
 
 HttpServer::~HttpServer()
@@ -247,7 +247,6 @@ void HttpServer::handle_write(std::shared_ptr<Client> client)
 		client->resp = std::make_shared<Response>(client, client->req);
 		if (client->conn_type == CONN_WAIT_CGI)
 		{
-			std::cerr << "CONN_WAIT_CGI\n";
 			add_cgi_fds(client);
 			return;
 		}
