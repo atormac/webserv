@@ -24,7 +24,6 @@ Client::~Client()
 		{
 			kill(this->pid, SIGTERM);
 		}
-		std::cerr << "~Client pid\n";
 		this->pid = -1;
 	}
 }

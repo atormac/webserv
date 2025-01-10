@@ -80,7 +80,7 @@ State Request::parse(State s_start, char *data, size_t size)
 
 State Request::parse_status_line(void)
 {
-	if (_total_read >= (8 * 1024))
+	if (_total_read >= MAX_HEADER_BYTES)
 	{
 		this->parser_error = STATUS_BAD_REQUEST;
 		return State::Error;
@@ -124,7 +124,7 @@ State Request::parse_status_line(void)
 
 State Request::parse_header(void)
 {
-	if (_total_read >= (8 * 1024))
+	if (_total_read >= MAX_HEADER_BYTES)
 	{
 		this->parser_error = STATUS_BAD_REQUEST;
 		return State::Error;
@@ -252,7 +252,10 @@ void Request::parse_multipart(void)
 	std::smatch match_res;
 
 	if (!std::regex_match(_headers["content-type"], match_res, ptrn))
-		std::cout << "HANDLE ERROR HERE" << std::endl;
+	{
+		this->_state = State::Error;
+		return;
+	}
 	std::string boundary = "--";
 	boundary += match_res[1];
 	boundary += "\r\n";
@@ -289,7 +292,6 @@ void Request::parse_multipart(void)
 	_state = State::Ok;
 	_body.clear();
 	_buffer.clear();
-	std::cout << "multipart parsed.\n";
 }
 
 void Request::dump(void)

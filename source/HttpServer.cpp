@@ -148,7 +148,7 @@ bool HttpServer::accept_client(int _socket_fd)
 
 	if (_clients.size() >= 512)
 	{
-		std::cout << "Error: too many connections\n";
+		std::cerr << "Error: too many connections\n";
 		return false;
 	}
 	int client_fd = accept(_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);

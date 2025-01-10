@@ -17,6 +17,7 @@ enum {
 enum { METHOD_GET, METHOD_POST, METHOD_DELETE };
 
 #define TIMEOUT_SECONDS (60)
+#define MAX_HEADER_BYTES 8 * 1024
 
 #define READ 0
 #define WRITE 1
