@@ -244,7 +244,7 @@ void HttpServer::handle_write(std::shared_ptr<Client> client)
 	if (client->conn_type == CONN_REGULAR && client->resp == nullptr)
 	{
 		client->resp = std::make_shared<Response>(client, client->req);
-		if (client->conn_type == CONN_WAIT_CGI && client->resp->_body.str().size() == 0)
+		if (client->conn_type == CONN_WAIT_CGI)
 		{
 			init_cgi_fds(client);
 			return;
