@@ -181,8 +181,7 @@ bool Response::init_cgi(std::shared_ptr<Client> client)
 
 	if (!cgi.start(client))
 	{
-		_status_code = 404;
-		std::cout << "cgi.start failed\n";
+		_status_code = STATUS_INTERNAL_ERROR;
 		return false;
 	}
 	client->conn_type = CONN_WAIT_CGI;
