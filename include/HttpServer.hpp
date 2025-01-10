@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/10 03:15:25 by user             ###   ########.fr       */
+/*   Updated: 2025/01/10 04:38:19 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -31,6 +31,7 @@ class Response;
 #include <Io.hpp>
 #include <set>
 
+
 class HttpServer {
     private:
 	int _epoll_fd;
@@ -43,9 +44,8 @@ class HttpServer {
 
 	void remove_fd(int fd);
 	void cull_clients(void);
-	bool insert_map(int const &k, std::shared_ptr<Client> const &v);
 	bool accept_client(int socket_fd);
-	bool mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl);
+	bool mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> &cl);
 
 	void handle_read(std::shared_ptr<Client> client);
 	void handle_write(std::shared_ptr<Client> client);

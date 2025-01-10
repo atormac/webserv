@@ -32,15 +32,15 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 			this->_status_code = 200;
 			return;
 		}
-	} else
-	{
-		switch (_request->_method)
-		{
-			case METHOD_GET: handle_get(); break;
-			case METHOD_POST: handle_post(); break;
-			case METHOD_DELETE: handle_delete(); break;
-		}
+		finish_response();
+		return;
 	}
+	if (_request->_method == METHOD_GET)
+		_status_code = handle_get();
+	if (_request->_method == METHOD_POST)
+		_status_code = handle_post();
+	if (_request->_method == METHOD_DELETE)
+		_status_code = handle_delete();
 	finish_response();
 }
 
@@ -51,33 +51,6 @@ void Response::finish_response(void)
 void Response::set_error(int code)
 {
 	this->_status_code = code;
-}
-
-void Response::finish_cgi(std::shared_ptr<Request> req)
-{
-	if (req->_headers.count("content-type"))
-		_additional_headers["Content-Type"] = req->_headers["content-type"];
-	_body << req->_body;
-	create_response(_status_code);
-}
-
-bool Response::init_cgi(std::shared_ptr<Client> client)
-{
-	if (_request->_method == METHOD_DELETE)
-	{
-		_status_code = STATUS_METHOD_NOT_ALLOWED;
-		return false;
-	}
-	Cgi cgi(_location, _request);
-
-	if (!cgi.start(client))
-	{
-		_status_code = 404;
-		std::cout << "cgi.start failed\n";
-		return false;
-	}
-	client->conn_type = CONN_WAIT_CGI;
-	return true;
 }
 
 int Response::has_errors(void)
@@ -159,45 +132,36 @@ void Response::generate_error_page(int code)
 	_body << "</h1></body></html>";
 }
 
-void Response::handle_get(void)
+int Response::handle_get(void)
 {
 	std::string filename = _location->_rootPath + _request->_uri;
 	int flags = Io::file_stat(filename);
 
 	if (!flags)
-	{
-		_status_code = STATUS_NOT_FOUND;
-		return;
-	}
+		return STATUS_NOT_FOUND;
 	if (!(flags & FS_READ))
-	{
-		_status_code = STATUS_FORBIDDEN;
-		return;
-	}
+		return STATUS_FORBIDDEN;
 
 	if (flags & FS_ISFILE)
 	{
 		if (!Io::read_file(filename, _body))
-		{
-			_status_code = STATUS_INTERNAL_ERROR;
-			return;
-		}
-		_status_code = STATUS_OK;
-	} else if (flags & FS_ISDIR)
+			return STATUS_INTERNAL_ERROR;
+		return STATUS_OK;
+	}
+	if (flags & FS_ISDIR)
 	{
 		if (_request->_uri.back() != '/')
-			return;
+			return STATUS_NOT_FOUND;
 		if (!_location->_autoIndex)
-		{
-			_status_code = STATUS_INTERNAL_ERROR;
-			return;
-		}
-		if (directory_index(filename))
-			_status_code = STATUS_OK;
+			return STATUS_FORBIDDEN;
+		if (!directory_index(filename))
+			return STATUS_INTERNAL_ERROR;
+		return STATUS_OK;
 	}
+	return STATUS_NOT_FOUND;
 }
 
-void Response::handle_post(void)
+int Response::handle_post(void)
 {
 	for (auto &part : _request->parts)
 	{
@@ -205,29 +169,49 @@ void Response::handle_post(void)
 		std::cerr << "path: " << path << "\n";
 
 		if (!Io::write_file(path, part.data))
-		{
-			_status_code = STATUS_INTERNAL_ERROR;
-			return;
-		}
+			return STATUS_INTERNAL_ERROR;
 	}
-	_status_code = STATUS_OK;
+	return STATUS_CREATED;
 }
 
-void Response::handle_delete(void)
+int Response::handle_delete(void)
 {
 	std::string filename = _location->_rootPath + _request->_uri;
 	int flags = Io::file_stat(filename);
 	if (!flags)
-	{
-		_status_code = STATUS_NOT_FOUND;
-		return;
-	}
+		return STATUS_NOT_FOUND;
+	if (!(flags & FS_WRITE))
+		return STATUS_FORBIDDEN;
 	if (!std::filesystem::remove(filename.c_str()))
+		return STATUS_INTERNAL_ERROR;
+	return STATUS_OK;
+}
+
+void Response::finish_cgi(std::shared_ptr<Request> req)
+{
+	if (req->_headers.count("content-type"))
+		_additional_headers["Content-Type"] = req->_headers["content-type"];
+	_body << req->_body;
+	create_response(_status_code);
+}
+
+bool Response::init_cgi(std::shared_ptr<Client> client)
+{
+	if (_request->_method == METHOD_DELETE)
 	{
-		_status_code = 500;
-		return;
+		_status_code = STATUS_METHOD_NOT_ALLOWED;
+		return false;
 	}
-	_status_code = STATUS_OK;
+	Cgi cgi(_location, _request);
+
+	if (!cgi.start(client))
+	{
+		_status_code = 404;
+		std::cout << "cgi.start failed\n";
+		return false;
+	}
+	client->conn_type = CONN_WAIT_CGI;
+	return true;
 }
 
 std::shared_ptr<Location> Response::find_location(void)
@@ -261,10 +245,7 @@ bool Response::directory_index(std::string path)
 
 	dir = opendir(path.c_str());
 	if (!dir)
-	{
-		_status_code = STATUS_INTERNAL_ERROR;
 		return false;
-	}
 	_body << "<html><head><title>Index</title></head><body><h1>Index of "
 	      << _request->_uri << "</h1><ul>";
 

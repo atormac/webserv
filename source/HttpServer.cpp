@@ -170,7 +170,7 @@ bool HttpServer::accept_client(int _socket_fd)
 	return mod_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
 }
 
-bool HttpServer::mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
+bool HttpServer::mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> &cl)
 {
 	struct epoll_event ev;
 

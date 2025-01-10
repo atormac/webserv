@@ -7,6 +7,7 @@ class Location;
 
 class Response {
     private:
+	std::shared_ptr<Request> _client;
 	std::shared_ptr<Request> _request;
 	std::shared_ptr<Location> _location;
 
@@ -18,9 +19,9 @@ class Response {
 	int has_errors(void);
 	void create_response(int status);
 
-	void handle_post(void);
-	void handle_delete(void);
-	void handle_get(void);
+	int handle_post(void);
+	int handle_delete(void);
+	int handle_get(void);
 
 	std::shared_ptr<Location> find_location(void);
 	void set_error_page(int code);
