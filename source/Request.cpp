@@ -89,9 +89,6 @@ State Request::parse_status_line(void)
 
 	if (pos == std::string::npos)
 	{
-		if (_buffer.rfind("GET ") != 0 && _buffer.rfind("POST ") != 0 &&
-		    _buffer.rfind("DELETE") != 0)
-			return State::Error;
 		return State::PartialStatus;
 	}
 	std::string str = _buffer.substr(0, pos);
