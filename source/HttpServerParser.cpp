@@ -9,12 +9,15 @@ void HttpServer::parseConfig(const std::string &filePath)
 	if (!configFile.is_open())
 		throw std::runtime_error("ParseConfig: Coldn't open config file");
 	std::cout << "Parsing config file" << std::endl;
+	if (configFile.peek() == EOF)
+		throw std::runtime_error("ParseConfig: Empty config file");
 
 	while (std::getline(configFile, line))
 	{
 		removeComments(line);
-		if (line.empty())
+		if (line.empty()) 
 			continue;
+
 		if (std::regex_match(line, std::regex("^server\\s*$")))
 		{
 			std::shared_ptr<ServerConfig> server(new ServerConfig());
@@ -35,4 +38,7 @@ void HttpServer::parseConfig(const std::string &filePath)
 				"ParseConfig: Unexpected value outside server block: " +
 				line);
 	}
+
+	if (_portsToSockets.empty())
+		throw std::runtime_error("ParseConfig: No server blocks in config");
 }
