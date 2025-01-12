@@ -38,7 +38,7 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 		return;
 	}
 
-	_handleCookies();
+	if (_location->_session) _handleCookies();
 
 	if (_request->_method == METHOD_GET)
 		_status_code = handle_get();
