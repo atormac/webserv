@@ -48,6 +48,12 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 
 void Response::set_index(void)
 {
+	if (_request->_uri.rfind(_location->_path, 0) == 0)
+	{
+		_request->_uri.erase(0, _location->_path.size());
+		if (_request->_uri.front() != '/')
+			_request->_uri = "/" + _request->_uri;
+	}
 	if (_location->_autoIndex || _location->_index.empty())
 		return;
 	if (_request->_uri.back() != '/')

@@ -326,9 +326,6 @@ bool HttpServer::init_cgi_fds(std::shared_ptr<Client> conn)
 	return true;
 }
 
-
-
-
 void HttpServer::set_config(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 {
 	if (req->host_matched || client->conn_type != CONN_REGULAR) return;
@@ -373,14 +370,5 @@ std::vector<std::shared_ptr<ServerConfig> > HttpServer::matching_configs(int por
 				CONFIGS.push_back(con);
 		}
 	}
-
-	/*
-	for (std::shared_ptr<ServerConfig> y : CONFIGS)
-	{
-		if (y)
-			std::cout << "CHECK for configs port: " << y->getPort() << std::endl;
-	}
-	*/
-
 	return CONFIGS;
 }
