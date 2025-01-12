@@ -5,8 +5,8 @@ error_reporting(E_ALL);
 $post_data = file_get_contents('php://input');
 //header("Content-Type: text/html");
 //header("X-Debug: CGI Test");
-echo "Content-Type: text/html\r\n";
-echo "Debug-Header: DEBUG\r\n\r\n";
+echo "Content-Type: text/html\n";
+echo "Debug-Header: DEBUG\n\n";
 
 sleep(3);
 echo("post_size: " . getenv("CONTENT_LENGTH") . "\n");
