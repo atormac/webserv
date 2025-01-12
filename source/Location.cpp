@@ -87,7 +87,7 @@ void Location::parseLocation(std::ifstream &configFile, std::string &location_li
 	if (!std::regex_match(line, std::regex("\t\\}\\s*")))
 		throw std::runtime_error("parseLocation: No '}' closing location block!");
 
-	if ((_rootPath == "" || !_autoIndexSet || _methods.empty()) && _redirectPath == "")
+	if (_methods.empty() || ((_rootPath == "" || !_autoIndexSet) && _redirectPath == ""))
 		throw std::runtime_error("parseLocation: Incomplete location");
 }
 
@@ -124,7 +124,7 @@ void Location::_addRoot(std::string &line)
 
 void Location::_addIndex(std::string &line)
 {
-	std::regex ptrn("\\t{2}index(\\s+\\w+.(html|htm|txt))\\s*;\\s*");
+	std::regex ptrn("\\t{2}index\\s+(\\w+.(html|htm|txt))\\s*;\\s*");
 	std::smatch match_res;
 
 	if (!_index.empty())
@@ -133,7 +133,7 @@ void Location::_addIndex(std::string &line)
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addIndex: Expected format: \"index file.(html|htm|txt);\"");
 	_index = match_res[1];
-	std::cout << "_index: " << _index << "\n";
+	std::cout << "_index: |" << _index << "|\n";
 }
 
 void Location::_addAutoIndex(std::string &line)
