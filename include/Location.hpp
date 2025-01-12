@@ -30,6 +30,8 @@ class Location {
 	std::string _redirectPath;
 	std::string _uploadPath;
 	std::map<std::string, std::string> _cgi;
+	bool _session;
+	bool _sessionSet;
 
 	Location(ServerConfig *serverConfig);
 	Location(const Location &original);
@@ -46,6 +48,7 @@ class Location {
 	void _addRedirect(std::string &line);
 	void _addUpload(std::string &line);
 	void _addCgi(std::string &line);
+	void _addSession(std::string &line);
 
 	bool getAutoIndex();
 	void dump(void);

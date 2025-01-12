@@ -16,7 +16,8 @@ Location::Location(ServerConfig *srvConf)
 	, _autoIndex(false)
 	, _autoIndexSet(false)
 	, _redirectCode(0)
-	
+	, _session(false)
+	, _sessionSet(false)
 {
 }
 
@@ -60,7 +61,6 @@ void Location::parseLocation(std::ifstream &configFile, std::string &location_li
 
 	while (skipEmptyLines(configFile, line), configFile)
 	{
-		std::cout << line << "\n";
 		std::smatch match_res;
 		std::regex ptrn("^\t{2}(\\w+).*");
 		if (!std::regex_match(line, match_res, ptrn))
@@ -72,6 +72,8 @@ void Location::parseLocation(std::ifstream &configFile, std::string &location_li
 			_addIndex(line);
 		else if (match_res[1] == "autoindex")
 			_addAutoIndex(line);
+		else if (match_res[1] == "session")
+			_addSession(line);
 		else if (match_res[1] == "methods")
 			_addMethods(line);
 		else if (match_res[1] == "return")
@@ -153,6 +155,24 @@ void Location::_addAutoIndex(std::string &line)
 	else
 		_autoIndex = 0;
 	_autoIndexSet = true;
+}
+
+void Location::_addSession(std::string &line)
+{
+	std::regex ptrn("^\\s*session\\s+(on|off)\\s*;\\s*$");
+	std::smatch match_res;
+
+	if (_sessionSet)
+		throw std::runtime_error(
+			"_addSession: Cannot add sesseion element multiple times!");
+	if (!std::regex_match(line, match_res, ptrn))
+		throw std::runtime_error(
+			"_addSession: Expected format: \"session [on/off];\"");
+	if (match_res[1] == "on")
+		_session = 1;
+	else
+		_session = 0;
+	_sessionSet = true;
 }
 
 void Location::_addMethods(std::string &line)
