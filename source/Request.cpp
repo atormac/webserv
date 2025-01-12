@@ -75,7 +75,9 @@ State Request::parse(State s_start, char *data, size_t size)
 			break;
 	}
 	if (_state == State::Error && !this->parser_error)
+	{
 		this->parser_error = STATUS_BAD_REQUEST;
+	}
 	return _state;
 }
 
@@ -237,10 +239,16 @@ State Request::parse_chunked(void)
 		return State::PartialChunked;
 
 	int chunk_len = Str::decode_hex(_buffer.c_str());
+
 	if (chunk_len == -1)
+	{
 		return State::Error;
-	_body += _buffer.substr(pos + 2, chunk_len);
-	_buffer.erase(0, pos + 2 + chunk_len + 1);
+	}
+	std::string chunk = _buffer.substr(pos + 2, chunk_len);
+	_body += chunk;
+	_buffer.erase(0, pos + 2);
+	_buffer.erase(0, chunk.size());
+	_buffer.erase(0, 2);
 
 	return chunk_len ? State::Chunked : State::Ok;
 }
