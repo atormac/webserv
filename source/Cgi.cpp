@@ -53,7 +53,10 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 
 	if (request->_method == METHOD_POST)
 	{
-		env_set("CONTENT_TYPE", "application/x-www-form-urlencoded");
+		if (request->_headers.count("content_type"))
+			env_set("CONTENT_TYPE", request->_headers["content-type"]);
+		else
+			env_set("CONTENT_TYPE", "application/x-www-form-urlencoded");
 		env_set("CONTENT_LENGTH", std::to_string(request->_body.size()));
 	}
 }

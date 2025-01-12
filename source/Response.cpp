@@ -21,7 +21,7 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 		return;
 	}
 
-	set_index();
+	fix_uri();
 
 	if (Cgi::is_cgi(_location, _request->_uri))
 	{
@@ -46,7 +46,7 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 	finish_response();
 }
 
-void Response::set_index(void)
+void Response::fix_uri(void)
 {
 	if (_request->_uri.rfind(_location->_path, 0) == 0)
 	{

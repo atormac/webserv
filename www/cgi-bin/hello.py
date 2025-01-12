@@ -1,8 +1,8 @@
 import sys
 import time
 
-sys.stdout.write("Content-Type: text/plain\n\n")
-sys.stdout.write("Debug-Header: debug\n\n\n\n")
+sys.stdout.write("Content-Type: text/plain\n")
+sys.stdout.write("Debug-Header: debug\n\n")
 
 time.sleep(5)
 print("""

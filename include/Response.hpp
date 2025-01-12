@@ -19,7 +19,7 @@ class Response {
 	int has_errors(void);
 	void create_response(int status);
 
-	void set_index(void);
+	void fix_uri(void);
 
 	int handle_post(void);
 	int handle_delete(void);
