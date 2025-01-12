@@ -22,7 +22,7 @@ class Location {
 	ServerConfig *_serverConfig;
 	std::string _path;
 	std::string _rootPath;
-	std::vector<std::string> _indices;
+	std::string _index;
 	bool _autoIndex;
 	bool _autoIndexSet;
 	std::vector<std::string> _methods;
