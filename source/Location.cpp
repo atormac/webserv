@@ -86,7 +86,9 @@ void Location::parseLocation(std::ifstream &configFile, std::string &location_li
 	}
 	if (!std::regex_match(line, std::regex("\t\\}\\s*")))
 		throw std::runtime_error("parseLocation: No '}' closing location block!");
-	_rootPath = (_rootPath == "") ? "www" : _rootPath;
+
+	if (_rootPath == "" || !_autoIndexSet || _methods.empty())
+		throw std::runtime_error("parseLocation: Incomplete location");
 }
 
 // Setters
