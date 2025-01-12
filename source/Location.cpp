@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/02 12:32:30 by lopoka            #+#    #+#             */
-/*   Updated: 2024/11/26 12:34:41 by lopoka           ###   ########.fr       */
+/*   Updated: 2025/01/12 16:19:14 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -133,7 +133,6 @@ void Location::_addIndex(std::string &line)
 	if (!std::regex_match(line, match_res, ptrn))
 		throw std::runtime_error("_addIndex: Expected format: \"index file.(html|htm|txt);\"");
 	_index = match_res[1];
-	std::cout << "_index: |" << _index << "|\n";
 }
 
 void Location::_addAutoIndex(std::string &line)

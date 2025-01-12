@@ -22,7 +22,7 @@ Request::Request(bool cgi)
 	: Request()
 {
 	this->_cgi = cgi;
-	this->_header_delim = "\n\n";
+	this->_header_delim = "\n";
 }
 
 Request::~Request()
@@ -76,7 +76,10 @@ State Request::parse(State s_start, char *data, size_t size)
 	}
 	if (_state == State::Error && !this->parser_error)
 	{
-		this->parser_error = STATUS_BAD_REQUEST;
+		if (_cgi)
+			this->parser_error = 502;
+		else
+			this->parser_error = STATUS_BAD_REQUEST;
 	}
 	return _state;
 }
@@ -153,7 +156,7 @@ State Request::parse_header_cgi(void)
 		_buffer.erase(0, _header_delim.size());
 		return State::CgiBody;
 	}
-	return parse_header_field(pos) ? State::CgiHeader : State::CgiBody;
+	return parse_header_field(pos) ? State::CgiHeader : State::Error;
 }
 
 bool Request::parse_header_field(size_t pos)
