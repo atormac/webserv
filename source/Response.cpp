@@ -17,13 +17,14 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 	}
 
 	// Cookie Monster lives here:
-	_handleCookies();
 
 	if (!_location->_redirectPath.empty())
 	{
 		create_response(_location->_redirectCode);
 		return;
 	}
+
+	set_index();
 
 	if (Cgi::is_cgi(_location, _request->_uri))
 	{
@@ -36,6 +37,9 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 		_status_code = STATUS_OK;
 		return;
 	}
+
+	_handleCookies();
+
 	if (_request->_method == METHOD_GET)
 		_status_code = handle_get();
 	if (_request->_method == METHOD_POST)
@@ -43,6 +47,23 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 	if (_request->_method == METHOD_DELETE)
 		_status_code = handle_delete();
 	finish_response();
+}
+
+void Response::set_index(void)
+{
+	if (_location->_autoIndex || _location->_index.empty())
+		return;
+	if (_request->_uri.back() != '/')
+		return;
+
+	std::string filename = _location->_rootPath + _request->_uri;
+	int flags = Io::file_stat(filename);
+
+	if (flags & FS_ISDIR)
+	{
+		_request->_uri += _location->_index;
+	}
+	std::cerr << "new uri: " << _request->_uri << std::endl;
 }
 
 void Response::finish_response(void)
@@ -131,7 +152,9 @@ int Response::handle_get(void)
 		if (_request->_uri.back() != '/')
 			return STATUS_NOT_FOUND;
 		if (!_location->_autoIndex)
+		{
 			return STATUS_FORBIDDEN;
+		}
 		if (!directory_index(filename))
 			return STATUS_INTERNAL_ERROR;
 		return STATUS_OK;
