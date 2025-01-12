@@ -235,6 +235,11 @@ State Request::parse_body_cgi(void)
 
 State Request::parse_chunked(void)
 {
+	if (conf && _buffer.size() > conf->getMaxSize())
+	{
+		this->parser_error = STATUS_TOO_LARGE;
+		return State::Error;
+	}
 	if (_bytes_read == 0)
 		return State::Ok;
 	size_t pos = _buffer.find(CRLF);
