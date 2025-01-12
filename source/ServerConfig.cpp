@@ -45,6 +45,9 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 	}
 	if (!std::regex_match(line, std::regex("\\}\\s*")))
 		throw std::runtime_error("parseServer: No '}' closing server block!");
+
+	if (_ipAddress == "" || _port == "" || _locations.empty())
+		throw std::runtime_error("parseServer: Incomplete server config");
 }
 
 // Setters
