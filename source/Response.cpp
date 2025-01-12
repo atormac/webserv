@@ -15,9 +15,6 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 		create_response(error_code);
 		return;
 	}
-
-	// Cookie Monster lives here:
-
 	if (!_location->_redirectPath.empty())
 	{
 		create_response(_location->_redirectCode);
