@@ -63,7 +63,6 @@ void Response::set_index(void)
 	{
 		_request->_uri += _location->_index;
 	}
-	std::cerr << "new uri: " << _request->_uri << std::endl;
 }
 
 void Response::finish_response(void)
@@ -205,6 +204,8 @@ void Response::finish_cgi(std::shared_ptr<Request> req)
 {
 	if (req->_headers.count("content-type"))
 		_additional_headers["Content-Type"] = req->_headers["content-type"];
+	if (req->parser_error)
+		_status_code = req->parser_error;
 	_body << req->_body;
 	create_response(_status_code);
 }
