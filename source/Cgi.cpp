@@ -135,6 +135,7 @@ bool Cgi::start(std::shared_ptr<Client> client)
 		child_process(client, args, fd_from, fd_to);
 		close_pipes(fd_from);
 		close_pipes(fd_to);
+		client->cleanup_child();
 		exit(1);
 	}
 

@@ -70,6 +70,15 @@ bool Client::has_timed_out(time_t now)
 
 void Client::cleanup_child(void)
 {
-	this->instance->close_server();
-	close(this->fd);
+	this->instance->close_connections();
+	this->close_fd();
+}
+
+void Client::close_fd(void)
+{
+	if (this->fd >= 0)
+	{
+		close(this->fd);
+		this->fd = -1;
+	}
 }

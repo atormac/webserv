@@ -178,7 +178,7 @@ bool Request::parse_header_field(size_t pos)
 	if (key == "content-length")
 	{
 		int tmp = Str::content_len_int(value);
-		if (tmp < 0)
+		if (tmp < 0 || _method == METHOD_GET)
 			return false;
 		_content_len = tmp;
 	}

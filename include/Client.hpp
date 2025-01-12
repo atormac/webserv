@@ -44,5 +44,6 @@ class Client {
 	void update_time(void);
 	bool has_timed_out(time_t now);
 	void cleanup_child(void);
+	void close_fd(void);
 };
 #endif

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/10 23:04:36 by user             ###   ########.fr       */
+/*   Updated: 2025/01/12 18:06:23 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
@@ -63,6 +63,7 @@ class HttpServer {
 	void parseConfig(const std::string &filePath);
 	std::vector<std::shared_ptr<ServerConfig> > matching_configs(int port);
 	void close_server(void);
+	void close_connections(void);
 	bool init();
 	void epoll(void);
 

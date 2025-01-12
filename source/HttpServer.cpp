@@ -30,6 +30,20 @@ void HttpServer::close_server(void)
 	this->_epoll_fd = -1;
 }
 
+void HttpServer::close_connections(void)
+{
+	if (this->_epoll_fd == -1)
+		return;
+	for (auto &c : _clients)
+	{
+		c.second->close_fd();
+	}
+	this->_socketFdToSockets.clear();
+	this->_portsToSockets.clear();
+	close(this->_epoll_fd);
+	this->_epoll_fd = -1;
+}
+
 bool HttpServer::init()
 {
 	signal(SIGPIPE, SIG_IGN);
