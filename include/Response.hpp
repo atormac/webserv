@@ -19,6 +19,8 @@ class Response {
 	int has_errors(void);
 	void create_response(int status);
 
+	void set_index(void);
+
 	int handle_post(void);
 	int handle_delete(void);
 	int handle_get(void);
