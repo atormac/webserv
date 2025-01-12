@@ -328,7 +328,6 @@ void HttpServer::set_config(std::shared_ptr<Client> client, std::shared_ptr<Requ
 	int port = _socketToPort[client->socket];
 	std::vector <std::shared_ptr<ServerConfig>> configs = matching_configs(port);
 
-	std::cerr << "matched port: " << port << "\n";
 	for (const auto &c : configs)
 	{
 		for (const auto &name : c->getNames())
@@ -356,17 +355,18 @@ std::vector<std::shared_ptr<ServerConfig> > HttpServer::matching_configs(int por
 	
 		if (_portsToSockets.count(x.first) && port == std::stoi(match_res[2]))
 		{
-			std::cout << "Found socket with port: " <<  match_res[2] << std::endl;
 			for (auto con : _portsToSockets[x.first]->getServers())
 				CONFIGS.push_back(con);
 		}
 	}
 
+	/*
 	for (std::shared_ptr<ServerConfig> y : CONFIGS)
 	{
 		if (y)
 			std::cout << "CHECK for configs port: " << y->getPort() << std::endl;
 	}
+	*/
 
 	return CONFIGS;
 }
