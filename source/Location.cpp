@@ -60,6 +60,7 @@ void Location::parseLocation(std::ifstream &configFile, std::string &location_li
 
 	while (skipEmptyLines(configFile, line), configFile)
 	{
+		std::cout << line << "\n";
 		std::smatch match_res;
 		std::regex ptrn("^\t{2}(\\w+).*");
 		if (!std::regex_match(line, match_res, ptrn))
@@ -87,8 +88,9 @@ void Location::parseLocation(std::ifstream &configFile, std::string &location_li
 	if (!std::regex_match(line, std::regex("\t\\}\\s*")))
 		throw std::runtime_error("parseLocation: No '}' closing location block!");
 
-	if (_methods.empty() || ((_rootPath == "" || !_autoIndexSet) && _redirectPath == ""))
-		throw std::runtime_error("parseLocation: Incomplete location");
+	if (_methods.empty() || 
+	!((_rootPath.size() && _autoIndexSet && !_redirectPath.size()) || (!_rootPath.size() && !_autoIndexSet && _redirectPath.size())))
+		throw std::runtime_error("parseLocation: Invalid location block");
 }
 
 // Setters
