@@ -26,7 +26,12 @@ void HttpServer::parseConfig(const std::string &filePath)
 				server->getIpAddress() + ":" + server->getPort();
 
 			if (_portsToSockets.count(ip_and_port))
-				_portsToSockets[ip_and_port]->addServer(server);
+			{
+				if (!_portsToSockets[ip_and_port]->serverExist(server->getNames()))
+					_portsToSockets[ip_and_port]->addServer(server);
+				else
+					throw std::runtime_error("ParseConfig: Adding duplicate servers(same IP, Port and Name)");
+			}
 			else
 			{
 				std::shared_ptr<Socket> socket(new Socket(server));

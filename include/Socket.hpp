@@ -29,6 +29,7 @@ class Socket {
 	void close_socket(void);
 	void setSocketDescriptor(int socketFd);
 	void addServer(std::shared_ptr<ServerConfig> server);
+	bool serverExist(std::vector<std::string> names) const;
 	const std::vector<std::shared_ptr<ServerConfig> > getServers() const;
 
 	int bind_socket(std::string ip, int port);

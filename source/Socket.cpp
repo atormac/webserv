@@ -85,3 +85,19 @@ int Socket::bind_socket(std::string ip, int port)
 	std::cout << "Listening on: " << ip << ":" << port << std::endl;
 	return socket_fd;
 }
+
+bool Socket::serverExist(std::vector<std::string> names) const
+{
+	for (const auto &name_new : names)
+	{
+		for (const auto &server : _servers)
+		{
+			for (const auto &name_old : server->getNames())
+			{
+				if (name_new == name_old)
+					return true;
+			}
+		}
+	}
+	return false;
+}
