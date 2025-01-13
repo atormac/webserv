@@ -38,7 +38,10 @@ void ServerConfig::parseServerConfig(std::ifstream &configFile)
 		{
 			std::shared_ptr<Location> location(new Location(this));
 			location->parseLocation(configFile, line);
-			_addLocation(location);
+			if (!_locationExist(location->_path))
+				_addLocation(location);
+			else
+				throw std::runtime_error("parseServer: Adding duplicate locations");
 		} else
 			throw std::runtime_error(
 				"parseServer: Unknown element in server block: " + line);
@@ -140,4 +143,14 @@ std::string &ServerConfig::getPort()
 std::vector<std::shared_ptr<Location> > &ServerConfig::getLocations()
 {
 	return _locations;
+}
+
+bool ServerConfig::_locationExist(std::string &name)
+{
+	for (auto &location : _locations)
+	{
+		if (location->_path == name)
+			return true;
+	}
+	return false;
 }

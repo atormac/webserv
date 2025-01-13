@@ -22,6 +22,7 @@ class ServerConfig {
 	void _addMaxSize(std::string &line);
 	void _addErrorPage(std::string &line);
 	void _addLocation(std::shared_ptr<Location> location);
+	bool _locationExist(std::string &name);
 	void _addListen(std::string &line);
 
     public:
