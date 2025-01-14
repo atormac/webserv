@@ -155,6 +155,7 @@ bool HttpServer::accept_client(int _socket_fd)
 	}
 	std::shared_ptr cl = std::make_shared<Client>(*this, client_fd, _socket_fd,
 						      inet_ntoa(peer_addr.sin_addr));
+	//printf("Accepted FD: %d\n", client_fd);
 	return mod_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
 }
 
@@ -182,6 +183,7 @@ void HttpServer::remove_fd(int fd)
 {
 	if (fd < 0 || _clients.count(fd) == 0)
 		return;
+	//printf("Removing FD: %d\n", fd);
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
 	{
 		perror("epoll_ctl");

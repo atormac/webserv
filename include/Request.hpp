@@ -45,7 +45,6 @@ class Request {
 	std::string _buffer;
 	size_t _bytes_read;
 	size_t _total_read;
-	size_t _body_read;
 
 	int _body_type;
 	bool _cgi;
