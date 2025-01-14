@@ -306,7 +306,7 @@ bool Response::directory_index(std::string path)
 	std::string href;
 	href.reserve(256);
 	std::string link;
-	href.reserve(256);
+	link.reserve(256);
 
 	while ((entry = readdir(dir)) != NULL)
 	{
@@ -324,9 +324,9 @@ bool Response::directory_index(std::string path)
 		}
 		_body << "<li><a href=\"" << href << "\">" << link << "</a></li>";
 	}
+	closedir(dir);
 	_body << "</ul></body></html>";
 
-	closedir(dir);
 	return true;
 }
 

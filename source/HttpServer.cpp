@@ -43,7 +43,8 @@ bool HttpServer::init()
 		_socketFdToSockets.insert({ socketFd, itr->second });
 	}
 
-	_epoll_fd = epoll_create(512);
+	_epoll_fd = epoll_create(1);
+
 	if (_epoll_fd == -1)
 	{
 		perror("epoll_create");
@@ -52,7 +53,7 @@ bool HttpServer::init()
 	for (const auto &so : _socketFdToSockets)
 	{
 		struct epoll_event ev;
-		ev.events = EPOLLET | EPOLLIN;
+		ev.events = EPOLLIN;
 		ev.data.fd = so.first;
 
 		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -1)
@@ -136,15 +137,16 @@ bool HttpServer::accept_client(int _socket_fd)
 	std::memset(&peer_addr, 0, sizeof(sockaddr_in));
 	socklen_t peer_addr_size = sizeof(peer_addr);
 
-	if (_clients.size() >= 512)
-	{
-		std::cerr << "Error: too many connections\n";
-		return false;
-	}
 	int client_fd = accept(_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
 	if (client_fd == -1)
 	{
 		perror("accept()");
+		return false;
+	}
+	if (_clients.size() >= 512)
+	{
+		std::cerr << "Error: too many connections\n";
+		close(client_fd);
 		return false;
 	}
 	if (!Io::set_nonblocking(client_fd))
@@ -155,15 +157,14 @@ bool HttpServer::accept_client(int _socket_fd)
 	}
 	std::shared_ptr cl = std::make_shared<Client>(*this, client_fd, _socket_fd,
 						      inet_ntoa(peer_addr.sin_addr));
-	//printf("Accepted FD: %d\n", client_fd);
 	return mod_fd(client_fd, EPOLL_CTL_ADD, EPOLLIN, cl);
 }
 
-bool HttpServer::mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> &cl)
+bool HttpServer::mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 {
 	struct epoll_event ev;
 
-	ev.events = EPOLLET | mask;
+	ev.events = mask;
 	ev.data.fd = fd;
 
 	if (epoll_ctl(this->_epoll_fd, ctl, fd, &ev) == -1)
@@ -174,7 +175,7 @@ bool HttpServer::mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> &cl)
 	}
 	if (ctl == EPOLL_CTL_ADD)
 	{
-		_clients.emplace(fd, cl);
+		_clients[fd] = cl;
 	}
 	return true;
 }
@@ -183,7 +184,6 @@ void HttpServer::remove_fd(int fd)
 {
 	if (fd < 0 || _clients.count(fd) == 0)
 		return;
-	//printf("Removing FD: %d\n", fd);
 	if (epoll_ctl(this->_epoll_fd, EPOLL_CTL_DEL, fd, NULL) == -1)
 	{
 		perror("epoll_ctl");
@@ -221,6 +221,11 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 	int mask = EPOLLIN;
 	if (state == State::Ok || state == State::Error || bytes_read == 0)
 	{
+		if (bytes_read == 0 && state != State::Ok && state != State::Error)
+		{
+			remove_fd(client->fd);
+			return;
+		}
 		client->req->dump();
 		mask = EPOLLOUT;
 		mod_fd(client->fd, EPOLL_CTL_MOD, mask, client);
