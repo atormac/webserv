@@ -7,6 +7,7 @@ std::unordered_map<std::string, int> method_map = { { "GET", METHOD_GET },
 Request::Request()
 {
 	this->_bytes_read = 0;
+	this->_body_read = 0;
 	this->parser_error = 0;
 	this->_state = State::StatusLine;
 	this->_content_len = 0;
@@ -235,7 +236,7 @@ State Request::parse_body_cgi(void)
 
 State Request::parse_chunked(void)
 {
-	if (conf && _buffer.size() > conf->getMaxSize())
+	if (conf && _body_read > conf->getMaxSize())
 	{
 		this->parser_error = STATUS_TOO_LARGE;
 		return State::Error;
@@ -254,6 +255,7 @@ State Request::parse_chunked(void)
 	}
 	std::string chunk = _buffer.substr(pos + 2, chunk_len);
 	_body += chunk;
+	_body_read += _buffer.size();
 	_buffer.erase(0, pos + 2);
 	_buffer.erase(0, chunk.size());
 	_buffer.erase(0, 2);
@@ -305,7 +307,6 @@ void Request::parse_multipart(void)
 		this->parts.push_back(part);
 	}
 	_state = State::Ok;
-	_body.clear();
 	_buffer.clear();
 }
 

@@ -62,7 +62,7 @@ bool Client::has_timed_out(time_t now)
 
 	if (delta > TIMEOUT_SECONDS)
 	{
-		std::cout << "client timed out: " << this->fd << std::endl;
+		std::cerr << "client timed out: " << this->fd << std::endl;
 		return true;
 	}
 	return false;
