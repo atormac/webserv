@@ -298,14 +298,15 @@ void Request::parse_multipart(void)
 		if (part.filename.empty() || part.data.empty())
 			continue;
 
+		/*
 		std::cout << "part.name: " << part.name << std::endl;
 		std::cout << "part.filename: " << part.filename << std::endl;
 		std::cout << "part.content_type: " << part.content_type << std::endl;
 		std::cout << "part.data.size: " << part.data.size() << std::endl;
+		*/
 		this->parts.push_back(part);
 	}
 	_state = State::Ok;
-	_body.clear();
 	_buffer.clear();
 }
 
