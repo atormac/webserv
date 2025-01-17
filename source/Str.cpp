@@ -1,6 +1,6 @@
 #include <HttpServer.hpp>
 
-int Str::decode_hex(const char *s)
+int Str::decode_hex(const char *s, int *out_len)
 {
 	int ret = 0;
 	int val = 0;
@@ -19,6 +19,7 @@ int Str::decode_hex(const char *s)
 		else if (c >= 'A' && c <= 'F')
 			val = c - 'A' + 10;
 		ret = (ret * 16) + val;
+		*out_len = *out_len + 1;
 		s++;
 	}
 	return ret;

@@ -251,19 +251,22 @@ State Request::parse_chunked(void)
 	if (pos == std::string::npos)
 		return State::PartialChunked;
 
-	int chunk_len = Str::decode_hex(_buffer.c_str());
+	int num_len = 0;
+	int chunk_len = Str::decode_hex(_buffer.c_str(), &num_len);
 
-	if (chunk_len == -1)
+	if (chunk_len == -1 || num_len == 0)
 	{
 		return State::Error;
 	}
+	if (chunk_len == 0)
+		return State::Ok;
 	std::string chunk = _buffer.substr(pos + 2, chunk_len);
 	_body += chunk;
 	_buffer.erase(0, pos + 2);
 	_buffer.erase(0, chunk.size());
 	_buffer.erase(0, 2);
 
-	return chunk_len ? State::Chunked : State::Ok;
+	return State::Chunked;
 }
 
 void Request::parse_multipart(void)

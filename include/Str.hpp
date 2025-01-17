@@ -5,7 +5,7 @@
 
 class Str {
     public:
-	static int decode_hex(const char *s);
+	static int decode_hex(const char *s, int *out_len);
 	static std::string url_decode(const std::string &s);
 	static std::string date_str_now(void);
 	static std::string date_str_hour_from_now(void);
