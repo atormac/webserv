@@ -108,7 +108,7 @@ State Request::parse_status_line(void)
 
 	if (method_map.count(_method_str) == 0)
 	{
-		this->parser_error = STATUS_METHOD_NOT_ALLOWED;
+		this->parser_error = 501;
 		return State::Error;
 	}
 	if (_uri.at(0) != '/' || _version != "HTTP/1.1")
@@ -203,7 +203,12 @@ State Request::parse_body(void)
 	}
 	if (_body_type == BODY_TYPE_CHUNKED)
 		return State::Chunked;
-	if (_headers.count("content-length") && _buffer.size() < _content_len)
+	bool has_length = _headers.count("content-length");
+	if (!has_length && _buffer.size() > 0) {
+		return State::Error;
+	}
+
+	if (has_length && _buffer.size() < _content_len)
 		return State::PartialBody;
 	if (_body_type == BODY_TYPE_MULTIPART)
 		return State::MultiPart;
