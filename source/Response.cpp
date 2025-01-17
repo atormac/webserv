@@ -253,8 +253,7 @@ void Response::set_error_page(int code)
 	std::string page_path = _request->conf->_errorPages[code];
 	if (!Io::read_file(page_path, _body))
 	{
-		this->_status_code = 500;
-		generate_error_page(this->_status_code);
+		generate_error_page(code);
 	}
 }
 
