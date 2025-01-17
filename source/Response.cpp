@@ -166,9 +166,17 @@ int Response::handle_get(void)
 
 int Response::handle_post(void)
 {
+	std::string filename = _location->_rootPath + _request->_uri;
 	bool wrote = false;
 
-	std::string filename = _location->_rootPath + _request->_uri;
+	if (_request->_body_type == BODY_TYPE_CHUNKED &&
+			!_location->_uploadPath.empty()
+			&& filename.rfind(_location->_uploadPath, 0) == 0)
+	{
+		if (!Io::write_file(filename, _request->_body))
+			return STATUS_INTERNAL_ERROR;
+		return STATUS_CREATED;
+	}
 	int flags = Io::file_stat(filename);
 
 	for (auto &part : _request->parts)

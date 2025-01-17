@@ -46,7 +46,6 @@ class Request {
 	size_t _bytes_read;
 	size_t _total_read;
 
-	int _body_type;
 	bool _cgi;
 
 	std::string _header_delim;
@@ -78,6 +77,7 @@ class Request {
 
 	size_t _content_len;
 	std::string _body;
+	int _body_type;
 
 	Request();
 	Request(bool cgi);
