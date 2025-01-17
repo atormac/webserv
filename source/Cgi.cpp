@@ -11,6 +11,8 @@ Cgi::Cgi(std::shared_ptr<Location> location, std::shared_ptr<Request> request)
 {
 	std::string ext = Io::get_file_ext(request->_uri);
 	_interpreter = location->_cgi[ext];
+
+	try {
 	std::filesystem::path p = location->_rootPath;
 	p += request->_uri;
 
@@ -22,6 +24,11 @@ Cgi::Cgi(std::shared_ptr<Location> location, std::shared_ptr<Request> request)
 	dir += location->_rootPath;
 	dir += request->_uri;
 	_script_dir = p.parent_path();
+		
+	} catch (const std::exception &e)
+	{
+		_script_abs = "";
+	}
 
 	env_set_vars(request);
 }
@@ -116,6 +123,8 @@ bool Cgi::start(std::shared_ptr<Client> client)
 	int fd_to[2] = { -1, -1 }; //write cgi input
 	int pid;
 
+	if (_script_abs == "")
+		return false;
 	std::vector<char *> args;
 	args.push_back(const_cast<char *>(_interpreter.c_str()));
 	args.push_back(const_cast<char *>(_script_path.c_str()));

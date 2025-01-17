@@ -65,7 +65,7 @@ bool HttpServer::init()
 	return true;
 }
 
-void HttpServer::cull_clients(void)
+void HttpServer::timeout_clients(void)
 {
 	time_t now;
 	std::time(&now);
@@ -93,8 +93,6 @@ void HttpServer::epoll(void)
 	{
 		int timeout = 1 * 1000;
 		int nfds = ::epoll_wait(_epoll_fd, events, MAX_EVENTS, timeout);
-	
-		cull_clients();
 
 		for (int i = 0; i < nfds; i++)
 		{
@@ -127,6 +125,7 @@ void HttpServer::epoll(void)
 			else if (e.events & EPOLLOUT)
 				handle_write(cl);
 		}
+		timeout_clients();
 	}
 }
 
