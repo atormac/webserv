@@ -81,7 +81,20 @@ void HttpServer::timeout_clients(void)
 	}
 	for (int i : timedout)
 	{
-		remove_fd(i);
+		std::shared_ptr cl = _clients[i];
+		if (!cl)
+			continue;
+		if (cl->conn_type == CONN_CGI)
+		{
+			remove_fd(i);
+			continue;
+		}
+		if (cl->resp == nullptr)
+			cl->resp = std::make_shared<Response>(cl, cl->req);
+		cl->resp->set_error(408);
+		cl->resp->finish_response();
+		cl->response = cl->resp->buffer.str();
+		mod_fd(cl->fd, EPOLL_CTL_MOD, EPOLLOUT, cl);
 	}
 }
 
