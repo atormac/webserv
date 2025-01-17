@@ -27,6 +27,7 @@ Cgi::Cgi(std::shared_ptr<Location> location, std::shared_ptr<Request> request)
 		
 	} catch (const std::exception &e)
 	{
+		std::cerr << "Cgi init error\n";
 		_script_abs = "";
 	}
 

@@ -163,7 +163,7 @@ bool HttpServer::mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 {
 	struct epoll_event ev;
 
-	ev.events = mask;
+	ev.events = EPOLLET | mask;
 	ev.data.fd = fd;
 
 	if (epoll_ctl(this->_epoll_fd, ctl, fd, &ev) == -1)
@@ -267,6 +267,9 @@ void HttpServer::finish_cgi_client(std::shared_ptr<Client> cgi_client)
 {
 	int conn_fd = _cgi_to_client[cgi_client->fd];
 	std::shared_ptr conn = _clients[conn_fd];
+
+	if (!conn)
+		return;
 
 	remove_fd(conn->cgi_write_fd);
 	remove_fd(conn->cgi_read_fd);

@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:28:21 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/14 17:51:15 by atorma           ###   ########.fr       */
+/*   Updated: 2025/01/17 14:03:12 by atorma           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -26,7 +26,6 @@ void Socket::close_socket(void)
 {
 	if (this->_socketFd >= 0)
 	{
-		std::cout << "closing socket: " << this->_socketFd << "\n";
 		close(this->_socketFd);
 		this->_socketFd = -1;
 	}
