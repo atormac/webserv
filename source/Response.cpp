@@ -69,8 +69,6 @@ void Response::fix_uri(void)
 
 		if (flags & FS_ISFILE)
 			_request->_uri += _location->_index;
-		std::cerr << "target: " << target << "\n";
-		std::cerr << "uri fixed: " << _request->_uri << "\n";
 	}
 }
 

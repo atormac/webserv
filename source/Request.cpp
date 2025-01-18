@@ -191,7 +191,6 @@ bool Request::parse_header_field(size_t pos)
 
 State Request::parse_body(void)
 {
-	std::cerr << "post_data: " << _buffer << "\n";
 	if (_headers.count("host") == 0)
 	{
 		this->parser_error = STATUS_BAD_REQUEST;
