@@ -53,7 +53,7 @@ bool HttpServer::init()
 	for (const auto &so : _socketFdToSockets)
 	{
 		struct epoll_event ev;
-		ev.events = EPOLLIN;
+		ev.events = EPOLLIN | EPOLLET;
 		ev.data.fd = so.first;
 
 		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -1)
@@ -126,7 +126,8 @@ void HttpServer::epoll(void)
 
 			if (this->_socketFdToSockets.count(e.data.fd))
 			{
-				accept_client(e.data.fd);
+				while (accept_client(e.data.fd))
+					;
 				continue;
 			}
 			if ((e.events & EPOLLERR) || (e.events & EPOLLRDHUP))
@@ -165,7 +166,7 @@ bool HttpServer::accept_client(int _socket_fd)
 	int client_fd = accept(_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
 	if (client_fd == -1)
 	{
-		perror("accept()");
+		//perror("accept()");
 		return false;
 	}
 	if (_clients.size() >= 512)
