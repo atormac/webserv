@@ -319,7 +319,7 @@ void Request::parse_multipart(void)
 
 void Request::check_body_limit(void)
 {
-	if (!this->conf)
+	if (!this->conf || _headers.count("host") == 0)
 		return;
 	if (_body.size() > this->conf->getMaxSize())
 	{
