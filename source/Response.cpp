@@ -54,17 +54,23 @@ void Response::fix_uri(void)
 		if (_request->_uri.front() != '/')
 			_request->_uri = "/" + _request->_uri;
 	}
-	if (_location->_autoIndex || _location->_index.empty())
-		return;
 	if (_request->_uri.back() != '/')
 		return;
+	std::string target = _location->_rootPath + _request->_uri;
+	int fs = Io::file_stat(target);
 
-	std::string filename = _location->_rootPath + _request->_uri;
-	int flags = Io::file_stat(filename);
+	if (!(fs & FS_ISDIR))
+		return;
 
-	if (flags & FS_ISDIR)
+	if (!_location->_index.empty())
 	{
-		_request->_uri += _location->_index;
+		target = _location->_rootPath + _request->_uri + _location->_index;
+		int flags = Io::file_stat(target);
+
+		if (flags & FS_ISFILE)
+			_request->_uri += _location->_index;
+		std::cerr << "target: " << target << "\n";
+		std::cerr << "uri fixed: " << _request->_uri << "\n";
 	}
 }
 
