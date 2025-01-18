@@ -332,7 +332,7 @@ void Request::dump(void)
 	std::cout << "[webserv] " << _method_str << " | ";
 	std::cout << _uri << " | " << _query_string << " | ";
 	std::cout << _bytes_read << " | " << _headers["host"];
-	std::cout << std::endl;
+	std::cout << "\n";
 
 	/*
 	for(const auto &e : this->_headers)
