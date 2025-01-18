@@ -8,7 +8,7 @@ $post_data = file_get_contents('php://input');
 echo "Content-Type: text/html\n";
 echo "Debug-Header: DEBUG\n\n";
 
-sleep(3);
+sleep(5);
 echo("post_size: " . getenv("CONTENT_LENGTH") . "\n");
 echo("post_data: " . $post_data . "\n");
 if ($post_data == false)

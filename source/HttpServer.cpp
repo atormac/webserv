@@ -69,21 +69,29 @@ void HttpServer::timeout_clients(void)
 {
 	time_t now;
 	std::time(&now);
-
 	std::vector <int> timedout;
 
 	for (auto const &cl : _clients)
 	{
+		if (cl.second == nullptr)
+			continue;
 		if (cl.second->has_timed_out(now))
 		{
+			if (cl.second->conn_type == CONN_CGI)
+				continue;
 			timedout.push_back(cl.first);
+			if (cl.second->conn_type == CONN_WAIT_CGI)
+			{
+				timedout.push_back(cl.second->cgi_read_fd);
+				timedout.push_back(cl.second->cgi_write_fd);
+			}
 		}
 	}
 	for (int i : timedout)
 	{
-		std::shared_ptr cl = _clients[i];
-		if (!cl)
+		if (!_clients.count(i))
 			continue;
+		std::shared_ptr cl = _clients[i];
 		if (cl->conn_type == CONN_CGI)
 		{
 			remove_fd(i);
@@ -92,6 +100,11 @@ void HttpServer::timeout_clients(void)
 		if (cl->resp == nullptr)
 			cl->resp = std::make_shared<Response>(cl, cl->req);
 		cl->resp->set_error(408);
+		if (cl->conn_type == CONN_WAIT_CGI)
+		{
+			cl->resp->set_error(504);
+			std::cerr << "CGI timeout for: " << i << "\n";
+		}
 		cl->resp->finish_response();
 		cl->response = cl->resp->buffer.str();
 		mod_fd(cl->fd, EPOLL_CTL_MOD, EPOLLOUT, cl);
