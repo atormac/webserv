@@ -253,7 +253,6 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 			remove_fd(client->fd);
 			return;
 		}
-		client->req->dump();
 		mask = EPOLLOUT;
 		mod_fd(client->fd, EPOLL_CTL_MOD, mask, client);
 		return;

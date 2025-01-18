@@ -1,14 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   HttpServer.hpp                                     :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/28 11:17:19 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/17 13:39:10 by atorma           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 #ifndef HTTPSERVER_HPP
 #define HTTPSERVER_HPP
 
@@ -29,6 +18,7 @@ class Response;
 #include <Str.hpp>
 #include <Cgi.hpp>
 #include <Io.hpp>
+#include <Logger.hpp>
 #include <set>
 
 

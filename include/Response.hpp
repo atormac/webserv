@@ -7,7 +7,7 @@ class Location;
 
 class Response {
     private:
-	std::shared_ptr<Request> _client;
+	std::shared_ptr<Client> _client;
 	std::shared_ptr<Request> _request;
 	std::shared_ptr<Location> _location;
 
