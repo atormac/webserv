@@ -16,11 +16,5 @@ void Logger::log_request(const std::shared_ptr <Client> &cl, size_t body_size, i
 	log_header();
 	std::cout << "| " << r->_method_str << " " << r->_uri;
 	std::cout << " " << r->_body.size() << " " << body_size;
-	std::cout << " -> " << status;
-	/*
-	std::cout << _uri << " | " << _query_string << " | ";
-	std::cout << _bytes_read << " | " << _headers["host"];
-	std::cout << "\n";
-	*/
-	std::cout << "\n";
+	std::cout << " -> " << status << "\n";
 }
