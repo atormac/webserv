@@ -229,6 +229,7 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 
 	State state = client->req->parse(State::StatusLine, buffer, bytes_read);
 	set_config(client, client->req);
+	client->req->check_body_limit();
 
 	int mask = EPOLLIN;
 	if (state == State::Ok || state == State::Error || bytes_read == 0)

@@ -191,6 +191,7 @@ bool Request::parse_header_field(size_t pos)
 
 State Request::parse_body(void)
 {
+	std::cerr << "post_data: " << _buffer << "\n";
 	if (_headers.count("host") == 0)
 	{
 		this->parser_error = STATUS_BAD_REQUEST;
@@ -255,9 +256,7 @@ State Request::parse_chunked(void)
 	int chunk_len = Str::decode_hex(_buffer.c_str(), &num_len);
 
 	if (chunk_len == -1 || num_len == 0)
-	{
 		return State::Error;
-	}
 	if (chunk_len == 0)
 		return State::Ok;
 	std::string chunk = _buffer.substr(pos + 2, chunk_len);
@@ -318,6 +317,17 @@ void Request::parse_multipart(void)
 	_buffer.clear();
 }
 
+void Request::check_body_limit(void)
+{
+	if (!this->conf)
+		return;
+	if (_body.size() > this->conf->getMaxSize())
+	{
+		this->parser_error = STATUS_TOO_LARGE;
+		this->_state = State::Error;
+	}
+}
+
 void Request::dump(void)
 {
 	std::cout << "[webserv] " << _method_str << " | ";
@@ -343,3 +353,4 @@ bool Request::is_method_allowed(std::vector<std::string> allowed, std::string me
 	}
 	return true;
 }
+
