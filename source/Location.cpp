@@ -124,6 +124,7 @@ void Location::_addRoot(std::string &line)
 	if (!(mode.st_mode & S_IFDIR))
 		throw(std::runtime_error("_addRoot: Specified path isn't a directory!"));
 	_rootPath = match_res[1];
+	_rootPath = std::filesystem::canonical(_rootPath).generic_string();
 }
 
 void Location::_addIndex(std::string &line)
