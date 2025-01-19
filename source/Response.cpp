@@ -93,13 +93,11 @@ int Response::has_errors(void)
 	if (!_location->_redirectPath.empty())
 		return 0;
 	try {
-		std::filesystem::path root = std::filesystem::canonical(_location->_rootPath);
 		std::string filename = _location->_rootPath + _request->_uri;
 		std::filesystem::path resolved = std::filesystem::canonical(filename);
 
 		std::string uri_normalized = resolved.generic_string();
-		std::string root_normalized = root.generic_string();
-		if (uri_normalized.rfind(root_normalized, 0) != 0) //path traversal
+		if (uri_normalized.rfind(_location->_rootPath, 0) != 0) //path traversal
 			return STATUS_NOT_FOUND;
 	} catch (const std::exception &e) {
 		return 0;
@@ -323,6 +321,7 @@ bool Response::directory_index(std::string path)
 	_body << "<th>Last Modified</th>";
 	_body << "<th>Size</th>";
 	_body << "</thead></tr>";
+	_body << "<tr><th colspan=\"3\"><hr/></th></tr>";
 	while ((entry = readdir(dir)) != NULL)
 	{
 		if (entry->d_name[0] == '.')
@@ -333,16 +332,16 @@ bool Response::directory_index(std::string path)
 		struct stat sb;
 		if (stat(e.c_str(), &sb) != 0)
 			continue;
-		if (S_ISDIR(sb.st_mode)) {
+		if (S_ISDIR(sb.st_mode))
 			href += "/";
-		}
 		_body << "<tbody>";
 		_body << "<tr><td><a href=\"" << href << "\">" << href << "</td>";
-		_body << "<td>" << std::ctime(&sb.st_mtime) << "</td>";
-		_body << "<td>" << sb.st_size << "</td></tr>";
+		_body << "<td align=\"right\">" << Str::time_to_str(sb.st_mtime) << "</td>";
+		_body << "<td align=\"right\">" << sb.st_size << "</td></tr>";
 		_body << "</tbody>";
 	}
 	closedir(dir);
+	_body << "<tr><th colspan=\"3\"><hr/></th></tr>";
 	_body << "</table>";
 	_body << "</body></html>";
 

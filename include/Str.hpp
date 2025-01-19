@@ -9,6 +9,7 @@ class Str {
 	static std::string url_decode(const std::string &s);
 	static std::string date_str_now(void);
 	static std::string date_str_hour_from_now(void);
+	static std::string time_to_str(time_t t);
 	static std::string get_key_data(std::string &buf, std::string key);
 	static std::string safe_substr(std::string &buf, std::string before,
 				       std::string after);

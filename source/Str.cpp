@@ -70,6 +70,18 @@ std::string Str::date_str_hour_from_now(void)
 	return std::string(buf);
 }
 
+std::string Str::time_to_str(time_t t)
+{
+	std::string res = "";
+	char time_buf[64];
+	struct tm* ti = localtime(&t);
+
+	if (!ti)
+		return res;
+	std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M", ti);
+	return std::string(time_buf);
+}
+
 std::string Str::get_key_data(std::string &buf, std::string key)
 {
 	size_t pos = buf.find(key + "=\"");
