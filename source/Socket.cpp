@@ -6,7 +6,7 @@
 /*   By: lopoka <lopoka@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/28 12:28:21 by lopoka            #+#    #+#             */
-/*   Updated: 2025/01/17 14:03:12 by atorma           ###   ########.fr       */
+/*   Updated: 2025/01/19 01:21:13 by user             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <HttpServer.hpp>
@@ -62,6 +62,13 @@ int Socket::bind_socket(std::string ip, int port)
 		perror("setsockopt");
 		return -1;
 	}
+	/*
+	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) == -1)
+	{
+		perror("setsockopt");
+		return -1;
+	}
+	*/
 	if (!Io::set_nonblocking(socket_fd))
 	{
 		perror("fcntl");

@@ -9,7 +9,7 @@ class Logger {
 	private:
 		static void log_header(void);
 	public:
-		static void log_request(const std::shared_ptr <Client> &cl, size_t body_size, int status);
+		static void log_request(std::weak_ptr <Request> req, size_t body_size, int status);
 };
 
 #endif

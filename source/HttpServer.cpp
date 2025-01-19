@@ -52,15 +52,8 @@ bool HttpServer::init()
 	}
 	for (const auto &so : _socketFdToSockets)
 	{
-		struct epoll_event ev;
-		ev.events = EPOLLIN | EPOLLET;
-		ev.data.fd = so.first;
-
-		if (::epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, so.first, &ev) == -1)
-		{
-			perror("epoll_ctl");
+		if (!mod_fd(so.first, EPOLL_CTL_ADD, EPOLLIN, nullptr))
 			return false;
-		}
 	}
 	return true;
 }
@@ -163,21 +156,19 @@ bool HttpServer::accept_client(int _socket_fd)
 	std::memset(&peer_addr, 0, sizeof(sockaddr_in));
 	socklen_t peer_addr_size = sizeof(peer_addr);
 
-	int client_fd = accept(_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
-	if (client_fd == -1)
-	{
-		//perror("accept()");
-		return false;
-	}
 	if (_clients.size() >= 512)
 	{
 		std::cerr << "Error: too many connections\n";
-		close(client_fd);
+		return false;
+	}
+
+	int client_fd = accept(_socket_fd, (sockaddr *)&peer_addr, &peer_addr_size);
+	if (client_fd == -1)
+	{
 		return false;
 	}
 	if (!Io::set_nonblocking(client_fd))
 	{
-		perror("set_nonblocking");
 		close(client_fd);
 		return false;
 	}
@@ -199,9 +190,9 @@ bool HttpServer::mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl)
 		remove_fd(fd);
 		return false;
 	}
-	if (ctl == EPOLL_CTL_ADD)
+	if (ctl == EPOLL_CTL_ADD && cl != nullptr)
 	{
-		_clients[fd] = cl;
+		_clients.emplace(fd, cl);
 	}
 	return true;
 }
@@ -214,8 +205,8 @@ void HttpServer::remove_fd(int fd)
 	{
 		perror("epoll_ctl");
 	}
-	_clients.erase(fd);
 	_cgi_to_client.erase(fd);
+	_clients.erase(fd);
 }
 
 void HttpServer::handle_read(std::shared_ptr<Client> client)

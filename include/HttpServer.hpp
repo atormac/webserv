@@ -21,7 +21,6 @@ class Response;
 #include <Logger.hpp>
 #include <set>
 
-
 class HttpServer {
     private:
 	int _epoll_fd;

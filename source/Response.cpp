@@ -8,7 +8,7 @@ Response::Response(std::shared_ptr<Client> client, std::shared_ptr<Request> req)
 	: _request(req)
 	, _status_code(STATUS_NOT_FOUND)
 {
-	this->_client = client;
+	//this->_client = client;
 	int error_code = this->has_errors();
 
 	if (error_code)
@@ -113,7 +113,7 @@ void Response::create_response(int status)
 	set_error_page(status);
 
 	const std::string &bs = _body.str();
-	Logger::log_request(this->_client, bs.size(), status);
+	Logger::log_request(std::weak_ptr<Request>(_request), bs.size(), status);
 
 	buffer << "HTTP/1.1 " << status << " " << code_map[status] << CRLF;
 	buffer << "Content-Length: " << bs.size() << CRLF;

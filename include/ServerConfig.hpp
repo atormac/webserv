@@ -3,7 +3,7 @@
 
 #include <HttpServer.hpp>
 
-#define MAX_EVENTS 256
+#define MAX_EVENTS 64
 #define LISTEN_BACKLOG 256
 
 void signal_handler(int code);
