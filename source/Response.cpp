@@ -312,32 +312,39 @@ bool Response::directory_index(std::string path)
 	dir = opendir(path.c_str());
 	if (!dir)
 		return false;
-	_body << "<html><head><title>Index</title></head><body><h1>Index of "
-	      << _request->_uri << "</h1><ul>";
+	_body << "<html><head><title>Index</title></head><body><h2>Index of "
+	      << _request->_uri << "</h2>";
 
 	std::string href;
 	href.reserve(256);
-	std::string link;
-	link.reserve(256);
 
+	_body << "<table><thead><tr>";
+	_body << "<th>Name</th>";
+	_body << "<th>Last Modified</th>";
+	_body << "<th>Size</th>";
+	_body << "</thead></tr>";
 	while ((entry = readdir(dir)) != NULL)
 	{
-		href = entry->d_name;
-		if (href == "." || href == "..")
+		if (entry->d_name[0] == '.')
 			continue;
+		href = entry->d_name;
+		std::string e = path + href;
 
-		link = href;
-		int eflags = Io::file_stat(path + href);
-
-		if (eflags & FS_ISDIR)
-		{
+		struct stat sb;
+		if (stat(e.c_str(), &sb) != 0)
+			continue;
+		if (S_ISDIR(sb.st_mode)) {
 			href += "/";
-			link = "/" + href;
 		}
-		_body << "<li><a href=\"" << href << "\">" << link << "</a></li>";
+		_body << "<tbody>";
+		_body << "<tr><td><a href=\"" << href << "\">" << href << "</td>";
+		_body << "<td>" << std::ctime(&sb.st_mtime) << "</td>";
+		_body << "<td>" << sb.st_size << "</td></tr>";
+		_body << "</tbody>";
 	}
 	closedir(dir);
-	_body << "</ul></body></html>";
+	_body << "</table>";
+	_body << "</body></html>";
 
 	return true;
 }
