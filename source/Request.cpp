@@ -82,6 +82,8 @@ State Request::parse(State s_start, char *data, size_t size)
 	return _state;
 }
 
+static std::regex r(R"((\S+) (\S+) (\S+))");
+
 State Request::parse_status_line(void)
 {
 	if (_total_read >= MAX_HEADER_BYTES)
@@ -96,7 +98,6 @@ State Request::parse_status_line(void)
 		return State::PartialStatus;
 	}
 	std::string str = _buffer.substr(0, pos);
-	std::regex r(R"((\S+) (\S+) (\S+))");
 	std::smatch m;
 	if (!std::regex_match(str, m, r))
 		return State::Error;
@@ -109,8 +110,12 @@ State Request::parse_status_line(void)
 		this->parser_error = 501;
 		return State::Error;
 	}
-	if (_uri.at(0) != '/' || _version != "HTTP/1.1")
+	if (_uri.at(0) != '/' || _version.rfind("HTTP/", 0) != 0)
 		return State::Error;
+	if (_version != "HTTP/1.1") {
+		this->parser_error = 505;
+		return State::Error;
+	}
 	size_t pos_q = _uri.find("?");
 	if (pos_q != std::string::npos)
 	{
@@ -318,23 +323,6 @@ void Request::check_body_limit(void)
 		this->parser_error = STATUS_TOO_LARGE;
 		this->_state = State::Error;
 	}
-}
-
-void Request::dump(void)
-{
-	std::cout << "[webserv] " << _method_str << " | ";
-	std::cout << _uri << " | " << _query_string << " | ";
-	std::cout << _bytes_read << " | " << _headers["host"];
-	std::cout << "\n";
-
-	/*
-	for(const auto &e : this->_headers)
-	{
-		std::cout << "\t" << e.first << ": " << e.second << std::endl;
-	}
-	if (_content_len > 0)
-		std::cout << "body: " << _body << std::endl;
-	*/
 }
 
 bool Request::is_method_allowed(std::vector<std::string> allowed, std::string method)

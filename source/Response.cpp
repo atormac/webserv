@@ -216,12 +216,18 @@ int Response::handle_delete(void)
 
 void Response::finish_cgi(std::shared_ptr<Request> req)
 {
+	if (req->parser_error) {
+		_status_code = req->parser_error;
+		create_response(_status_code);
+		return;
+	}
+	if (req->_headers.count("status"))
+		_status_code = std::atoi(req->_headers["status"].c_str());
 	if (req->_headers.count("content-type"))
 		_additional_headers["Content-Type"] = req->_headers["content-type"];
 	if (req->_headers.count("set-cookie"))
 		_setCookie = req->_headers["set-cookie"];
-	if (req->parser_error)
-		_status_code = req->parser_error;
+
 	_body << req->_body;
 	create_response(_status_code);
 }
@@ -251,10 +257,14 @@ void Response::set_error(int code)
 
 void Response::set_error_page(int code)
 {
+	if (_body.str().size() > 0)
+		return;
 	if (!(code >= 400 && code <= 599))
 		return;
+	/*
 	_body.str("");
 	_body.clear();
+	*/
 	_additional_headers["Content-Type"] = "text/html";
 
 	if (!_request->conf || _request->conf->_errorPages.count(code) == 0)

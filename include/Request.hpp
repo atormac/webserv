@@ -82,7 +82,6 @@ class Request {
 	~Request();
 	State parse(State s_start, char *data, size_t size);
 	void check_body_limit(void);
-	void dump();
 	static bool is_method_allowed(std::vector<std::string> allowed,
 				      std::string method);
 };
