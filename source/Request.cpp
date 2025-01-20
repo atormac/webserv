@@ -22,7 +22,7 @@ Request::Request(bool cgi)
 	: Request()
 {
 	this->_cgi = cgi;
-	this->_header_delim = "\n";
+	this->_header_delim = CRLF;
 }
 
 Request::~Request()
@@ -128,11 +128,7 @@ State Request::parse_status_line(void)
 State Request::parse_header(void)
 {
 	if (_total_read >= MAX_HEADER_BYTES)
-	{
-		this->parser_error = STATUS_BAD_REQUEST;
 		return State::Error;
-	}
-
 	size_t pos = _buffer.find(_header_delim);
 
 	if (pos == std::string::npos)
@@ -147,6 +143,8 @@ State Request::parse_header(void)
 
 State Request::parse_header_cgi(void)
 {
+	if (_total_read >= MAX_HEADER_BYTES)
+		return State::Error;
 	size_t pos = _buffer.find(_header_delim);
 
 	if (pos == std::string::npos)
@@ -156,7 +154,8 @@ State Request::parse_header_cgi(void)
 		_buffer.erase(0, _header_delim.size());
 		return State::CgiBody;
 	}
-	return parse_header_field(pos) ? State::CgiHeader : State::Error;
+	_state = parse_header_field(pos) ? State::CgiHeader : State::Error;
+	return _state;
 }
 
 bool Request::parse_header_field(size_t pos)
@@ -178,7 +177,7 @@ bool Request::parse_header_field(size_t pos)
 	if (key == "content-length")
 	{
 		int tmp = Str::content_len_int(value);
-		if (tmp < 0 || _method == METHOD_GET)
+		if (tmp < 0)
 			return false;
 		_content_len = tmp;
 	}
@@ -192,10 +191,7 @@ bool Request::parse_header_field(size_t pos)
 State Request::parse_body(void)
 {
 	if (_headers.count("host") == 0)
-	{
-		this->parser_error = STATUS_BAD_REQUEST;
 		return State::Error;
-	}
 	if (conf && _buffer.size() > conf->getMaxSize())
 	{
 		this->parser_error = STATUS_TOO_LARGE;
@@ -228,12 +224,11 @@ State Request::parse_body_cgi(void)
 		_body += _buffer;
 		_buffer.clear();
 		return State::PartialCgiBody;
-	} else if (_body.size() < _content_len)
-	{
-		_body += _buffer;
-		_buffer.clear();
-		return State::PartialCgiBody;
 	}
+	_body += _buffer;
+	_buffer.clear();
+	if (_body.size() < _content_len)
+		return State::PartialCgiBody;
 	_buffer.clear();
 	return State::Ok;
 }

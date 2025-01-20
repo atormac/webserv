@@ -38,6 +38,7 @@ class HttpServer {
 	bool mod_fd(int fd, int ctl, int mask, std::shared_ptr<Client> cl);
 
 	void handle_read(std::shared_ptr<Client> client);
+	void handle_cgi_read(std::shared_ptr<Client> client);
 	void handle_write(std::shared_ptr<Client> client);
 
 	void finish_cgi_client(std::shared_ptr<Client> client);

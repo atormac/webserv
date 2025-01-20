@@ -1,6 +1,6 @@
 #include <HttpServer.hpp>
 
-std::unordered_map<std::string, std::string> cgi_map = { { ".php", "/usr/bin/php" },
+std::unordered_map<std::string, std::string> cgi_map = { { ".php", "/usr/bin/php-cgi" },
 							 { ".py", "/usr/bin/python3" } };
 
 Cgi::Cgi()
@@ -10,7 +10,7 @@ Cgi::Cgi()
 Cgi::Cgi(std::shared_ptr<Location> location, std::shared_ptr<Request> request)
 {
 	std::string ext = Io::get_file_ext(request->_uri);
-	_interpreter = location->_cgi[ext];
+	_interpreter = cgi_map[ext];
 
 	try {
 	std::filesystem::path p = location->_rootPath;
@@ -50,14 +50,14 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 {
 	env_set("GATEWAY_INTERFACE", "CGI/1.1");
 	env_set("SERVER_PROTOCOL", "HTTP/1.1");
+	env_set("REDIRECT_STATUS", "1");
+	env_set("SCRIPT_FILENAME", _script_abs);
+	env_set("PATH_INFO", _script_abs);
 	env_set("REQUEST_METHOD", request->_method_str);
 	env_set("QUERY_STRING", request->_query_string);
-	env_set("SCRIPT_FILENAME", _script_abs);
-
-	env_set("SERVER_NAME", request->_headers["host"]);
 	env_set("HTTP_ACCEPT", request->_headers["accept"]);
 	env_set("HTTP_USER_AGENT", request->_headers["user-agent"]);
-	env_set("PATH_INFO", _script_abs);
+	//env_set("SERVER_NAME", request->_headers["host"]);
 
 	if (request->_method == METHOD_POST)
 	{
@@ -85,17 +85,21 @@ bool Cgi::parent_init(int pid, int *fd_from, int *fd_to)
 	return true;
 }
 
-void Cgi::child_process(std::shared_ptr<Client> client, std::vector<char *> args,
-			int *fd_from, int *fd_to)
+void Cgi::child_process(std::shared_ptr<Client> client, int *fd_from, int *fd_to)
 {
-	signal(SIGPIPE, SIG_IGN);
-	signal(SIGINT, SIG_IGN);
+	std::vector<char *> args;
 	std::vector<char *> c_env;
+
+	args.reserve(3);
+	args.push_back(const_cast<char *>(_interpreter.c_str()));
+	args.push_back(const_cast<char *>(_script_path.c_str()));
+	args.push_back(nullptr);
 
 	c_env.reserve(_env.size() + 1);
 	for (const auto &var : _env)
 	{
 		c_env.push_back(const_cast<char *>(var.c_str()));
+		std::cerr << var << "\n";
 	}
 	c_env.push_back(nullptr);
 
@@ -114,6 +118,7 @@ void Cgi::child_process(std::shared_ptr<Client> client, std::vector<char *> args
 	close(fd_to[0]);
 	close(fd_from[1]);
 	client->cleanup_child();
+	signal(SIGPIPE, SIG_IGN);
 	execve(args.data()[0], args.data(), c_env.data());
 }
 
@@ -126,11 +131,6 @@ bool Cgi::start(std::shared_ptr<Client> client)
 
 	if (_script_abs == "")
 		return false;
-	std::vector<char *> args;
-	args.push_back(const_cast<char *>(_interpreter.c_str()));
-	args.push_back(const_cast<char *>(_script_path.c_str()));
-	args.push_back(nullptr);
-
 	if (pipe(fd_from) == -1 || pipe(fd_to) == -1)
 	{
 		close_pipes(fd_from);
@@ -145,7 +145,7 @@ bool Cgi::start(std::shared_ptr<Client> client)
 	}
 	if (pid == 0)
 	{
-		child_process(client, args, fd_from, fd_to);
+		child_process(client, fd_from, fd_to);
 		close_pipes(fd_from);
 		close_pipes(fd_to);
 		client->cleanup_child();

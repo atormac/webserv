@@ -140,7 +140,9 @@ void HttpServer::epoll(void)
 			if (e.events & EPOLLHUP)
 				e.events |= EPOLLIN;
 
-			if (e.events & EPOLLIN)
+			if (e.events & EPOLLIN && cl->conn_type == CONN_CGI)
+				handle_cgi_read(cl);
+			else if (e.events & EPOLLIN)
 				handle_read(cl);
 			else if (e.events & EPOLLOUT)
 				handle_write(cl);
@@ -214,24 +216,11 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 	char buffer[READ_BUFFER_SIZE];
 
 	ssize_t bytes_read = read(client->fd, buffer, READ_BUFFER_SIZE);
-	if (bytes_read == -1)
+	if (bytes_read <= 0)
 	{
 		remove_fd(client->fd);
 		return;
 	}
-	if (client->conn_type == CONN_CGI)
-	{
-		State s = client->req->parse(State::CgiHeader, buffer, bytes_read);
-
-		if (s == State::Ok || s == State::Error)
-		{
-			finish_cgi_client(client);
-			return;
-		}
-		mod_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
-		return;
-	}
-
 	State state = client->req->parse(State::StatusLine, buffer, bytes_read);
 	set_config(client, client->req);
 	client->req->check_body_limit();
@@ -249,6 +238,27 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 		return;
 	}
 	mod_fd(client->fd, EPOLL_CTL_MOD, mask, client);
+}
+
+void HttpServer::handle_cgi_read(std::shared_ptr<Client> client)
+{
+	char buffer[READ_BUFFER_SIZE];
+
+	ssize_t bytes_read = read(client->fd, buffer, READ_BUFFER_SIZE);
+	if (bytes_read == -1)
+	{
+		remove_fd(client->fd);
+		return;
+	}
+	State s = client->req->parse(State::CgiHeader, buffer, bytes_read);
+
+	if (s == State::Ok || s == State::Error)
+	{
+		finish_cgi_client(client);
+		return;
+	}
+	mod_fd(client->fd, EPOLL_CTL_MOD, EPOLLIN, client);
+	return;
 }
 
 void HttpServer::handle_write(std::shared_ptr<Client> client)
