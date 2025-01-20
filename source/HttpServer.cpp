@@ -226,13 +226,8 @@ void HttpServer::handle_read(std::shared_ptr<Client> client)
 	client->req->check_body_limit();
 
 	int mask = EPOLLIN;
-	if (state == State::Ok || state == State::Error || bytes_read == 0)
+	if (state == State::Ok || state == State::Error)
 	{
-		if (bytes_read == 0 && state != State::Ok && state != State::Error)
-		{
-			remove_fd(client->fd);
-			return;
-		}
 		mask = EPOLLOUT;
 		mod_fd(client->fd, EPOLL_CTL_MOD, mask, client);
 		return;

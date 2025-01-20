@@ -48,8 +48,6 @@ class Request {
 
 	bool _cgi;
 
-	std::string _header_delim;
-
 	State parse_header_cgi(void);
 
 	State parse_status_line(void);

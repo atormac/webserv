@@ -218,6 +218,8 @@ void Response::finish_cgi(std::shared_ptr<Request> req)
 {
 	if (req->_headers.count("content-type"))
 		_additional_headers["Content-Type"] = req->_headers["content-type"];
+	if (req->_headers.count("set-cookie"))
+		_setCookie = req->_headers["set-cookie"];
 	if (req->parser_error)
 		_status_code = req->parser_error;
 	_body << req->_body;

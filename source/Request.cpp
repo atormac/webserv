@@ -13,7 +13,6 @@ Request::Request()
 	this->_body_type = BODY_TYPE_NORMAL;
 	this->_cgi = false;
 	this->conf = nullptr;
-	this->_header_delim = CRLF;
 	this->_total_read = 0;
 	this->host_matched = false;
 }
@@ -22,7 +21,6 @@ Request::Request(bool cgi)
 	: Request()
 {
 	this->_cgi = cgi;
-	this->_header_delim = CRLF;
 }
 
 Request::~Request()
@@ -129,13 +127,13 @@ State Request::parse_header(void)
 {
 	if (_total_read >= MAX_HEADER_BYTES)
 		return State::Error;
-	size_t pos = _buffer.find(_header_delim);
+	size_t pos = _buffer.find(CRLF);
 
 	if (pos == std::string::npos)
 		return State::PartialHeader;
 	if (pos == 0)
 	{
-		_buffer.erase(0, _header_delim.size());
+		_buffer.erase(0, CRLF_LEN);
 		return State::Body;
 	}
 	return parse_header_field(pos) ? State::Header : State::Error;
@@ -145,13 +143,13 @@ State Request::parse_header_cgi(void)
 {
 	if (_total_read >= MAX_HEADER_BYTES)
 		return State::Error;
-	size_t pos = _buffer.find(_header_delim);
+	size_t pos = _buffer.find(CRLF);
 
 	if (pos == std::string::npos)
 		return State::CgiBody;
 	if (pos == 0)
 	{
-		_buffer.erase(0, _header_delim.size());
+		_buffer.erase(0, CRLF_LEN);
 		return State::CgiBody;
 	}
 	_state = parse_header_field(pos) ? State::CgiHeader : State::Error;
@@ -161,7 +159,7 @@ State Request::parse_header_cgi(void)
 bool Request::parse_header_field(size_t pos)
 {
 	std::string line = _buffer.substr(0, pos);
-	_buffer.erase(0, pos + _header_delim.size());
+	_buffer.erase(0, pos + CRLF_LEN);
 
 	std::regex regex(R"((\S+): (.+))");
 	std::smatch m;

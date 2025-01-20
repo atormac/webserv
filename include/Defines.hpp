@@ -27,6 +27,7 @@ enum { METHOD_GET, METHOD_POST, METHOD_DELETE };
 #define SERVER_NAME "webserv"
 #define REQUEST_BODY_LIMIT 10 * 1024 * 1024 //10MB
 #define CRLF "\r\n"
+#define CRLF_LEN 2
 
 extern std::unordered_map<int, std::string> code_map;
 extern std::unordered_map<std::string, std::string> mime_map;
