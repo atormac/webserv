@@ -9,6 +9,7 @@ class Location;
 
 class Cgi {
     private:
+	std::string _document_root;
 	std::string _interpreter;
 	std::string _script_abs;
 	std::string _script_path;

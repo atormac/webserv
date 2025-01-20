@@ -9,6 +9,7 @@ Cgi::Cgi()
 
 Cgi::Cgi(std::shared_ptr<Location> location, std::shared_ptr<Request> request)
 {
+	_document_root = location->_rootPath;
 	std::string ext = Io::get_file_ext(request->_uri);
 	_interpreter = cgi_map[ext];
 
@@ -53,6 +54,7 @@ void Cgi::env_set_vars(std::shared_ptr<Request> request)
 	env_set("REDIRECT_STATUS", "1");
 	env_set("SCRIPT_FILENAME", _script_abs);
 	env_set("PATH_INFO", _script_abs);
+	env_set("DOCUMENT_ROOT", _document_root);
 	env_set("REQUEST_METHOD", request->_method_str);
 	env_set("QUERY_STRING", request->_query_string);
 	env_set("HTTP_ACCEPT", request->_headers["accept"]);
