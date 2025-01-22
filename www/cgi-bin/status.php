@@ -1,5 +1,5 @@
 <?php
 
-echo("PHP not found!");
-http_response_code(404);
+echo("I'm a teapot!");
+http_response_code(418);
 ?>
