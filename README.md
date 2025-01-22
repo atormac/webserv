@@ -1,3 +1,11 @@
+### C++ HTTP 1.1 webserver with nonblocking I/O (epoll)
+
+```bash
+make
+./webserv <config file>
+```
+
+or:
 ### Run docker
 ```bash
 docker run -it -p 127.0.0.1:8080:8080 ubuntu
