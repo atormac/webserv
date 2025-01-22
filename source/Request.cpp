@@ -256,9 +256,9 @@ State Request::parse_chunked(void)
 		return State::Error;
 	if (chunk_len == 0)
 		return State::Ok;
-	std::string chunk = _buffer.substr(pos + 2, chunk_len);
+	_buffer.erase(0, num_len + CRLF_LEN);
+	std::string chunk = _buffer.substr(0, chunk_len);
 	_body += chunk;
-	_buffer.erase(0, pos + 2);
 	_buffer.erase(0, chunk.size());
 	_buffer.erase(0, 2);
 
