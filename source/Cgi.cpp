@@ -104,7 +104,7 @@ void Cgi::child_process(std::shared_ptr<Client> client, int *fd_from, int *fd_to
 	for (const auto &var : _env)
 	{
 		c_env.push_back(const_cast<char *>(var.c_str()));
-		std::cerr << var << "\n";
+		//std::cerr << var << "\n";
 	}
 	c_env.push_back(nullptr);
 

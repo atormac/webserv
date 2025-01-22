@@ -247,7 +247,7 @@ void HttpServer::handle_cgi_read(std::shared_ptr<Client> client)
 	}
 	State s = client->req->parse(State::CgiHeader, buffer, bytes_read);
 
-	if (s == State::Ok || s == State::Error)
+	if (s == State::Ok || s == State::Error || bytes_read == 0)
 	{
 		finish_cgi_client(client);
 		return;
